@@ -1383,13 +1383,7 @@ async function loadQueueItem(id, el) {
   document.querySelectorAll('.qitem').forEach(i => i.classList.remove('qitem-active'));
   if (el) el.classList.add('qitem-active');
   await loadHistory(id);
-  // Entra em modo monitoramento — grava assim que detectar áudio da ligação
-  setTimeout(() => {
-    if ((recState === 'idle' || recState === 'stopped') && currentOutput?.id) {
-      startMonitoring();
-      showToast('👂 Monitorando — vai gravar ao iniciar a ligação');
-    }
-  }, 500);
+  showToast('✅ Script carregado — clique 👂 ou F2 para monitorar a ligação');
 }
 
 // ── Toast ───────────────────────────────────────────────────────────────────
@@ -1417,15 +1411,19 @@ let recTimerInt    = null;
 let recSeconds     = 0;
 
 // VAD (Voice Activity Detection)
-let vadContext     = null;
-let vadStream      = null;
-let vadAnalyser    = null;
-let vadPollInt     = null;
-let vadFrames      = 0;           // frames consecutivos acima do limiar
-const VAD_THRESHOLD    = 0.012;   // RMS mínimo (~silêncio ambiente = ~0.002)
-const VAD_TRIGGER_MS   = 600;     // ms de áudio contínuo para disparar
-const VAD_POLL_MS      = 80;
-const VAD_TRIGGER_FRAMES = Math.ceil(VAD_TRIGGER_MS / VAD_POLL_MS);
+let vadContext       = null;
+let vadStream        = null;
+let vadAnalyser      = null;
+let vadPollInt       = null;
+let vadFrames        = 0;
+let vadCalibrating   = false;
+let vadCalibFrames   = 0;
+let vadCalibPeak     = 0;
+let vadThreshold     = 0.025;     // será substituído após calibração
+const VAD_POLL_MS        = 80;
+const VAD_CALIB_FRAMES   = Math.ceil(2500 / VAD_POLL_MS);  // 2.5s de calibração
+const VAD_HEADROOM       = 0.022;  // headroom acima do ruído ambiente
+const VAD_TRIGGER_FRAMES = Math.ceil(900  / VAD_POLL_MS);  // 900ms contínuos
 
 function showRecPanel(show) {
   const topbar = document.getElementById('recTopbar');
@@ -1471,7 +1469,11 @@ function toggleRecording() {
 // ── VAD — aguarda áudio da ligação ──────────────────────────────────────────
 async function startMonitoring() {
   if (recState === 'monitoring' || recState === 'recording') return;
-  recState = 'monitoring';
+  recState       = 'monitoring';
+  vadCalibrating = true;
+  vadCalibFrames = 0;
+  vadCalibPeak   = 0;
+  vadFrames      = 0;
   updateRecUI();
 
   try {
@@ -1479,22 +1481,42 @@ async function startMonitoring() {
     vadContext  = new (window.AudioContext || window.webkitAudioContext)();
     const src   = vadContext.createMediaStreamSource(vadStream);
     vadAnalyser = vadContext.createAnalyser();
-    vadAnalyser.fftSize = 256;
+    vadAnalyser.fftSize = 512;
     src.connect(vadAnalyser);
-
     const buf = new Float32Array(vadAnalyser.frequencyBinCount);
-    vadFrames  = 0;
 
     vadPollInt = setInterval(() => {
       if (recState !== 'monitoring') { stopVAD(); return; }
+
       vadAnalyser.getFloatTimeDomainData(buf);
-      // RMS do frame
       const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
-      if (rms > VAD_THRESHOLD) {
+
+      // ── Fase 1: calibração de ruído ambiente (2.5s) ────────────────────
+      if (vadCalibrating) {
+        vadCalibPeak   = Math.max(vadCalibPeak, rms);
+        vadCalibFrames++;
+        // atualiza sublabel com contagem regressiva
+        const remaining = Math.ceil((VAD_CALIB_FRAMES - vadCalibFrames) * VAD_POLL_MS / 1000);
+        const sub = document.getElementById('recTbSub');
+        if (sub) sub.innerHTML = `Calibrando ambiente… ${remaining}s <span class="rec-f2-badge">F2</span>`;
+
+        if (vadCalibFrames >= VAD_CALIB_FRAMES) {
+          // define limiar = pico do ambiente + headroom
+          vadThreshold   = vadCalibPeak + VAD_HEADROOM;
+          vadCalibrating = false;
+          vadFrames      = 0;
+          updateRecUI();  // mostra "Aguardando ligação…"
+          console.log(`[VAD] limiar calibrado: ${vadThreshold.toFixed(4)} (ambiente: ${vadCalibPeak.toFixed(4)})`);
+        }
+        return;
+      }
+
+      // ── Fase 2: detecção ────────────────────────────────────────────────
+      if (rms > vadThreshold) {
         vadFrames++;
         if (vadFrames >= VAD_TRIGGER_FRAMES) {
-          stopVAD(false);   // fecha stream VAD, mantém recState
-          startRec();       // dispara gravação
+          stopVAD(false);
+          startRec();
           showToast('🎙️ Ligação detectada — gravando!');
         }
       } else {
