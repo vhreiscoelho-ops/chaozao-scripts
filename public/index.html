@@ -327,6 +327,12 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 .rec-f2-badge { display:inline-block; background:rgba(0,0,0,.08); border:1px solid var(--border); border-radius:4px; font-size:9px; font-weight:700; padding:1px 5px; color:var(--muted); letter-spacing:.04em; margin-left:4px; vertical-align:middle; }
 @keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.55)} 50%{box-shadow:0 0 0 8px rgba(220,38,38,0)} }
 @keyframes monitorPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.72;transform:scale(.93)} }
+/* Medidor de nível */
+.rec-level-wrap { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.rec-level-track { flex:1; height:4px; background:var(--border); border-radius:2px; position:relative; overflow:visible; }
+.rec-level-fill { height:100%; border-radius:2px; width:0%; transition:width 60ms linear; background:#22c55e; }
+.rec-level-threshold { position:absolute; top:-2px; bottom:-2px; width:2px; background:#f59e0b; border-radius:1px; }
+.rec-level-label { font-size:9px; color:var(--light); white-space:nowrap; }
 .coaching-wrap { margin-top:.6rem; }
 .coaching-card { border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-top:.65rem; background:#FAFAF7; }
 .coaching-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
@@ -497,9 +503,16 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
     <!-- ── Barra de Gravação ── -->
     <div id="recTopbar" class="rec-topbar" style="display:none">
       <button id="recMicBtn" class="rec-mic-btn" onclick="toggleRecording()" title="Gravar ligação">🎙️</button>
-      <div style="flex:1">
-        <div class="rec-tb-label" id="recTbLabel">Iniciar gravação da ligação</div>
-        <div class="rec-tb-sublabel" id="recTbSub">Transcrição em tempo real via Chrome <span class="rec-f2-badge">F2</span></div>
+      <div style="flex:1;min-width:0">
+        <div class="rec-tb-label" id="recTbLabel">Monitorar ligação</div>
+        <div class="rec-tb-sublabel" id="recTbSub">Detecta e grava automaticamente ao iniciar <span class="rec-f2-badge">F2</span></div>
+        <div class="rec-level-wrap" id="recLevelWrap" style="display:none">
+          <div class="rec-level-track">
+            <div class="rec-level-fill" id="recLevelFill"></div>
+            <div class="rec-level-threshold" id="recLevelThreshold"></div>
+          </div>
+          <span class="rec-level-label" id="recLevelLabel">nível de áudio</span>
+        </div>
       </div>
       <div class="rec-tb-timer" id="recTimer" style="display:none">0:00</div>
       <button class="rec-tb-btn" id="recTranscriptToggle" onclick="toggleTranscriptPanel()" style="display:none">📝 Ver transcrição</button>
@@ -1424,11 +1437,12 @@ let vadFrames        = 0;
 let vadCalibrating   = false;
 let vadCalibFrames   = 0;
 let vadCalibPeak     = 0;
-let vadThreshold     = 0.025;     // será substituído após calibração
-const VAD_POLL_MS        = 80;
-const VAD_CALIB_FRAMES   = Math.ceil(2500 / VAD_POLL_MS);  // 2.5s de calibração
-const VAD_HEADROOM       = 0.022;  // headroom acima do ruído ambiente
-const VAD_TRIGGER_FRAMES = Math.ceil(900  / VAD_POLL_MS);  // 900ms contínuos
+let vadThreshold     = 0.025;     // recalculado após calibração
+const VAD_POLL_MS        = 60;
+const VAD_CALIB_FRAMES   = Math.ceil(2000 / VAD_POLL_MS);  // 2s de calibração
+const VAD_TRIGGER_FRAMES = Math.ceil(700  / VAD_POLL_MS);  // 700ms contínuos
+// Referência máxima do medidor visual (normaliza a barra)
+const VAD_VISUAL_MAX     = 0.15;
 
 function showRecPanel(show) {
   const topbar = document.getElementById('recTopbar');
@@ -1506,17 +1520,20 @@ async function startMonitoring() {
         if (sub) sub.innerHTML = `Calibrando ambiente… ${remaining}s <span class="rec-f2-badge">F2</span>`;
 
         if (vadCalibFrames >= VAD_CALIB_FRAMES) {
-          // define limiar = pico do ambiente + headroom
-          vadThreshold   = vadCalibPeak + VAD_HEADROOM;
+          // Limiar = pico do ambiente × 3 (mín. pico + 0.006)
+          // Sensível o suficiente para pegar voz, mas acima do ruído
+          vadThreshold   = Math.max(vadCalibPeak * 3, vadCalibPeak + 0.006);
           vadCalibrating = false;
           vadFrames      = 0;
-          updateRecUI();  // mostra "Aguardando ligação…"
-          console.log(`[VAD] limiar calibrado: ${vadThreshold.toFixed(4)} (ambiente: ${vadCalibPeak.toFixed(4)})`);
+          updateRecUI();
+          console.log(`[VAD] calibrado — ambiente: ${vadCalibPeak.toFixed(4)} | limiar: ${vadThreshold.toFixed(4)}`);
         }
         return;
       }
 
-      // ── Fase 2: detecção ────────────────────────────────────────────────
+      // ── Fase 2: detecção + medidor visual ──────────────────────────────
+      updateVADMeter(rms);
+
       if (rms > vadThreshold) {
         vadFrames++;
         if (vadFrames >= VAD_TRIGGER_FRAMES) {
@@ -1542,10 +1559,27 @@ async function startMonitoring() {
 function stopVAD(resetState = true) {
   clearInterval(vadPollInt); vadPollInt = null;
   vadFrames = 0;
-  if (vadStream)   { vadStream.getTracks().forEach(t => t.stop()); vadStream = null; }
-  if (vadContext)  { vadContext.close().catch(()=>{}); vadContext = null; }
+  if (vadStream)  { vadStream.getTracks().forEach(t => t.stop()); vadStream = null; }
+  if (vadContext) { vadContext.close().catch(()=>{}); vadContext = null; }
   vadAnalyser = null;
+  updateVADMeter(0);
   if (resetState) { recState = 'idle'; updateRecUI(); }
+}
+
+function updateVADMeter(rms) {
+  const fill  = document.getElementById('recLevelFill');
+  const thr   = document.getElementById('recLevelThreshold');
+  const lbl   = document.getElementById('recLevelLabel');
+  if (!fill) return;
+  const pct       = Math.min(100, (rms / VAD_VISUAL_MAX) * 100);
+  const thrPct    = Math.min(100, (vadThreshold / VAD_VISUAL_MAX) * 100);
+  const triggered = rms > vadThreshold;
+  fill.style.width      = pct + '%';
+  fill.style.background = triggered ? '#ef4444' : '#22c55e';
+  if (thr) thr.style.left = thrPct + '%';
+  if (lbl) lbl.textContent = triggered
+    ? `🔴 voz detectada (${(rms).toFixed(3)})`
+    : `nível: ${(rms).toFixed(3)} | limiar: ${(vadThreshold).toFixed(3)}`;
 }
 
 // ── Gravação com SpeechRecognition ──────────────────────────────────────────
@@ -1625,13 +1659,17 @@ function updateRecUI() {
   if (!micBtn) return;
 
   const f2hint = ' <span class="rec-f2-badge">F2</span>';
+  const levelWrap = document.getElementById('recLevelWrap');
 
   if (recState === 'monitoring') {
     micBtn.textContent        = '👂';
     micBtn.style.background   = '#92400e';
     micBtn.style.animation    = 'monitorPulse 2s ease-in-out infinite';
-    if (label)     label.innerHTML  = 'Aguardando ligação…';
-    if (sub)       sub.innerHTML    = 'Vai gravar automaticamente ao detectar áudio' + f2hint;
+    if (label)     label.innerHTML  = vadCalibrating ? 'Calibrando ambiente…' : 'Aguardando ligação…';
+    if (sub)       sub.innerHTML    = vadCalibrating
+      ? 'Fique em silêncio por 2 segundos' + f2hint
+      : 'Grava ao detectar áudio da ligação' + f2hint;
+    if (levelWrap) levelWrap.style.display = vadCalibrating ? 'none' : 'flex';
     if (timer)     timer.style.display    = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
     if (coachBtn)  coachBtn.style.display  = 'none';
@@ -1641,6 +1679,7 @@ function updateRecUI() {
     micBtn.style.animation    = 'recPulse 1.2s ease-in-out infinite';
     if (label)     label.innerHTML  = 'Gravando ligação…';
     if (sub)       sub.innerHTML    = 'Clique para parar' + f2hint;
+    if (levelWrap) levelWrap.style.display = 'none';
     if (timer)     timer.style.display    = '';
     if (toggleBtn) toggleBtn.style.display = '';
     if (coachBtn)  coachBtn.style.display  = 'none';
@@ -1650,6 +1689,7 @@ function updateRecUI() {
     micBtn.style.animation    = 'none';
     if (label)     label.innerHTML  = 'Gravação encerrada';
     if (sub)       sub.innerHTML    = 'Clique para monitorar nova ligação' + f2hint;
+    if (levelWrap) levelWrap.style.display = 'none';
     if (timer)     timer.style.display    = '';
     if (toggleBtn) { toggleBtn.style.display = ''; toggleBtn.textContent = '📝 Ocultar'; }
     if (coachBtn)  coachBtn.style.display  = '';
@@ -1661,6 +1701,7 @@ function updateRecUI() {
     micBtn.style.animation    = 'none';
     if (label)     label.innerHTML  = 'Monitorar ligação';
     if (sub)       sub.innerHTML    = 'Detecta e grava automaticamente ao iniciar' + f2hint;
+    if (levelWrap) levelWrap.style.display = 'none';
     if (timer)     timer.style.display    = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
     if (coachBtn)  coachBtn.style.display  = 'none';
