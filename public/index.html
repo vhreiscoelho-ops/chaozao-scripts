@@ -331,8 +331,13 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 .rec-level-wrap { display:flex; align-items:center; gap:6px; margin-top:4px; }
 .rec-level-track { flex:1; height:4px; background:var(--border); border-radius:2px; position:relative; overflow:visible; }
 .rec-level-fill { height:100%; border-radius:2px; width:0%; transition:width 60ms linear; background:#22c55e; }
-.rec-level-threshold { position:absolute; top:-2px; bottom:-2px; width:2px; background:#f59e0b; border-radius:1px; }
+.rec-level-threshold { position:absolute; top:-2px; bottom:-2px; width:2px; background:#f59e0b; border-radius:1px; transition:left .1s; }
 .rec-level-label { font-size:9px; color:var(--light); white-space:nowrap; }
+/* Slider de sensibilidade */
+.rec-sens-wrap { display:flex; align-items:center; gap:6px; margin-top:5px; }
+.rec-sens-label { font-size:9px; color:var(--muted); white-space:nowrap; text-transform:uppercase; letter-spacing:.05em; }
+.rec-sens-slider { flex:1; height:3px; cursor:pointer; accent-color:var(--accent); }
+.rec-sens-val { font-size:9px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; min-width:20px; text-align:right; }
 .coaching-wrap { margin-top:.6rem; }
 .coaching-card { border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-top:.65rem; background:#FAFAF7; }
 .coaching-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
@@ -512,6 +517,13 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
             <div class="rec-level-threshold" id="recLevelThreshold"></div>
           </div>
           <span class="rec-level-label" id="recLevelLabel">nível de áudio</span>
+        </div>
+        <div class="rec-sens-wrap" id="recSensWrap" style="display:none">
+          <span class="rec-sens-label">Sensibilidade</span>
+          <input type="range" id="recSensSlider" class="rec-sens-slider"
+            min="1" max="100" value="50"
+            oninput="onSensSlider(this.value)">
+          <span class="rec-sens-val" id="recSensVal">50</span>
         </div>
       </div>
       <div class="rec-tb-timer" id="recTimer" style="display:none">0:00</div>
@@ -1526,6 +1538,7 @@ async function startMonitoring() {
           vadCalibrating = false;
           vadFrames      = 0;
           updateRecUI();
+          syncSensSlider();   // posiciona slider no valor calibrado
           console.log(`[VAD] calibrado — ambiente: ${vadCalibPeak.toFixed(4)} | limiar: ${vadThreshold.toFixed(4)}`);
         }
         return;
@@ -1564,6 +1577,28 @@ function stopVAD(resetState = true) {
   vadAnalyser = null;
   updateVADMeter(0);
   if (resetState) { recState = 'idle'; updateRecUI(); }
+}
+
+// Slider: valor 1-100 → threshold (escala logarítmica, 0.002 a 0.12)
+function onSensSlider(val) {
+  const n = Number(val);
+  document.getElementById('recSensVal').textContent = n;
+  // Alta sensibilidade (100) = limiar baixo (0.003); Baixa (1) = limiar alto (0.10)
+  const t = 0.10 * Math.pow(0.003 / 0.10, (n - 1) / 99);
+  vadThreshold = t;
+  // Sincroniza posição visual do limiar sem esperar próximo frame
+  const thr = document.getElementById('recLevelThreshold');
+  if (thr) thr.style.left = Math.min(100, (t / VAD_VISUAL_MAX) * 100) + '%';
+}
+
+// Inicializa slider com o threshold atual (após calibração)
+function syncSensSlider() {
+  const slider = document.getElementById('recSensSlider');
+  if (!slider) return;
+  // Inverso da fórmula acima: n = 1 + 99 * log(t/0.10) / log(0.003/0.10)
+  const n = Math.round(1 + 99 * Math.log(vadThreshold / 0.10) / Math.log(0.003 / 0.10));
+  slider.value = Math.max(1, Math.min(100, n));
+  document.getElementById('recSensVal').textContent = slider.value;
 }
 
 function updateVADMeter(rms) {
@@ -1658,8 +1693,9 @@ function updateRecUI() {
   const coachBtn  = document.getElementById('coachingBtn');
   if (!micBtn) return;
 
-  const f2hint = ' <span class="rec-f2-badge">F2</span>';
+  const f2hint   = ' <span class="rec-f2-badge">F2</span>';
   const levelWrap = document.getElementById('recLevelWrap');
+  const sensWrap  = document.getElementById('recSensWrap');
 
   if (recState === 'monitoring') {
     micBtn.textContent        = '👂';
@@ -1670,6 +1706,7 @@ function updateRecUI() {
       ? 'Fique em silêncio por 2 segundos' + f2hint
       : 'Grava ao detectar áudio da ligação' + f2hint;
     if (levelWrap) levelWrap.style.display = vadCalibrating ? 'none' : 'flex';
+    if (sensWrap)  sensWrap.style.display  = vadCalibrating ? 'none' : 'flex';
     if (timer)     timer.style.display    = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
     if (coachBtn)  coachBtn.style.display  = 'none';
@@ -1680,6 +1717,7 @@ function updateRecUI() {
     if (label)     label.innerHTML  = 'Gravando ligação…';
     if (sub)       sub.innerHTML    = 'Clique para parar' + f2hint;
     if (levelWrap) levelWrap.style.display = 'none';
+    if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = '';
     if (toggleBtn) toggleBtn.style.display = '';
     if (coachBtn)  coachBtn.style.display  = 'none';
@@ -1690,6 +1728,7 @@ function updateRecUI() {
     if (label)     label.innerHTML  = 'Gravação encerrada';
     if (sub)       sub.innerHTML    = 'Clique para monitorar nova ligação' + f2hint;
     if (levelWrap) levelWrap.style.display = 'none';
+    if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = '';
     if (toggleBtn) { toggleBtn.style.display = ''; toggleBtn.textContent = '📝 Ocultar'; }
     if (coachBtn)  coachBtn.style.display  = '';
@@ -1702,6 +1741,7 @@ function updateRecUI() {
     if (label)     label.innerHTML  = 'Monitorar ligação';
     if (sub)       sub.innerHTML    = 'Detecta e grava automaticamente ao iniciar' + f2hint;
     if (levelWrap) levelWrap.style.display = 'none';
+    if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
     if (coachBtn)  coachBtn.style.display  = 'none';
