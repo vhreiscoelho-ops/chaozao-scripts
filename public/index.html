@@ -325,7 +325,8 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 .rec-tb-btn { padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface); font-size:11.5px; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; white-space:nowrap; flex-shrink:0; transition:all .15s; }
 .rec-tb-btn:hover { background:var(--border); color:var(--text); }
 .rec-f2-badge { display:inline-block; background:rgba(0,0,0,.08); border:1px solid var(--border); border-radius:4px; font-size:9px; font-weight:700; padding:1px 5px; color:var(--muted); letter-spacing:.04em; margin-left:4px; vertical-align:middle; }
-@keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 50%{box-shadow:0 0 0 7px rgba(239,68,68,0)} }
+@keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.55)} 50%{box-shadow:0 0 0 8px rgba(220,38,38,0)} }
+@keyframes monitorPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.72;transform:scale(.93)} }
 .coaching-wrap { margin-top:.6rem; }
 .coaching-card { border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-top:.65rem; background:#FAFAF7; }
 .coaching-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
@@ -1382,13 +1383,13 @@ async function loadQueueItem(id, el) {
   document.querySelectorAll('.qitem').forEach(i => i.classList.remove('qitem-active'));
   if (el) el.classList.add('qitem-active');
   await loadHistory(id);
-  // Auto-inicia gravação se ainda não estiver gravando
+  // Entra em modo monitoramento — grava assim que detectar áudio da ligação
   setTimeout(() => {
-    if (recState === 'idle' && currentOutput?.id) {
-      startRec();
-      showToast('🎙️ Gravação iniciada — boa ligação!');
+    if ((recState === 'idle' || recState === 'stopped') && currentOutput?.id) {
+      startMonitoring();
+      showToast('👂 Monitorando — vai gravar ao iniciar a ligação');
     }
-  }, 700);
+  }, 500);
 }
 
 // ── Toast ───────────────────────────────────────────────────────────────────
@@ -1407,12 +1408,25 @@ document.addEventListener('keydown', e => {
   if (e.key === 'F2') { e.preventDefault(); toggleRecording(); }
 });
 
-// ── Recording ──────────────────────────────────────────────────────────────
-let recState        = 'idle';   // 'idle' | 'recording' | 'stopped'
-let recFinalText    = '';
-let recRecognition  = null;
-let recTimerInt     = null;
-let recSeconds      = 0;
+// ── Recording + VAD ────────────────────────────────────────────────────────
+// Estados: 'idle' | 'monitoring' | 'recording' | 'stopped'
+let recState       = 'idle';
+let recFinalText   = '';
+let recRecognition = null;
+let recTimerInt    = null;
+let recSeconds     = 0;
+
+// VAD (Voice Activity Detection)
+let vadContext     = null;
+let vadStream      = null;
+let vadAnalyser    = null;
+let vadPollInt     = null;
+let vadFrames      = 0;           // frames consecutivos acima do limiar
+const VAD_THRESHOLD    = 0.012;   // RMS mínimo (~silêncio ambiente = ~0.002)
+const VAD_TRIGGER_MS   = 600;     // ms de áudio contínuo para disparar
+const VAD_POLL_MS      = 80;
+const VAD_TRIGGER_FRAMES = Math.ceil(VAD_TRIGGER_MS / VAD_POLL_MS);
+
 function showRecPanel(show) {
   const topbar = document.getElementById('recTopbar');
   if (topbar) topbar.style.display = show ? '' : 'none';
@@ -1429,6 +1443,7 @@ function toggleTranscriptPanel() {
 }
 
 function resetRec() {
+  stopVAD();
   stopRec(true);
   recFinalText = '';
   recState = 'idle';
@@ -1441,33 +1456,91 @@ function resetRec() {
   updateRecUI();
 }
 
+// ── Comportamento do botão / F2 ─────────────────────────────────────────────
+// idle       → clique → monitoring (escuta aguardando ligação)
+// monitoring → clique → gravação forçada imediata
+// recording  → clique → parar
+// stopped    → clique → monitoring novamente
 function toggleRecording() {
-  if (recState === 'recording') stopRec(false);
-  else startRec();
+  if      (recState === 'idle')       startMonitoring();
+  else if (recState === 'monitoring') { stopVAD(false); startRec(); }
+  else if (recState === 'recording')  stopRec(false);
+  else                                startMonitoring();  // stopped
 }
 
+// ── VAD — aguarda áudio da ligação ──────────────────────────────────────────
+async function startMonitoring() {
+  if (recState === 'monitoring' || recState === 'recording') return;
+  recState = 'monitoring';
+  updateRecUI();
+
+  try {
+    vadStream   = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    vadContext  = new (window.AudioContext || window.webkitAudioContext)();
+    const src   = vadContext.createMediaStreamSource(vadStream);
+    vadAnalyser = vadContext.createAnalyser();
+    vadAnalyser.fftSize = 256;
+    src.connect(vadAnalyser);
+
+    const buf = new Float32Array(vadAnalyser.frequencyBinCount);
+    vadFrames  = 0;
+
+    vadPollInt = setInterval(() => {
+      if (recState !== 'monitoring') { stopVAD(); return; }
+      vadAnalyser.getFloatTimeDomainData(buf);
+      // RMS do frame
+      const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
+      if (rms > VAD_THRESHOLD) {
+        vadFrames++;
+        if (vadFrames >= VAD_TRIGGER_FRAMES) {
+          stopVAD(false);   // fecha stream VAD, mantém recState
+          startRec();       // dispara gravação
+          showToast('🎙️ Ligação detectada — gravando!');
+        }
+      } else {
+        vadFrames = 0;
+      }
+    }, VAD_POLL_MS);
+
+  } catch(err) {
+    recState = 'idle';
+    updateRecUI();
+    if (err.name === 'NotAllowedError')
+      alert('Permissão de microfone negada. Permita o acesso no cadeado da barra de endereços.');
+    else
+      console.error('[VAD]', err);
+  }
+}
+
+function stopVAD(resetState = true) {
+  clearInterval(vadPollInt); vadPollInt = null;
+  vadFrames = 0;
+  if (vadStream)   { vadStream.getTracks().forEach(t => t.stop()); vadStream = null; }
+  if (vadContext)  { vadContext.close().catch(()=>{}); vadContext = null; }
+  vadAnalyser = null;
+  if (resetState) { recState = 'idle'; updateRecUI(); }
+}
+
+// ── Gravação com SpeechRecognition ──────────────────────────────────────────
 function startRec() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    alert('⚠️ Transcrição automática requer Chrome ou Edge.\n\nNo Firefox, você pode digitar a transcrição manualmente no campo abaixo.');
-    recState = 'stopped';
-    updateRecUI();
-    return;
+    alert('⚠️ Transcrição automática requer Chrome ou Edge.\nVocê pode digitar a transcrição manualmente.');
+    recState = 'stopped'; updateRecUI(); return;
   }
-
   recFinalText = '';
-  recState = 'recording';
-  recSeconds = 0;
+  recState     = 'recording';
+  recSeconds   = 0;
   const timerEl = document.getElementById('recTimer');
   if (timerEl) timerEl.textContent = '0:00';
 
   recRecognition = new SR();
-  recRecognition.lang = 'pt-BR';
-  recRecognition.continuous = true;
-  recRecognition.interimResults = true;
+  recRecognition.lang            = 'pt-BR';
+  recRecognition.continuous      = true;
+  recRecognition.interimResults  = true;
   recRecognition.maxAlternatives = 1;
 
-  recRecognition.onresult = (e) => {
+  recRecognition.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       if (e.results[i].isFinal) recFinalText += e.results[i][0].transcript + ' ';
@@ -1477,13 +1550,11 @@ function startRec() {
     if (el) el.value = (recFinalText + interim).trim();
   };
   recRecognition.onend = () => {
-    if (recState === 'recording') {
-      try { recRecognition.start(); } catch {}
-    }
+    if (recState === 'recording') try { recRecognition.start(); } catch {}
   };
-  recRecognition.onerror = (e) => {
+  recRecognition.onerror = e => {
     if (e.error === 'not-allowed') {
-      alert('Permissão de microfone negada. Clique no cadeado na barra de endereços e permita o microfone.');
+      alert('Permissão de microfone negada.');
       stopRec(false);
     }
   };
@@ -1492,8 +1563,7 @@ function startRec() {
   clearInterval(recTimerInt);
   recTimerInt = setInterval(() => {
     recSeconds++;
-    const m = Math.floor(recSeconds / 60);
-    const s = recSeconds % 60;
+    const m = Math.floor(recSeconds / 60), s = recSeconds % 60;
     const el = document.getElementById('recTimer');
     if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
   }, 1000);
@@ -1507,59 +1577,64 @@ function stopRec(silent = false) {
     try { recRecognition.stop(); } catch {}
     recRecognition = null;
   }
-  clearInterval(recTimerInt);
-  recTimerInt = null;
+  clearInterval(recTimerInt); recTimerInt = null;
   if (!silent) {
     recFinalText = document.getElementById('recTranscriptEl')?.value || recFinalText;
     recState = 'stopped';
     updateRecUI();
-    // Auto-analisa se tiver transcrição suficiente
     const text = document.getElementById('recTranscriptEl')?.value.trim() || '';
-    if (text.length >= 30 && currentOutput?.id) {
-      analyzeCall();
-    }
+    if (text.length >= 30 && currentOutput?.id) analyzeCall();
   }
 }
 
+// ── Atualiza visual da barra de gravação ────────────────────────────────────
 function updateRecUI() {
-  const micBtn      = document.getElementById('recMicBtn');
-  const label       = document.getElementById('recTbLabel');
-  const sub         = document.getElementById('recTbSub');
-  const timer       = document.getElementById('recTimer');
-  const toggleBtn   = document.getElementById('recTranscriptToggle');
-  const coachBtn    = document.getElementById('coachingBtn');
-
+  const micBtn    = document.getElementById('recMicBtn');
+  const label     = document.getElementById('recTbLabel');
+  const sub       = document.getElementById('recTbSub');
+  const timer     = document.getElementById('recTimer');
+  const toggleBtn = document.getElementById('recTranscriptToggle');
+  const coachBtn  = document.getElementById('coachingBtn');
   if (!micBtn) return;
 
-  if (recState === 'recording') {
-    micBtn.textContent = '⏹';
-    micBtn.style.background = '#ef4444';
-    micBtn.style.animation  = 'recPulse 1.2s ease-in-out infinite';
-    if (label)     label.textContent = 'Gravando ligação…';
-    if (sub)       sub.textContent   = 'Clique para parar';
-    if (timer)     timer.style.display = '';
+  const f2hint = ' <span class="rec-f2-badge">F2</span>';
+
+  if (recState === 'monitoring') {
+    micBtn.textContent        = '👂';
+    micBtn.style.background   = '#92400e';
+    micBtn.style.animation    = 'monitorPulse 2s ease-in-out infinite';
+    if (label)     label.innerHTML  = 'Aguardando ligação…';
+    if (sub)       sub.innerHTML    = 'Vai gravar automaticamente ao detectar áudio' + f2hint;
+    if (timer)     timer.style.display    = 'none';
+    if (toggleBtn) toggleBtn.style.display = 'none';
+    if (coachBtn)  coachBtn.style.display  = 'none';
+  } else if (recState === 'recording') {
+    micBtn.textContent        = '⏹';
+    micBtn.style.background   = '#dc2626';
+    micBtn.style.animation    = 'recPulse 1.2s ease-in-out infinite';
+    if (label)     label.innerHTML  = 'Gravando ligação…';
+    if (sub)       sub.innerHTML    = 'Clique para parar' + f2hint;
+    if (timer)     timer.style.display    = '';
     if (toggleBtn) toggleBtn.style.display = '';
     if (coachBtn)  coachBtn.style.display  = 'none';
   } else if (recState === 'stopped') {
-    micBtn.textContent = '🔄';
-    micBtn.style.background = '#6b7280';
-    micBtn.style.animation  = 'none';
-    if (label)     label.textContent = 'Gravação encerrada';
-    if (sub)       sub.textContent   = 'Clique para gravar novamente';
-    if (timer)     timer.style.display = '';
-    if (toggleBtn) toggleBtn.style.display = '';
+    micBtn.textContent        = '🔄';
+    micBtn.style.background   = '#4b5563';
+    micBtn.style.animation    = 'none';
+    if (label)     label.innerHTML  = 'Gravação encerrada';
+    if (sub)       sub.innerHTML    = 'Clique para monitorar nova ligação' + f2hint;
+    if (timer)     timer.style.display    = '';
+    if (toggleBtn) { toggleBtn.style.display = ''; toggleBtn.textContent = '📝 Ocultar'; }
     if (coachBtn)  coachBtn.style.display  = '';
-    // Abrir painel de transcrição automaticamente
     const panel = document.getElementById('recTranscriptPanel');
     if (panel) panel.style.display = '';
-    if (toggleBtn) toggleBtn.textContent = '📝 Ocultar';
-  } else {
-    micBtn.textContent = '🎙️';
-    micBtn.style.background = '';
-    micBtn.style.animation  = 'none';
-    if (label)     label.textContent = 'Iniciar gravação da ligação';
-    if (sub)       sub.textContent   = 'Transcrição em tempo real via Chrome';
-    if (timer)     timer.style.display = 'none';
+  } else { // idle
+    micBtn.textContent        = '🎙️';
+    micBtn.style.background   = '';
+    micBtn.style.animation    = 'none';
+    if (label)     label.innerHTML  = 'Monitorar ligação';
+    if (sub)       sub.innerHTML    = 'Detecta e grava automaticamente ao iniciar' + f2hint;
+    if (timer)     timer.style.display    = 'none';
     if (toggleBtn) toggleBtn.style.display = 'none';
     if (coachBtn)  coachBtn.style.display  = 'none';
   }
