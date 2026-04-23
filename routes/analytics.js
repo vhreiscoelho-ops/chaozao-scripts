@@ -3,7 +3,10 @@ const Anthropic  = require('@anthropic-ai/sdk');
 const { load }  = require('../store');
 
 const router = express.Router();
-const client = new Anthropic();
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  timeout: 120_000,
+});
 
 const RES_LABELS = {
   fechou: '✅ Fechou', proposta: '📄 Proposta env.',

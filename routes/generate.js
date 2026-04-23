@@ -3,7 +3,10 @@ const Anthropic  = require('@anthropic-ai/sdk');
 const { load, save } = require('../store');
 
 const router = express.Router();
-const client = new Anthropic();
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  timeout: 120_000,
+});
 
 // ─── System context (cacheado pela API do Claude) ─────────────────────────────
 const SYSTEM = `Você é um especialista sênior em vendas do Chãozão, maior plataforma de imóveis rurais do Brasil.
