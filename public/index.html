@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chãozão — Script Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F5F2EB; --surface:#FFFDF8; --surface2:#F0EDE4;
+  --border:#DDD9CE; --text:#1A1915; --muted:#7A7769; --light:#A8A495;
+  --accent:#2D5016; --accent-l:#4A7A25; --accent-bg:#EDF5E1;
+  --amber:#8A5C00; --r:10px; --rl:16px;
+}
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.6; }
+
+/* ── Header ── */
+header { background:var(--accent); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:58px; position:sticky; top:0; z-index:200; }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:#fff; letter-spacing:-.02em; }
+.logo span { color:#A8D97F; }
+.logo small { font-family:'DM Sans',sans-serif; font-weight:300; font-size:13px; color:rgba(255,255,255,.45); margin-left:8px; }
+.hactions { display:flex; gap:8px; }
+.hbtn { background:rgba(255,255,255,.1); color:rgba(255,255,255,.85); border:1px solid rgba(255,255,255,.2); border-radius:7px; padding:5px 13px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background .2s; }
+.hbtn:hover { background:rgba(255,255,255,.2); }
+
+/* ── Layout ── */
+.container { max-width:1180px; margin:0 auto; padding:2rem 1.5rem; display:grid; grid-template-columns:400px 1fr; gap:1.5rem; align-items:start; }
+@media(max-width:820px){ .container{ grid-template-columns:1fr; } }
+
+/* ── Input Panel ── */
+.ipanel { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); overflow:hidden; position:sticky; top:74px; }
+.mode-tabs { display:flex; gap:4px; padding:8px; background:var(--surface2); border-bottom:1px solid var(--border); }
+.mtab { flex:1; padding:8px 6px; border:none; border-radius:7px; background:transparent; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:12.5px; color:var(--muted); transition:all .2s; }
+.mtab.on { background:var(--accent); color:#fff; font-weight:500; }
+.mtab:hover:not(.on) { background:var(--border); color:var(--text); }
+.ab-toggle-wrap { padding:7px 1.4rem; border-bottom:1px solid var(--border); }
+.ab-toggle-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; padding:6px; border-radius:8px; border:1px dashed var(--border); background:transparent; cursor:pointer; font-size:12px; color:var(--muted); font-family:'DM Sans',sans-serif; transition:all .2s; }
+.ab-toggle-btn:hover { border-color:var(--accent-l); color:var(--accent); }
+.ab-toggle-btn.on { background:var(--accent); border-color:var(--accent); border-style:solid; color:#fff; font-weight:500; }
+.ab-strat-wrap { padding:.7rem 1.4rem; border-bottom:1px solid var(--border); background:#FAFAF7; display:none; }
+.ab-strat-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.ab-strat-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.strat-a .ab-strat-label { color:#3C3489; }
+.strat-b .ab-strat-label { color:#085041; }
+select { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:8px 10px; font-family:'DM Sans',sans-serif; font-size:12.5px; color:var(--text); outline:none; cursor:pointer; }
+select:focus { border-color:var(--accent-l); }
+.ph { padding:1rem 1.4rem .8rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.picon { width:30px; height:30px; background:var(--accent-bg); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.pt { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
+.ps { font-size:11px; color:var(--muted); }
+.pb { padding:1.2rem 1.4rem; }
+label { display:block; font-size:10.5px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:5px; }
+input, textarea { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); padding:9px 11px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; transition:border-color .2s,box-shadow .2s; resize:none; }
+input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px rgba(74,122,37,.11); background:var(--surface); }
+.field { margin-bottom:.85rem; }
+.label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.char-count { font-size:10px; color:var(--light); font-weight:400; }
+.cpills { display:flex; flex-wrap:wrap; gap:6px; }
+.cpill { padding:5px 13px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; color:var(--muted); transition:all .15s; }
+.cpill:hover { border-color:var(--accent-l); color:var(--accent); }
+.cpill.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+.gbtn { width:100%; padding:13px; background:var(--accent); color:#fff; border:none; border-radius:var(--r); font-family:'Syne',sans-serif; font-weight:700; font-size:14px; cursor:pointer; letter-spacing:.02em; transition:background .2s,transform .1s; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:4px; }
+.gbtn:hover:not(:disabled) { background:var(--accent-l); }
+.gbtn:active:not(:disabled) { transform:scale(.99); }
+.gbtn:disabled { opacity:.55; cursor:not-allowed; }
+.hint { font-size:10.5px; color:var(--light); text-align:center; margin-top:6px; }
+
+/* ── Output Panel ── */
+.opanel { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); overflow:hidden; min-height:520px; display:flex; flex-direction:column; }
+.oh { padding:1.1rem 1.4rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.oh-left { display:flex; align-items:center; gap:10px; }
+#out { flex:1; }
+.estate { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:420px; color:var(--light); text-align:center; gap:10px; }
+.estate-icon { width:56px; height:56px; background:var(--surface2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; margin-bottom:4px; }
+.estate h3 { font-family:'Syne',sans-serif; font-weight:600; font-size:14px; color:var(--muted); }
+.estate p { font-size:12px; max-width:260px; line-height:1.55; }
+.spin { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .75s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.cbtn { padding:5px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); font-family:'DM Sans',sans-serif; font-size:12px; cursor:pointer; color:var(--muted); transition:all .15s; display:flex; align-items:center; gap:5px; }
+.cbtn:hover { border-color:var(--accent-l); color:var(--accent); }
+
+/* ── A/B Tab switcher ── */
+.ab-tab-wrap { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.abtab { flex:1; padding:.75rem 1.1rem; border:none; background:var(--surface2); cursor:pointer; text-align:left; border-bottom:3px solid transparent; transition:all .15s; }
+.abtab.on { background:var(--surface); border-bottom-color:var(--accent); }
+.abtab-variant { font-family:'Syne',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+.abtab-a .abtab-variant { color:#3C3489; }
+.abtab-b .abtab-variant { color:#085041; }
+.abtab-strat { font-size:12px; color:var(--text); font-weight:500; }
+.abtab-score { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* ── Score Card ── */
+.score-card { display:flex; align-items:flex-start; gap:14px; border-radius:12px; padding:.9rem 1.1rem; margin-bottom:1.1rem; border:1px solid; }
+.score-alta  { background:#E1F5EE; border-color:#A8DFC4; }
+.score-media { background:#FFF5DC; border-color:#F0D080; }
+.score-baixa { background:#FDEAEA; border-color:#F5C0C0; }
+.score-num { font-family:'Syne',sans-serif; font-weight:800; font-size:38px; line-height:1; flex-shrink:0; min-width:42px; text-align:center; }
+.score-alta  .score-num { color:#085041; }
+.score-media .score-num { color:#7A5200; }
+.score-baixa .score-num { color:#791F1F; }
+.score-info { flex:1; }
+.score-class { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:3px; }
+.score-alta  .score-class { color:#085041; }
+.score-media .score-class { color:#7A5200; }
+.score-baixa .score-class { color:#791F1F; }
+.score-just { font-size:13px; line-height:1.55; margin-bottom:8px; }
+.score-alertas { display:flex; flex-wrap:wrap; gap:5px; }
+.score-tag { font-size:11px; background:rgba(0,0,0,.07); border-radius:20px; padding:3px 10px; }
+
+/* ── Script Output ── */
+.script-wrap { padding:1.5rem; font-family:'DM Sans',sans-serif; }
+.script-wrap h1 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:.15rem; }
+.script-wrap .sub { font-size:13px; color:var(--muted); margin-bottom:1.25rem; }
+.s-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; margin-bottom:1.25rem; }
+.s-stat { background:#fff; border-radius:10px; border:.5px solid var(--border); padding:10px 12px; }
+.s-stat-label { font-size:10px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px; }
+.s-stat-val { font-weight:500; font-size:14px; line-height:1.3; }
+.s-stat-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+.s-verde { background:#E1F5EE; border-radius:8px; padding:10px 14px; font-size:13px; color:#085041; margin-bottom:.9rem; line-height:1.6; }
+.s-verde strong { color:#04342C; font-weight:500; }
+.s-aviso { background:#FFF5DC; border-radius:8px; padding:10px 14px; font-size:13px; color:#7A5200; margin-bottom:.9rem; line-height:1.6; }
+.s-aviso strong { color:#412402; font-weight:500; }
+.s-alerta { background:#FDEAEA; border-radius:8px; padding:10px 14px; font-size:13px; color:#791F1F; margin-bottom:.9rem; line-height:1.6; }
+.s-alerta strong { color:#501313; font-weight:500; }
+.s-card { background:#fff; border-radius:12px; border:.5px solid var(--border); padding:.95rem 1.15rem; margin-bottom:.85rem; }
+.s-hrow { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.s-badge { font-size:10px; font-weight:600; padding:2px 9px; border-radius:20px; font-family:'Syne',sans-serif; white-space:nowrap; }
+.s-etitle { font-weight:500; font-size:14px; }
+.s-tempo { font-size:11px; color:var(--light); margin-left:auto; }
+.sb-1{background:#EEEDFE;color:#3C3489;} .sb-2{background:#E1F5EE;color:#085041;} .sb-3{background:#E6F1FB;color:#0C447C;}
+.sb-4{background:#FAEEDA;color:#633806;} .sb-5{background:#EEEDFE;color:#534AB7;} .sb-6{background:#FAECE7;color:#712B13;}
+.sb-7{background:#EAF3DE;color:#27500A;} .sb-8{background:#E1F5EE;color:#085041;}
+.s-fala { background:#f7f6f2; border-left:3px solid var(--amber); border-radius:0 8px 8px 0; padding:9px 13px; margin:7px 0; font-size:13.5px; line-height:1.7; font-style:italic; }
+.s-hr { border:none; border-top:.5px solid #e5e4df; margin:9px 0; }
+.s-dica { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.6; padding:7px 10px; background:#FFFBF0; border-radius:7px; }
+.s-dica strong { color:var(--amber); font-weight:500; }
+.s-destaque { background:#EEEDFE; border-radius:8px; padding:9px 13px; font-size:13px; color:#3C3489; margin:8px 0; line-height:1.6; }
+.s-destaque strong { color:#26215C; font-weight:500; }
+.s-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+.s-chip { font-size:11px; background:#f7f6f2; border:.5px solid var(--border); border-radius:20px; padding:3px 10px; color:var(--muted); }
+.s-obj { background:#f7f6f2; border-radius:8px; padding:9px 12px; margin:5px 0; }
+.s-obj-l { font-size:10.5px; font-weight:500; color:#993C1D; margin-bottom:3px; font-style:italic; }
+.s-obj-r { font-size:13px; line-height:1.55; }
+.s-list { list-style:none; padding:0; margin:0; }
+.s-list li { padding:6px 0; border-bottom:.5px solid #E8E5DE; font-size:13px; display:flex; align-items:flex-start; gap:8px; line-height:1.55; }
+.s-list li:last-child { border-bottom:none; }
+.s-list li::before { content:'✓'; color:var(--accent); font-weight:700; flex-shrink:0; margin-top:1px; }
+.s-step { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:.5px solid #E8E5DE; }
+.s-step:last-child { border-bottom:none; }
+.s-step-num { width:22px; height:22px; background:var(--accent); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; font-family:'Syne',sans-serif; }
+.s-step-text { font-size:13px; line-height:1.55; padding-top:1px; }
+.s-cta { background:var(--accent); color:#fff; border-radius:12px; padding:1.2rem 1.4rem; text-align:center; margin-top:.5rem; }
+.s-cta-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.3rem; }
+.s-validade { font-size:11px; opacity:.65; margin-top:.4rem; }
+
+/* ── Resultado Bar ── */
+.resultado-bar { border-top:1px solid var(--border); padding:1rem 1.4rem 1.1rem; background:var(--surface2); flex-shrink:0; }
+.resultado-title { font-size:10.5px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.65rem; }
+.rbtn-row { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:.7rem; }
+.rbtn { padding:6px 13px; border-radius:20px; border:1px solid var(--border); background:var(--surface); font-size:12px; cursor:pointer; color:var(--muted); transition:all .15s; font-family:'DM Sans',sans-serif; }
+.rbtn:hover { border-color:var(--accent-l); color:var(--accent); }
+.rbtn.on { font-weight:500; border-color:transparent; color:#fff; }
+.rbtn-fechou.on    { background:#085041; }
+.rbtn-proposta.on  { background:#0C447C; }
+.rbtn-reagendou.on { background:#633806; }
+.rbtn-sem_perfil.on{ background:#534AB7; }
+.rbtn-perdeu.on    { background:#791F1F; }
+.obs-area textarea { font-size:12.5px; border-radius:8px; margin-bottom:5px; }
+.obs-footer { display:flex; align-items:center; gap:10px; }
+.obs-save { padding:5px 14px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; }
+.obs-save:hover { background:var(--accent-l); }
+.obs-saved { font-size:11px; color:var(--accent); display:none; }
+
+/* ── Modals ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; }
+.modal-card { background:var(--surface); border-radius:var(--rl); width:100%; max-width:520px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+.modal-header { padding:1rem 1.2rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; font-family:'Syne',sans-serif; font-weight:700; font-size:15px; flex-shrink:0; }
+.modal-close { background:var(--surface2); border:1px solid var(--border); border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; color:var(--muted); }
+.modal-close:hover { color:var(--text); background:var(--border); }
+.modal-body { padding:1.2rem; overflow-y:auto; flex:1; }
+
+/* ── History ── */
+.hist-empty { text-align:center; padding:2.5rem 1rem; color:var(--muted); font-size:13px; }
+.hist-item { background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); padding:.75rem 1rem; margin-bottom:.5rem; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:8px; }
+.hist-item:hover { border-color:var(--accent-l); background:var(--accent-bg); }
+.hist-badges { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+.hist-badge { font-size:10px; padding:2px 8px; border-radius:20px; font-weight:600; font-family:'Syne',sans-serif; white-space:nowrap; text-align:center; }
+.hb-script{background:#E1F5EE;color:#085041;} .hb-proposal{background:#EEEDFE;color:#3C3489;}
+.hb-ab-a{background:#EEEDFE;color:#3C3489;} .hb-ab-b{background:#E1F5EE;color:#085041;}
+.hb-fechou{background:#085041;color:#fff;} .hb-proposta{background:#0C447C;color:#fff;}
+.hb-reagendou{background:#FAEEDA;color:#633806;} .hb-sem_perfil{background:#EEEDFE;color:#534AB7;} .hb-perdeu{background:#FDEAEA;color:#791F1F;}
+.hist-info { flex:1; min-width:0; }
+.hist-name { font-weight:500; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hist-meta { font-size:11px; color:var(--muted); margin-top:1px; display:flex; align-items:center; gap:6px; }
+.hist-score { font-size:10px; font-weight:600; font-family:'Syne',sans-serif; }
+.hist-date { font-size:11px; color:var(--light); white-space:nowrap; flex-shrink:0; }
+.hist-del { background:none; border:none; color:var(--light); cursor:pointer; font-size:14px; padding:2px 4px; border-radius:4px; flex-shrink:0; }
+.hist-del:hover { color:#791F1F; background:#FDEAEA; }
+
+/* ── Settings ── */
+.closer-item { display:flex; align-items:center; padding:.65rem .85rem; border:1px solid var(--border); border-radius:var(--r); margin-bottom:.4rem; background:var(--surface2); gap:8px; }
+.closer-name { flex:1; font-size:13px; font-weight:500; }
+.del-btn { background:#FDEAEA; border:1px solid #F5C0C0; color:#791F1F; border-radius:6px; padding:3px 10px; font-size:11px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.del-btn:hover { background:#F5C0C0; }
+.add-row { display:flex; gap:8px; margin-top:.8rem; padding-top:.8rem; border-top:1px solid var(--border); }
+.add-row input { flex:1; }
+.add-btn { padding:9px 16px; background:var(--accent); color:#fff; border:none; border-radius:var(--r); font-family:'Syne',sans-serif; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; }
+.add-btn:hover { background:var(--accent-l); }
+
+/* ── Dashboard ── */
+.dash-overlay { position:fixed; inset:0; background:var(--bg); z-index:300; display:flex; flex-direction:column; overflow:hidden; }
+.dash-topbar { background:var(--accent); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:58px; flex-shrink:0; }
+.dash-topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:#fff; }
+.dash-close { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:7px; padding:5px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.dash-close:hover { background:rgba(255,255,255,.25); }
+.dash-body { flex:1; overflow-y:auto; padding:2rem; }
+.dash-inner { max-width:1100px; margin:0 auto; }
+.dash-loading,.dash-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; text-align:center; color:var(--muted); gap:10px; }
+.dash-empty-icon { font-size:48px; }
+.dash-empty h3 { font-family:'Syne',sans-serif; font-size:18px; color:var(--text); }
+.dash-empty p { font-size:13px; max-width:320px; line-height:1.6; }
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+.kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:1.1rem 1.3rem; }
+.kpi-destaque { border-color:var(--accent-l); background:var(--accent-bg); }
+.kpi-val { font-family:'Syne',sans-serif; font-weight:800; font-size:34px; line-height:1.1; margin-bottom:4px; }
+.kpi-destaque .kpi-val { color:var(--accent); }
+.kpi-label { font-size:12px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.04em; }
+.kpi-sub { font-size:11px; color:var(--light); margin-top:3px; }
+.dash-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+@media(max-width:720px){ .dash-grid2{ grid-template-columns:1fr; } }
+.dash-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:1.1rem 1.3rem; }
+.dash-card-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; margin-bottom:.2rem; }
+.dash-card-sub { font-size:11px; color:var(--muted); margin-bottom:.9rem; }
+.dash-no-data { font-size:12px; color:var(--light); text-align:center; padding:1.5rem 0; }
+.rank-table { width:100%; border-collapse:collapse; font-size:13px; }
+.rank-table th { text-align:left; font-size:10px; font-weight:500; color:var(--light); text-transform:uppercase; letter-spacing:.06em; padding:0 6px 8px; border-bottom:1px solid var(--border); }
+.rank-table td { padding:8px 6px; border-bottom:.5px solid var(--surface2); vertical-align:middle; }
+.rank-table tr:last-child td { border-bottom:none; }
+.rank-table tr:hover td { background:var(--surface2); }
+.rank-taxa { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; }
+.bar-item { margin-bottom:.75rem; }
+.bar-item:last-child { margin-bottom:0; }
+.bar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.bar-name { font-size:13px; }
+.bar-val { font-size:12px; color:var(--muted); }
+.bar-track { height:9px; background:var(--surface2); border-radius:5px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:5px; transition:width .7s cubic-bezier(.4,0,.2,1); }
+.tendencia-row { display:flex; gap:1rem; margin-bottom:1.5rem; }
+.tend-card { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); padding:.9rem 1.1rem; display:flex; align-items:center; gap:12px; }
+.tend-icon { font-size:22px; }
+.tend-val { font-family:'Syne',sans-serif; font-weight:800; font-size:22px; }
+.tend-label { font-size:11px; color:var(--muted); }
+/* Insights */
+.insights-btn { width:100%; padding:12px; background:transparent; border:2px dashed var(--border); border-radius:var(--r); font-family:'Syne',sans-serif; font-weight:700; font-size:13px; cursor:pointer; color:var(--muted); transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.insights-btn:hover { border-color:var(--accent-l); color:var(--accent); background:var(--accent-bg); }
+.insights-btn:disabled { opacity:.5; cursor:not-allowed; }
+.insight-resumo { background:#EEEDFE; border-radius:10px; padding:.9rem 1.1rem; font-size:13px; color:#3C3489; line-height:1.6; margin-bottom:1rem; }
+.insight-section { margin-bottom:.9rem; }
+.insight-title { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem; }
+.insight-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:.5px solid var(--border); font-size:13px; line-height:1.55; }
+.insight-item:last-child { border-bottom:none; }
+.insight-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.insight-dot-win { background:#085041; }
+.insight-dot-lose { background:#791F1F; }
+.insight-rec { background:var(--accent-bg); border-radius:8px; padding:8px 12px; font-size:13px; display:flex; gap:8px; align-items:flex-start; margin-bottom:6px; }
+.insight-rec-num { font-family:'Syne',sans-serif; font-weight:800; color:var(--accent); flex-shrink:0; }
+.insight-hip { background:#FFF5DC; border-radius:8px; padding:9px 13px; font-size:13px; color:#7A5200; margin-top:.8rem; line-height:1.6; }
+.insight-hip strong { color:#412402; font-weight:600; }
+/* ── Queue Sidebar ── */
+.queue-sidebar { position:fixed; top:58px; right:0; bottom:0; width:288px; background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; z-index:150; transform:translateX(100%); transition:transform .22s cubic-bezier(.4,0,.2,1); box-shadow:-4px 0 24px rgba(0,0,0,.09); }
+.queue-sidebar.open { transform:translateX(0); }
+.queue-head { padding:.85rem 1rem .7rem; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
+.queue-head-left .queue-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; }
+.queue-head-left .queue-date { font-size:11px; color:var(--muted); margin-top:1px; }
+.queue-head-actions { display:flex; gap:5px; align-items:center; }
+.queue-refresh { background:none; border:1px solid var(--border); border-radius:6px; width:26px; height:26px; cursor:pointer; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:center; }
+.queue-refresh:hover { background:var(--surface2); color:var(--text); }
+.queue-filter { display:flex; align-items:center; gap:6px; padding:.55rem .85rem; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--surface2); }
+.queue-filter input[type="date"] { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:5px 8px; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--text); outline:none; cursor:pointer; }
+.queue-filter input[type="date"]:focus { border-color:var(--accent-l); }
+.queue-today-btn { padding:4px 10px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-size:11px; font-weight:600; font-family:'Syne',sans-serif; cursor:pointer; white-space:nowrap; transition:background .15s; }
+.queue-today-btn:hover { background:var(--accent-l); }
+.queue-count { font-size:10px; color:var(--light); padding:.2rem .85rem; flex-shrink:0; }
+.queue-tabs { display:flex; flex-wrap:wrap; gap:4px; padding:.6rem .85rem; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--surface2); }
+.qtab { padding:4px 11px; border-radius:20px; border:1px solid var(--border); background:var(--surface); font-size:11.5px; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; }
+.qtab:hover { border-color:var(--accent-l); color:var(--accent); }
+.qtab.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+.queue-list { flex:1; overflow-y:auto; padding:.5rem; }
+.queue-empty { padding:2rem 1rem; text-align:center; color:var(--muted); font-size:12px; line-height:1.7; }
+.queue-empty-icon { font-size:28px; margin-bottom:.4rem; }
+.qitem { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:.6rem .75rem; margin-bottom:.4rem; cursor:pointer; transition:all .15s; }
+.qitem:hover { border-color:var(--accent-l); background:var(--accent-bg); }
+.qitem.qitem-active { border-color:var(--accent); background:var(--accent-bg); }
+.qitem.qitem-done { opacity:.65; }
+.qitem-top { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:3px; }
+.qitem-name { font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+.qitem-score { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; flex-shrink:0; }
+.qitem-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.qitem-time { font-size:10.5px; color:var(--muted); }
+.queue-footer { padding:.65rem .85rem; border-top:1px solid var(--border); flex-shrink:0; }
+.queue-gen-btn { width:100%; padding:7px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-family:'Syne',sans-serif; font-weight:700; font-size:12px; cursor:pointer; transition:background .2s; }
+.queue-gen-btn:hover { background:var(--accent-l); }
+body.queue-open .container { padding-right:calc(288px + 1rem); transition:padding-right .22s cubic-bezier(.4,0,.2,1); }
+
+/* ── Recording Panel ── */
+.rec-panel { border-top:1px solid var(--border); flex-shrink:0; }
+.rec-toggle { display:flex; align-items:center; justify-content:space-between; padding:.65rem 1.4rem; cursor:pointer; font-size:12.5px; font-weight:500; color:var(--muted); transition:color .15s; user-select:none; background:var(--surface2); }
+.rec-toggle:hover { color:var(--text); background:var(--border); }
+.rec-toggle-icon { font-size:10px; transition:transform .2s; }
+.rec-toggle.open .rec-toggle-icon { transform:rotate(180deg); }
+.rec-body { padding:.85rem 1.4rem 1rem; background:var(--surface); }
+.rec-tip { background:#FFF5DC; border-radius:8px; padding:8px 12px; font-size:11.5px; color:#7A5200; line-height:1.6; margin-bottom:.75rem; }
+.rec-controls { display:flex; align-items:center; gap:10px; margin-bottom:.75rem; }
+.rec-indicator { display:flex; align-items:center; gap:6px; font-size:12px; color:#791F1F; font-weight:500; }
+.rec-dot { width:8px; height:8px; border-radius:50%; background:#E24B4A; animation:recpulse 1.1s ease-in-out infinite; }
+@keyframes recpulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+.rec-timer { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; margin-left:2px; }
+.rec-btn { padding:7px 18px; background:var(--accent); color:#fff; border:none; border-radius:var(--r); font-family:'DM Sans',sans-serif; font-size:12.5px; cursor:pointer; font-weight:500; transition:background .2s; }
+.rec-btn:hover { background:var(--accent-l); }
+.rec-btn.stopping { background:#791F1F; }
+.rec-btn.stopping:hover { background:#A02828; }
+.rec-actions { display:flex; align-items:center; gap:8px; margin-top:.5rem; margin-bottom:.65rem; }
+.coaching-wrap { margin-top:.6rem; }
+.coaching-card { border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-top:.65rem; background:#FAFAF7; }
+.coaching-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
+.coaching-nota { font-family:'Syne',sans-serif; font-weight:800; font-size:26px; }
+.coaching-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; }
+.coaching-resumo { font-size:12.5px; line-height:1.6; color:var(--muted); margin-bottom:.7rem; }
+.coaching-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em; }
+.coaching-bar-track { height:5px; background:var(--surface2); border-radius:3px; margin-bottom:.7rem; }
+.coaching-bar-fill { height:100%; border-radius:3px; }
+.coaching-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+.coaching-item { font-size:12px; padding:3px 0; line-height:1.55; }
+.coaching-critico { background:#FFF5DC; border-radius:7px; padding:7px 10px; margin-bottom:5px; font-size:12px; }
+.coaching-critico-trecho { font-style:italic; color:#633806; margin-bottom:3px; }
+.coaching-critico-analise { color:#7A5200; margin-bottom:2px; }
+.coaching-critico-sug { color:#085041; }
+.coaching-proxima { background:var(--accent-bg); border-radius:8px; padding:7px 11px; font-size:12px; color:var(--accent); margin-top:.5rem; }
+
+/* A/B performance */
+.ab-perf-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:.5px solid var(--surface2); }
+.ab-perf-row:last-child { border-bottom:none; }
+.ab-perf-strat { font-size:13px; font-weight:500; flex:1; }
+.ab-perf-taxa { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; }
+.ab-perf-sub { font-size:11px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Chão<span>zão</span><small>Scripts IA</small></div>
+  <div class="hactions">
+    <button id="queueBtn" class="hbtn" onclick="toggleQueue()">📋 Fila do Dia</button>
+    <button class="hbtn" onclick="openDashboard()">📊 Dashboard</button>
+    <button class="hbtn" onclick="openHistory()">📋 Histórico</button>
+    <button class="hbtn" onclick="openSettings()">⚙️ Closers</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── INPUT PANEL ── -->
+  <div class="ipanel">
+    <div class="mode-tabs">
+      <button id="mtab-script"   class="mtab on" onclick="setMode('script')">📞 Script</button>
+      <button id="mtab-proposal" class="mtab"    onclick="setMode('proposal')">📄 Proposta</button>
+    </div>
+
+    <!-- Botão A/B (só aparece no modo script) -->
+    <div class="ab-toggle-wrap" id="abToggleWrap">
+      <button id="abToggleBtn" class="ab-toggle-btn" onclick="toggleAB()">
+        🔬 Gerar 2 variantes A/B
+      </button>
+    </div>
+
+    <!-- Seletores de estratégia A/B -->
+    <div class="ab-strat-wrap" id="abStratWrap">
+      <div class="ab-strat-row">
+        <div class="strat-a">
+          <div class="ab-strat-label">Variante A</div>
+          <select id="stratA">
+            <option value="urgencia">⚡ Urgência</option>
+            <option value="sonho">🌟 Sonho</option>
+            <option value="racional">📊 Racional</option>
+            <option value="consultivo">🔍 Consultivo</option>
+            <option value="social">👥 Prova Social</option>
+          </select>
+        </div>
+        <div class="strat-b">
+          <div class="ab-strat-label">Variante B</div>
+          <select id="stratB">
+            <option value="sonho">🌟 Sonho</option>
+            <option value="urgencia">⚡ Urgência</option>
+            <option value="racional">📊 Racional</option>
+            <option value="consultivo">🔍 Consultivo</option>
+            <option value="social">👥 Prova Social</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="ph">
+      <div class="picon">📋</div>
+      <div><div class="pt">Briefing do Lead</div><div class="ps">Cole o resumo do SDR e configure</div></div>
+    </div>
+    <div class="pb">
+      <div class="field">
+        <label>Closer</label>
+        <div class="cpills" id="cpills"><span style="font-size:12px;color:var(--muted)">Carregando…</span></div>
+      </div>
+      <div class="field">
+        <label>Valor do plano</label>
+        <input id="planVal" type="text" placeholder="Ex: 3x R$ 399,33" value="3x R$ 399,33">
+      </div>
+      <div class="field" id="callTimeWrap">
+        <label>Horário da ligação</label>
+        <input id="callTime" type="time" value="09:30">
+      </div>
+      <div class="field">
+        <div class="label-row">
+          <label style="margin:0">Resumo do SDR</label>
+          <span class="char-count" id="charCount">0 / 4000</span>
+        </div>
+        <textarea id="sdr" rows="14" maxlength="4000"
+          placeholder="Cole aqui o briefing completo do SDR…"
+          oninput="updateCharCount()"
+          onkeydown="if(event.ctrlKey&&event.key==='Enter')gen()"></textarea>
+      </div>
+      <button class="gbtn" id="gbtn" onclick="gen()">
+        <span id="bico">⚡</span>
+        <span id="btxt">Gerar Script de Fechamento</span>
+      </button>
+      <p class="hint">Ctrl + Enter para gerar</p>
+    </div>
+  </div>
+
+  <!-- ── OUTPUT PANEL ── -->
+  <div class="opanel">
+    <div class="oh">
+      <div class="oh-left">
+        <div class="picon">🎯</div>
+        <div>
+          <div class="pt" id="otitle">Script de Fechamento</div>
+          <div class="ps" id="osub">Aguardando briefing…</div>
+        </div>
+      </div>
+      <button class="cbtn" id="cbtn" style="display:none" onclick="copyOutput()">📄 Copiar texto</button>
+    </div>
+
+    <!-- Tabs A/B (ocultas por padrão) -->
+    <div id="abTabWrap" class="ab-tab-wrap" style="display:none">
+      <button id="abtab-a" class="abtab abtab-a on" onclick="switchAB('a')">
+        <div class="abtab-variant">Variante A</div>
+        <div class="abtab-strat" id="abtab-a-strat">—</div>
+        <div class="abtab-score" id="abtab-a-score"></div>
+      </button>
+      <button id="abtab-b" class="abtab abtab-b" onclick="switchAB('b')">
+        <div class="abtab-variant">Variante B</div>
+        <div class="abtab-strat" id="abtab-b-strat">—</div>
+        <div class="abtab-score" id="abtab-b-score"></div>
+      </button>
+    </div>
+
+    <div id="out">
+      <div class="estate">
+        <div class="estate-icon">📞</div>
+        <h3>Script pronto em segundos</h3>
+        <p>Preencha o briefing do SDR ao lado e clique em gerar.</p>
+      </div>
+    </div>
+
+    <!-- ── Painel de Gravação ── -->
+    <div id="recPanel" class="rec-panel" style="display:none">
+      <div class="rec-toggle" id="recToggle" onclick="toggleRecPanel()">
+        <span>🎙️ Gravar e Analisar Ligação</span>
+        <span class="rec-toggle-icon">▼</span>
+      </div>
+      <div id="recBody" class="rec-body" style="display:none">
+        <div class="rec-tip">
+          💡 <strong>Para capturar os dois lados:</strong> Ative <strong>Mixagem Estéreo</strong> como dispositivo de gravação padrão
+          <em>e</em> certifique-se de que o áudio da ligação sai pelos <strong>alto-falantes do PC</strong> (não pelo fone/headset) —
+          assim o Stereo Mix captura sua voz e a voz do lead ao mesmo tempo.
+        </div>
+        <div class="rec-controls">
+          <div id="recIndicator" class="rec-indicator" style="display:none">
+            <div class="rec-dot"></div>
+            <span>Gravando</span>
+            <span id="recTimer" class="rec-timer">0:00</span>
+          </div>
+          <button id="recBtn" class="rec-btn" onclick="toggleRecording()">🎙️ Iniciar Gravação</button>
+        </div>
+        <div class="field" style="margin-bottom:.5rem">
+          <label>Transcrição em tempo real</label>
+          <textarea id="recTranscriptEl" rows="5"
+            placeholder="A transcrição aparece aqui automaticamente… Você também pode digitar ou colar manualmente."
+            oninput="recFinalText=this.value"></textarea>
+        </div>
+        <div id="recActionsRow" class="rec-actions" style="display:none">
+          <button class="obs-save" onclick="saveTranscript()">💾 Salvar no histórico</button>
+          <span class="obs-saved" id="recSavedMsg" style="display:none">✓ Salvo</span>
+        </div>
+        <div class="coaching-wrap" id="recCoachingWrap" style="display:none">
+          <button class="insights-btn" id="coachingBtn" onclick="analyzeCall()" style="padding:9px;font-size:12.5px">
+            🧠 Analisar Ligação com IA
+          </button>
+          <div id="coachingResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado da ligação -->
+    <div id="resultadoBar" class="resultado-bar" style="display:none">
+      <div class="resultado-title" id="resultadoTitle">Como foi a ligação?</div>
+      <div class="rbtn-row">
+        <button class="rbtn rbtn-fechou"     data-val="fechou"     onclick="setResultado(this)">✅ Fechou</button>
+        <button class="rbtn rbtn-proposta"   data-val="proposta"   onclick="setResultado(this)">📄 Proposta enviada</button>
+        <button class="rbtn rbtn-reagendou"  data-val="reagendou"  onclick="setResultado(this)">📅 Reagendou</button>
+        <button class="rbtn rbtn-sem_perfil" data-val="sem_perfil" onclick="setResultado(this)">❌ Sem perfil</button>
+        <button class="rbtn rbtn-perdeu"     data-val="perdeu"     onclick="setResultado(this)">🔴 Perdeu p/ concorrente</button>
+      </div>
+      <div id="obsArea" class="obs-area" style="display:none">
+        <textarea id="obsText" rows="2" placeholder="Anotação pós-call: o que o lead disse, onde resistiu, o que funcionou… (opcional)"></textarea>
+        <div class="obs-footer">
+          <button class="obs-save" onclick="saveObservacao()">Salvar anotação</button>
+          <span class="obs-saved" id="obsSaved">✓ Salvo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUEUE SIDEBAR ── -->
+<div id="queueSidebar" class="queue-sidebar">
+  <div class="queue-head">
+    <div class="queue-head-left">
+      <div class="queue-title">📋 Fila do Dia</div>
+      <div class="queue-date" id="queueDate"></div>
+    </div>
+    <div class="queue-head-actions">
+      <button class="queue-refresh" onclick="refreshQueue()" title="Atualizar">↺</button>
+    </div>
+  </div>
+  <div class="queue-filter">
+    <input type="date" id="queueDatePicker" onchange="refreshQueue()">
+    <button class="queue-today-btn" onclick="setQueueToday()">Hoje</button>
+  </div>
+  <div class="queue-count" id="queueCount"></div>
+  <div class="queue-tabs" id="queueTabs"></div>
+  <div class="queue-list" id="queueList">
+    <div class="queue-empty"><div class="queue-empty-icon">📋</div>Carregando…</div>
+  </div>
+  <div class="queue-footer">
+    <button class="queue-gen-btn" onclick="closeQueue();document.getElementById('sdr').focus()">+ Novo script para hoje</button>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashOverlay" class="dash-overlay" style="display:none">
+  <div class="dash-topbar">
+    <div class="dash-topbar-title">📊 Dashboard de Conversão</div>
+    <button class="dash-close" onclick="closeDashboard()">✕ Fechar</button>
+  </div>
+  <div class="dash-body">
+    <div class="dash-inner" id="dashContent">
+      <div class="dash-loading"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HISTORY MODAL ── -->
+<div id="histModal" class="modal-overlay" style="display:none" onclick="modalBg(event,'histModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>📋 Histórico</span>
+      <button class="modal-close" onclick="closeModal('histModal')">✕</button>
+    </div>
+    <div class="modal-body" id="histList"><div class="hist-empty">Carregando…</div></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div id="settModal" class="modal-overlay" style="display:none" onclick="modalBg(event,'settModal')">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span>⚙️ Gerenciar Closers</span>
+      <button class="modal-close" onclick="closeModal('settModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="closersList"></div>
+      <div class="add-row">
+        <input id="newCloserName" type="text" placeholder="Nome do novo closer"
+               onkeydown="if(event.key==='Enter')addCloser()">
+        <button class="add-btn" onclick="addCloser()">Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constantes ─────────────────────────────────────────────────────────────
+const STRATEGY_LABELS = {
+  urgencia:'⚡ Urgência', sonho:'🌟 Sonho', racional:'📊 Racional',
+  consultivo:'🔍 Consultivo', social:'👥 Prova Social', padrao:'— Padrão'
+};
+const RES_COLORS = {
+  fechou:'#085041', proposta:'#0C447C', reagendou:'#B06000', sem_perfil:'#534AB7', perdeu:'#791F1F'
+};
+const RES_CFG = {
+  fechou:    {label:'✅ Fechou',        cls:'hb-fechou'},
+  proposta:  {label:'📄 Proposta env.', cls:'hb-proposta'},
+  reagendou: {label:'📅 Reagendou',     cls:'hb-reagendou'},
+  sem_perfil:{label:'❌ Sem perfil',    cls:'hb-sem_perfil'},
+  perdeu:    {label:'🔴 Perdeu',        cls:'hb-perdeu'}
+};
+
+// ── Estado ─────────────────────────────────────────────────────────────────
+let closerList     = [];
+let selectedCloser = null;
+let currentMode    = 'script';
+let abMode         = false;
+let currentOutput  = null;        // { id, result, mode }
+let currentABOutput = null;       // { a:{id,result,strategy}, b:{id,result,strategy} }
+let currentABView  = 'a';
+let _loadTimer     = null;
+
+// ── Init ───────────────────────────────────────────────────────────────────
+async function init() { await loadClosers(); }
+
+// ── Closers ────────────────────────────────────────────────────────────────
+async function loadClosers() {
+  try {
+    const res = await fetch('/api/closers');
+    closerList = await res.json();
+    renderCloserPills();
+  } catch {
+    document.getElementById('cpills').innerHTML = '<span style="font-size:12px;color:#791F1F">Erro ao carregar closers</span>';
+  }
+}
+
+function renderCloserPills() {
+  const el = document.getElementById('cpills');
+  if (!closerList.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted)">Nenhum closer cadastrado</span>'; selectedCloser=null; return; }
+  const keepId = selectedCloser?.id;
+  const activeId = closerList.some(c=>c.id===keepId) ? keepId : closerList[0].id;
+  el.innerHTML = closerList.map(c =>
+    `<button class="cpill${c.id===activeId?' on':''}" onclick="pick(this,${c.id},'${esc(c.name)}')">${esc(c.name)}</button>`
+  ).join('');
+  selectedCloser = closerList.find(c=>c.id===activeId);
+}
+
+function pick(btn, id, name) {
+  document.querySelectorAll('.cpill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  selectedCloser = {id, name};
+}
+
+// ── Mode & A/B Toggle ──────────────────────────────────────────────────────
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('mtab-'+mode).classList.add('on');
+  document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
+  document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
+  document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
+  document.getElementById('btxt').textContent = mode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
+  document.getElementById('otitle').textContent = mode==='script' ? 'Script de Fechamento' : 'Proposta Comercial';
+  resetOutput();
+  if (mode!=='script' && abMode) { abMode=false; document.getElementById('abToggleBtn').classList.remove('on'); }
+}
+
+function toggleAB() {
+  abMode = !abMode;
+  document.getElementById('abToggleBtn').classList.toggle('on', abMode);
+  document.getElementById('abStratWrap').style.display = abMode ? '' : 'none';
+  document.getElementById('btxt').textContent = abMode ? 'Gerar Variantes A/B' : 'Gerar Script de Fechamento';
+  resetOutput();
+}
+
+function resetOutput() {
+  document.getElementById('out').innerHTML = `
+    <div class="estate">
+      <div class="estate-icon">${currentMode==='script'?'📞':'📄'}</div>
+      <h3>${abMode?'Duas variantes prontas em segundos': currentMode==='script'?'Script pronto em segundos':'Proposta pronta em segundos'}</h3>
+      <p>${abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':'Preencha o briefing e clique em gerar.'}</p>
+    </div>`;
+  document.getElementById('osub').textContent = 'Aguardando briefing…';
+  document.getElementById('cbtn').style.display = 'none';
+  document.getElementById('resultadoBar').style.display = 'none';
+  document.getElementById('abTabWrap').style.display = 'none';
+  showRecPanel(false);
+  currentOutput = null;
+  currentABOutput = null;
+}
+
+// ── Char Counter ───────────────────────────────────────────────────────────
+function updateCharCount() {
+  const len = document.getElementById('sdr').value.length;
+  const el  = document.getElementById('charCount');
+  el.textContent = `${len} / 4000`;
+  el.style.color = len>3500 ? '#791F1F' : 'var(--light)';
+}
+
+// ── Generate ───────────────────────────────────────────────────────────────
+async function gen() {
+  const briefing = document.getElementById('sdr').value.trim();
+  const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
+  const callTime = document.getElementById('callTime').value;
+
+  if (!briefing) {
+    const el = document.getElementById('sdr');
+    el.style.borderColor='#E24B4A'; el.focus();
+    setTimeout(()=>el.style.borderColor='', 2000); return;
+  }
+
+  const btn = document.getElementById('gbtn');
+  btn.disabled=true;
+  document.getElementById('bico').textContent='⏳';
+  document.getElementById('btxt').textContent='Gerando…';
+  document.getElementById('osub').textContent='Analisando briefing…';
+  document.getElementById('cbtn').style.display='none';
+  document.getElementById('resultadoBar').style.display='none';
+  document.getElementById('abTabWrap').style.display='none';
+  showLoad();
+
+  const body = {
+    mode: abMode ? 'ab' : currentMode,
+    closer: selectedCloser?.name || 'Closer',
+    callTime, planVal, briefing,
+    strategyA: document.getElementById('stratA')?.value || 'urgencia',
+    strategyB: document.getElementById('stratB')?.value || 'sonho'
+  };
+
+  try {
+    const res  = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error||'Erro desconhecido');
+
+    clearLoad();
+
+    if (data.ab) {
+      // ── A/B resultado ─────────────────────────────────────────────────
+      currentABOutput = { a: data.a, b: data.b };
+      currentABView   = 'a';
+      currentOutput   = { id:data.a.id, result:data.a.result, mode:'script' };
+
+      // Montar tabs
+      document.getElementById('abTabWrap').style.display = 'flex';
+      setABTabInfo('a', data.a.strategy, data.a.result.score?.valor);
+      setABTabInfo('b', data.b.strategy, data.b.result.score?.valor);
+      document.getElementById('abtab-a').classList.add('on');
+      document.getElementById('abtab-b').classList.remove('on');
+
+      renderScript(data.a.result);
+      document.getElementById('osub').textContent = `Variantes para ${selectedCloser?.name||'Closer'} · ${callTime}`;
+      document.getElementById('otitle').textContent = 'Script A/B';
+      document.getElementById('cbtn').style.display = 'flex';
+      showResultadoBar('script', null);
+
+    } else {
+      // ── Normal ────────────────────────────────────────────────────────
+      currentOutput = { id:data.id, result:data.result, mode:currentMode };
+      if (currentMode==='script') {
+        renderScript(data.result);
+        document.getElementById('osub').textContent = `Script para ${selectedCloser?.name||'Closer'} · ${callTime}`;
+      } else {
+        renderProposal(data.result);
+        document.getElementById('osub').textContent = `Proposta para ${esc(data.result.lead_nome||'Lead')} · ${selectedCloser?.name||'Closer'}`;
+      }
+      document.getElementById('cbtn').style.display = 'flex';
+      showResultadoBar(currentMode, null);
+    }
+
+  } catch(e) { clearLoad(); showErr(e.message); }
+
+  refreshQueue(); // atualiza a fila do dia
+  btn.disabled=false;
+  document.getElementById('bico').textContent='⚡';
+  const label = abMode ? 'Gerar Variantes A/B' : currentMode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
+  document.getElementById('btxt').textContent = label;
+}
+
+// ── A/B Tab Switcher ───────────────────────────────────────────────────────
+function setABTabInfo(variant, strategy, score) {
+  document.getElementById(`abtab-${variant}-strat`).textContent = STRATEGY_LABELS[strategy]||strategy;
+  document.getElementById(`abtab-${variant}-score`).textContent = score!=null ? `Score ${score}` : '';
+}
+
+function switchAB(variant) {
+  if (!currentABOutput) return;
+  currentABView = variant;
+  document.querySelectorAll('.abtab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(`abtab-${variant}`).classList.add('on');
+  const item = currentABOutput[variant];
+  currentOutput = { id:item.id, result:item.result, mode:'script' };
+  renderScript(item.result);
+  showResultadoBar('script', null);
+}
+
+// ── Loading ────────────────────────────────────────────────────────────────
+function showLoad() {
+  const msgs = abMode
+    ? ['Gerando Variante A…','Gerando Variante B em paralelo…','Calculando scores…','Comparando abordagens…']
+    : currentMode==='script'
+      ? ['Analisando perfil do lead…','Calculando score de propensão…','Identificando dor principal…','Montando script de fechamento…']
+      : ['Analisando perfil do lead…','Calculando score de propensão…','Estruturando proposta…','Personalizando para o lead…'];
+
+  let i=0;
+  document.getElementById('out').innerHTML = `
+    <div class="estate" style="gap:16px">
+      <div class="spin"></div>
+      <div id="loadMsg" style="font-size:13px;color:var(--muted);transition:opacity .25s">${msgs[0]}</div>
+    </div>`;
+  clearInterval(_loadTimer);
+  _loadTimer = setInterval(()=>{
+    i=(i+1)%msgs.length;
+    const el=document.getElementById('loadMsg');
+    if(!el)return;
+    el.style.opacity='0';
+    setTimeout(()=>{if(el){el.textContent=msgs[i];el.style.opacity='1';}},200);
+  },2200);
+}
+
+function clearLoad() { clearInterval(_loadTimer); _loadTimer=null; }
+
+function showErr(msg) {
+  document.getElementById('out').innerHTML=`<div class="estate"><div class="estate-icon">⚠️</div><h3>Ops!</h3><p>${esc(msg)}</p></div>`;
+}
+
+// ── Score Card ─────────────────────────────────────────────────────────────
+function scoreCard(s) {
+  if (!s||s.valor==null) return '';
+  const v   = Math.min(10, Math.max(1, Number(s.valor)||0));
+  const cls = v>=8?'score-alta':v>=5?'score-media':'score-baixa';
+  const tags = (s.alertas||[]).map(a=>`<span class="score-tag">⚠ ${esc(a)}</span>`).join('');
+  return `<div class="score-card ${cls}">
+    <div class="score-num">${v}</div>
+    <div class="score-info">
+      <div class="score-class">${esc(s.classificacao||'')}</div>
+      <div class="score-just">${esc(s.justificativa||'')}</div>
+      ${tags?`<div class="score-alertas">${tags}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ── Render Script ──────────────────────────────────────────────────────────
+const BADGE=['sb-1','sb-2','sb-3','sb-4','sb-5','sb-6','sb-7','sb-8'];
+
+function alertBox(tipo,titulo,texto){
+  const cls=tipo==='verde'?'s-verde':tipo==='aviso'?'s-aviso':'s-alerta';
+  return `<div class="${cls}">${titulo?`<strong>${esc(titulo)}</strong> `:''}${esc(texto)}</div>`;
+}
+
+function renderScript(j) {
+  let h=`<div class="script-wrap">`;
+  h+=scoreCard(j.score);
+  h+=`<h1>Script de ligação — ${esc(j.lead_nome)}</h1><p class="sub">${esc(j.subtitulo)}</p>`;
+  (j.alertas_topo||[]).forEach(a=>{h+=alertBox(a.tipo,a.titulo,a.texto);});
+  h+=`<div class="s-grid">`;
+  (j.stats||[]).forEach(s=>{h+=`<div class="s-stat"><div class="s-stat-label">${esc(s.label)}</div><div class="s-stat-val">${esc(s.val)}</div><div class="s-stat-sub">${esc(s.sub)}</div></div>`;});
+  h+=`</div>`;
+  (j.etapas||[]).forEach((e,i)=>{
+    h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge ${BADGE[i]}">${i+1}</span><span class="s-etitle">${esc(e.titulo)}</span><span class="s-tempo">${esc(e.tempo||'')}</span></div>`;
+    if(e.alerta)h+=alertBox(e.alerta.tipo,'',e.alerta.texto);
+    (e.falas||[]).forEach((f,fi)=>{if(fi>0)h+=`<div class="s-hr"></div>`;h+=`<div class="s-fala">"${esc(f)}"</div>`;});
+    if(e.destaque)h+=`<div class="s-destaque"><strong>${esc(e.destaque.titulo)}</strong> ${esc(e.destaque.texto)}</div>`;
+    if(e.dica)h+=`<p class="s-dica"><strong>Dica:</strong> ${esc(e.dica)}</p>`;
+    if(e.chips?.length)h+=`<div class="s-chips">${e.chips.map(c=>`<span class="s-chip">${esc(c)}</span>`).join('')}</div>`;
+    h+=`</div>`;
+  });
+  if(j.objecoes?.length){
+    h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-6">${(j.etapas||[]).length+1}</span><span class="s-etitle">Objeções prováveis</span></div>`;
+    j.objecoes.forEach(o=>{h+=`<div class="s-obj"><div class="s-obj-l">${esc(o.titulo)}</div><div class="s-obj-r">${esc(o.resposta)}</div></div>`;});
+    h+=`</div>`;
+  }
+  if(j.fechamento){
+    const fi=(j.etapas||[]).length+(j.objecoes?.length?2:1);
+    h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-7">${fi}</span><span class="s-etitle">${esc(j.fechamento.titulo)}</span><span class="s-tempo">${esc(j.fechamento.tempo||'~2 min')}</span></div>`;
+    (j.fechamento.falas||[]).forEach((f,idx)=>{if(idx>0)h+=`<div class="s-hr"></div>`;h+=`<div class="s-fala">"${esc(f)}"</div>`;});
+    if(j.fechamento.dica)h+=`<p class="s-dica"><strong>Regra de ouro:</strong> ${esc(j.fechamento.dica)}</p>`;
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+  document.getElementById('out').innerHTML=h;
+}
+
+// ── Render Proposal ────────────────────────────────────────────────────────
+function renderProposal(j) {
+  let h=`<div class="script-wrap">`;
+  h+=scoreCard(j.score);
+  h+=`<h1>Proposta Comercial — ${esc(j.lead_nome)}</h1><p class="sub">${esc(j.subtitulo)}</p>`;
+  if(j.alerta)h+=alertBox(j.alerta.tipo,j.alerta.titulo,j.alerta.texto);
+  if(j.resumo)h+=`<div class="s-verde">${esc(j.resumo)}</div>`;
+  h+=`<div class="s-grid">`;
+  (j.stats||[]).forEach(s=>{h+=`<div class="s-stat"><div class="s-stat-label">${esc(s.label)}</div><div class="s-stat-val">${esc(s.val)}</div><div class="s-stat-sub">${esc(s.sub)}</div></div>`;});
+  h+=`</div>`;
+  if(j.por_que_chaozao?.length){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-2">★</span><span class="s-etitle">Por que o Chãozão?</span></div><ul class="s-list">${j.por_que_chaozao.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;}
+  if(j.solucao){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-3">💡</span><span class="s-etitle">${esc(j.solucao.titulo)}</span></div><p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6">${esc(j.solucao.descricao)}</p><ul class="s-list">${(j.solucao.beneficios||[]).map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div>`;}
+  if(j.investimento){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-4">💰</span><span class="s-etitle">Investimento</span></div><div class="s-destaque"><strong>${esc(j.investimento.plano)}</strong> — ${esc(j.investimento.condicoes)}</div>`;if(j.investimento.inclui?.length)h+=`<ul class="s-list" style="margin-top:8px">${j.investimento.inclui.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;h+=`</div>`;}
+  if(j.proximos_passos?.length){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-5">→</span><span class="s-etitle">Próximos Passos</span></div><div>${j.proximos_passos.map((p,i)=>`<div class="s-step"><div class="s-step-num">${i+1}</div><div class="s-step-text">${esc(p)}</div></div>`).join('')}</div></div>`;}
+  if(j.cta){h+=`<div class="s-cta"><div class="s-cta-title">${esc(j.cta)}</div>${j.validade?`<div class="s-validade">⏰ Oferta válida por ${esc(j.validade)}</div>`:''}</div>`;}
+  h+=`</div>`;
+  document.getElementById('out').innerHTML=h;
+}
+
+// ── Resultado Bar ──────────────────────────────────────────────────────────
+function showResultadoBar(mode, item) {
+  showRecPanel(mode === 'script');   // painel de gravação só para scripts
+  const bar = document.getElementById('resultadoBar');
+  bar.style.display='';
+  document.getElementById('resultadoTitle').textContent = mode==='script'?'Como foi a ligação?':'Qual foi o resultado da proposta?';
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('obsArea').style.display='none';
+  document.getElementById('obsText').value='';
+  document.getElementById('obsSaved').style.display='none';
+  if(item?.resultado){
+    const btn=document.querySelector(`.rbtn[data-val="${item.resultado}"]`);
+    if(btn)btn.classList.add('on');
+    document.getElementById('obsArea').style.display='';
+    if(item.observacao)document.getElementById('obsText').value=item.observacao;
+  }
+}
+
+async function setResultado(btn) {
+  if(!currentOutput?.id)return;
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('obsArea').style.display='';
+  document.getElementById('obsSaved').style.display='none';
+  await fetch(`/api/history/${currentOutput.id}/resultado`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({resultado:btn.dataset.val})});
+  refreshQueue(); // reflete resultado na fila
+}
+
+async function saveObservacao() {
+  if(!currentOutput?.id)return;
+  await fetch(`/api/history/${currentOutput.id}/resultado`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({observacao:document.getElementById('obsText').value})});
+  const s=document.getElementById('obsSaved');
+  s.style.display='inline';
+  setTimeout(()=>s.style.display='none',2500);
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+async function openDashboard() {
+  document.getElementById('dashOverlay').style.display='flex';
+  document.getElementById('dashContent').innerHTML='<div class="dash-loading"><div class="spin"></div></div>';
+  try {
+    const d = await fetch('/api/analytics').then(r=>r.json());
+    renderDashboard(d);
+  } catch(e) {
+    document.getElementById('dashContent').innerHTML=`<div class="dash-empty"><div class="dash-empty-icon">⚠️</div><h3>Erro</h3><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function closeDashboard() { document.getElementById('dashOverlay').style.display='none'; }
+
+function renderDashboard(d) {
+  const el = document.getElementById('dashContent');
+  if(d.empty||d.total===0){
+    el.innerHTML=`<div class="dash-empty"><div class="dash-empty-icon">📊</div><h3>Ainda sem dados</h3><p>Gere scripts, registre os resultados das ligações e volte aqui para ver os padrões de conversão.</p></div>`;
+    return;
+  }
+  let h='';
+
+  // Tendência
+  if(d.tendencia?.total>0){
+    h+=`<div class="tendencia-row">
+      <div class="tend-card"><div class="tend-icon">📅</div><div><div class="tend-val">${d.tendencia.total}</div><div class="tend-label">Ligações últimos 30 dias</div></div></div>
+      <div class="tend-card"><div class="tend-icon">✅</div><div><div class="tend-val">${d.tendencia.fechou}</div><div class="tend-label">Fechamentos no período</div></div></div>
+      <div class="tend-card" style="border-color:var(--accent-l);background:var(--accent-bg)"><div class="tend-icon">🎯</div><div><div class="tend-val" style="color:var(--accent)">${d.tendencia.taxa}%</div><div class="tend-label">Taxa de fechamento (30d)</div></div></div>
+    </div>`;
+  }
+
+  // KPIs
+  h+=`<div class="kpi-row">
+    <div class="kpi-card"><div class="kpi-val">${d.total}</div><div class="kpi-label">Scripts gerados</div></div>
+    <div class="kpi-card"><div class="kpi-val">${d.totalResult}</div><div class="kpi-label">Com resultado</div><div class="kpi-sub">${d.total>0?Math.round(d.totalResult/d.total*100):0}% de registro</div></div>
+    <div class="kpi-card kpi-destaque"><div class="kpi-val">${d.taxaGeral}%</div><div class="kpi-label">Taxa de fechamento</div><div class="kpi-sub">${d.fechouTotal} de ${d.totalResult}</div></div>
+    <div class="kpi-card"><div class="kpi-val">${d.scoreMedio??'—'}</div><div class="kpi-label">Score médio leads</div></div>
+  </div>`;
+
+  h+=`<div class="dash-grid2">`;
+
+  // Ranking closers
+  h+=`<div class="dash-card"><div class="dash-card-title">🏆 Ranking de Closers</div><div class="dash-card-sub">Taxa de fechamento sobre resultados registrados</div>`;
+  if(d.byCloser?.length){
+    const medals=['🥇','🥈','🥉'];
+    h+=`<table class="rank-table"><thead><tr><th></th><th>Closer</th><th>Total</th><th>Fechou</th><th>Taxa</th><th>Score</th></tr></thead><tbody>`;
+    d.byCloser.forEach((c,i)=>{
+      const color=c.taxa==null?'var(--light)':c.taxa>=50?'#085041':c.taxa>=30?'#B06000':'#791F1F';
+      h+=`<tr><td style="font-size:18px">${medals[i]||`<span style="font-size:12px;color:var(--light)">${i+1}</span>`}</td><td><strong>${esc(c.name)}</strong></td><td style="color:var(--muted)">${c.total}</td><td>${c.fechou}</td><td class="rank-taxa" style="color:${color}">${c.taxa!=null?c.taxa+'%':'—'}</td><td style="color:var(--muted)">${c.scoreMedio??'—'}</td></tr>`;
+    });
+    h+=`</tbody></table>`;
+  } else h+=`<p class="dash-no-data">Registre resultados para ver o ranking</p>`;
+  h+=`</div>`;
+
+  // Distribuição
+  h+=`<div class="dash-card"><div class="dash-card-title">📊 Distribuição de Resultados</div><div class="dash-card-sub">${d.totalResult} resultados registrados</div>`;
+  if(d.dist?.length){
+    const maxC=Math.max(...d.dist.map(x=>x.count));
+    d.dist.forEach(item=>{
+      const pct=Math.round(item.count/d.totalResult*100);
+      const color=RES_COLORS[item.key]||'var(--accent)';
+      h+=`<div class="bar-item"><div class="bar-header"><span class="bar-name">${item.label}</span><span class="bar-val" style="color:${color};font-weight:600">${item.count} <span style="color:var(--light);font-weight:400">(${pct}%)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(item.count/maxC*100)}%;background:${color}"></div></div></div>`;
+    });
+  } else h+=`<p class="dash-no-data">Nenhum resultado registrado ainda</p>`;
+  h+=`</div></div>`; // fim grid2
+
+  // Score x Resultado
+  if(d.scoreByResult?.length){
+    h+=`<div class="dash-card" style="margin-top:1rem"><div class="dash-card-title">🎯 Score Médio por Resultado</div><div class="dash-card-sub">Quanto maior a diferença entre "Fechou" e "Perdeu", mais preciso o score está sendo</div>`;
+    d.scoreByResult.forEach(item=>{
+      const color=RES_COLORS[item.key]||'var(--accent)';
+      h+=`<div class="bar-item"><div class="bar-header"><span class="bar-name">${item.label}</span><span class="bar-val"><strong style="color:${color}">${item.media}</strong> <span style="color:var(--light)">(${item.count} lead${item.count>1?'s':''})</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(item.media/10*100)}%;background:${color}"></div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  // Melhor horário
+  if(d.byHour?.length){
+    const maxT=Math.max(...d.byHour.map(x=>x.taxa));
+    h+=`<div class="dash-card" style="margin-top:1rem"><div class="dash-card-title">⏰ Melhor Horário de Ligação</div><div class="dash-card-sub">Taxa de fechamento por faixa horária</div>`;
+    d.byHour.slice(0,10).forEach(item=>{
+      const color=item.taxa>=50?'#085041':item.taxa>=30?'#B06000':'#791F1F';
+      h+=`<div class="bar-item"><div class="bar-header"><span class="bar-name" style="font-family:'Syne',sans-serif;font-weight:600">${item.hora}</span><span class="bar-val"><strong style="color:${color}">${item.taxa}%</strong> <span style="color:var(--light)">(${item.total} lig.)</span></span></div><div class="bar-track"><div class="bar-fill" style="width:${maxT>0?Math.round(item.taxa/maxT*100):0}%;background:${color}"></div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  // A/B Performance
+  if(d.abPerformance?.length){
+    h+=`<div class="dash-card" style="margin-top:1rem"><div class="dash-card-title">🔬 Performance por Estratégia A/B</div><div class="dash-card-sub">Qual abordagem converte mais no seu time</div>`;
+    d.abPerformance.forEach(item=>{
+      const color=item.taxa>=50?'#085041':item.taxa>=30?'#B06000':'#791F1F';
+      h+=`<div class="ab-perf-row"><div class="ab-perf-strat">${STRATEGY_LABELS[item.strategy]||item.strategy}</div><div><div class="ab-perf-taxa" style="color:${color}">${item.taxa}%</div><div class="ab-perf-sub">${item.fechou} de ${item.total}</div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  // Insights IA
+  h+=`<div class="dash-card" style="margin-top:1rem" id="insightsCard">
+    <div class="dash-card-title">🧠 Análise de Padrões de Conversão</div>
+    <div class="dash-card-sub">IA analisa o que seus scripts vencedores têm em comum — mínimo 3 fechamentos</div>
+    <div id="insightsContent">
+      <button class="insights-btn" id="insightsBtn" onclick="generateInsights()">🔍 Analisar Padrões Agora</button>
+    </div>
+  </div>`;
+
+  el.innerHTML=h;
+}
+
+// ── Insights ───────────────────────────────────────────────────────────────
+async function generateInsights() {
+  const btn=document.getElementById('insightsBtn');
+  if(btn){ btn.disabled=true; btn.textContent='🔄 Analisando padrões…'; }
+  document.getElementById('insightsContent').innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:1rem 0;color:var(--muted)"><div class="spin" style="width:20px;height:20px;border-width:2px"></div>Analisando scripts vencedores e perdedores…</div>';
+
+  try {
+    const res  = await fetch('/api/analytics/insights',{method:'POST'});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error);
+    renderInsights(data);
+  } catch(e) {
+    document.getElementById('insightsContent').innerHTML=`<div style="color:#791F1F;font-size:13px;padding:.5rem 0">⚠ ${esc(e.message)}</div><button class="insights-btn" id="insightsBtn" onclick="generateInsights()">Tentar novamente</button>`;
+  }
+}
+
+function renderInsights(d) {
+  let h='';
+  if(d.resumo)h+=`<div class="insight-resumo">${esc(d.resumo)}</div>`;
+
+  if(d.padroes_vencedores?.length){
+    h+=`<div class="insight-section"><div class="insight-title" style="color:#085041">✅ Padrões dos Scripts Vencedores</div>`;
+    d.padroes_vencedores.forEach(p=>{
+      h+=`<div class="insight-item"><div class="insight-dot insight-dot-win"></div><div><strong>${esc(p.titulo)}</strong> — ${esc(p.descricao)}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  if(d.padroes_perdedores?.length){
+    h+=`<div class="insight-section"><div class="insight-title" style="color:#791F1F">🔴 Padrões das Perdas</div>`;
+    d.padroes_perdedores.forEach(p=>{
+      h+=`<div class="insight-item"><div class="insight-dot insight-dot-lose"></div><div><strong>${esc(p.titulo)}</strong> — ${esc(p.descricao)}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  if(d.perfil_lead_ideal){
+    h+=`<div class="dash-card-title" style="margin:.8rem 0 .3rem">🎯 Perfil do Lead Ideal</div>`;
+    h+=`<div class="s-verde" style="margin-bottom:.8rem">${esc(d.perfil_lead_ideal)}</div>`;
+  }
+
+  if(d.recomendacoes?.length){
+    h+=`<div class="dash-card-title" style="margin:.8rem 0 .4rem">📋 Recomendações para o Time</div>`;
+    d.recomendacoes.forEach((r,i)=>{
+      h+=`<div class="insight-rec"><div class="insight-rec-num">${i+1}</div><div>${esc(r)}</div></div>`;
+    });
+  }
+
+  if(d.proxima_hipotese){
+    h+=`<div class="insight-hip"><strong>🔬 Próxima hipótese para testar no A/B:</strong> ${esc(d.proxima_hipotese)}</div>`;
+  }
+
+  h+=`<div style="text-align:right;margin-top:.8rem"><button onclick="generateInsights()" style="font-size:11px;padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted)">↺ Reanalisar</button></div>`;
+
+  document.getElementById('insightsContent').innerHTML=h;
+}
+
+// ── History Modal ──────────────────────────────────────────────────────────
+async function openHistory() {
+  document.getElementById('histModal').style.display='flex';
+  const el=document.getElementById('histList');
+  el.innerHTML='<div class="hist-empty">Carregando…</div>';
+  try {
+    const items=await fetch('/api/history').then(r=>r.json());
+    if(!items.length){el.innerHTML='<div class="hist-empty">Nenhum script gerado ainda.</div>';return;}
+    el.innerHTML=items.map(item=>{
+      const isAB=!!item.abGroup;
+      const modeBadge=isAB
+        ?`<span class="hist-badge hb-ab-${item.abGroup?.toLowerCase()}">${item.abGroup==='A'?'🔬 A/B-A':'🔬 A/B-B'}</span>`
+        :`<span class="hist-badge ${item.mode==='script'?'hb-script':'hb-proposal'}">${item.mode==='script'?'📞 Script':'📄 Proposta'}</span>`;
+      const resCfg=item.resultado?RES_CFG[item.resultado]:null;
+      const resBadge=resCfg?`<span class="hist-badge ${resCfg.cls}">${resCfg.label}</span>`:'';
+      const scoreHtml=item.scoreValor!=null?`<span class="hist-score" style="color:${item.scoreValor>=8?'#085041':item.scoreValor>=5?'#7A5200':'#791F1F'}">Score ${item.scoreValor}</span>`:'';
+      const stratHtml=item.strategy?`<span style="font-size:10px;color:var(--light)">${STRATEGY_LABELS[item.strategy]||''}</span>`:'';
+      return `<div class="hist-item" onclick="loadHistory(${item.id})">
+        <div class="hist-badges">${modeBadge}${resBadge}</div>
+        <div class="hist-info">
+          <div class="hist-name">${esc(item.leadNome)}</div>
+          <div class="hist-meta">${esc(item.closer)} ${scoreHtml} ${stratHtml}</div>
+        </div>
+        <div class="hist-date">${fmtDate(item.createdAt)}</div>
+        <button class="hist-del" onclick="delHistory(event,${item.id})" title="Remover">🗑</button>
+      </div>`;
+    }).join('');
+  } catch(e){el.innerHTML=`<div class="hist-empty">Erro: ${esc(e.message)}</div>`;}
+}
+
+async function loadHistory(id) {
+  closeModal('histModal');
+  document.getElementById('out').innerHTML='<div class="estate" style="gap:16px"><div class="spin"></div></div>';
+  document.getElementById('resultadoBar').style.display='none';
+  document.getElementById('abTabWrap').style.display='none';
+  document.getElementById('cbtn').style.display='none';
+  try {
+    const item=await fetch(`/api/history/${id}`).then(r=>r.json());
+    currentOutput={id:item.id,result:item.resultJson,mode:item.mode};
+    if(item.mode==='script'||item.abGroup){
+      renderScript(item.resultJson);
+      document.getElementById('osub').textContent=`Script para ${esc(item.closer)} · ${item.callTime||''}`;
+      document.getElementById('otitle').textContent='Script de Fechamento';
+    } else {
+      renderProposal(item.resultJson);
+      document.getElementById('osub').textContent=`Proposta para ${esc(item.leadNome)} · ${esc(item.closer)}`;
+      document.getElementById('otitle').textContent='Proposta Comercial';
+    }
+    document.getElementById('cbtn').style.display='flex';
+    showResultadoBar(item.mode,item);
+  } catch(e){showErr(e.message);}
+}
+
+async function delHistory(e,id){
+  e.stopPropagation();
+  await fetch(`/api/history/${id}`,{method:'DELETE'});
+  openHistory();
+}
+
+// ── Settings Modal ─────────────────────────────────────────────────────────
+async function openSettings(){document.getElementById('settModal').style.display='flex';renderSettingsList();}
+function renderSettingsList(){
+  const el=document.getElementById('closersList');
+  if(!closerList.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;margin-bottom:.5rem">Nenhum closer cadastrado.</p>';return;}
+  el.innerHTML=closerList.map(c=>`<div class="closer-item"><span class="closer-name">${esc(c.name)}</span><button class="del-btn" onclick="deleteCloser(${c.id})">Remover</button></div>`).join('');
+}
+async function addCloser(){
+  const input=document.getElementById('newCloserName');
+  const name=input.value.trim();
+  if(!name){input.focus();return;}
+  try{const res=await fetch('/api/closers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});const c=await res.json();if(!res.ok)throw new Error(c.error);closerList.push(c);input.value='';renderCloserPills();renderSettingsList();}
+  catch(e){alert('Erro: '+e.message);}
+}
+async function deleteCloser(id){
+  if(!confirm('Remover este closer?'))return;
+  await fetch(`/api/closers/${id}`,{method:'DELETE'});
+  closerList=closerList.filter(c=>c.id!==id);
+  renderCloserPills();renderSettingsList();
+}
+
+// ── Utilitários ────────────────────────────────────────────────────────────
+function closeModal(id){document.getElementById(id).style.display='none';}
+function modalBg(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(iso){const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function copyOutput(){
+  navigator.clipboard.writeText(document.getElementById('out').innerText||'')
+    .then(()=>{const b=document.getElementById('cbtn');b.textContent='✅ Copiado!';setTimeout(()=>{b.innerHTML='📄 Copiar texto';},2000);})
+    .catch(()=>alert('Selecione o texto manualmente.'));
+}
+
+// ── Queue Sidebar ──────────────────────────────────────────────────────────
+let queueOpen      = false;
+let queueTab       = null;   // closer selecionado
+let _queueCache    = [];     // items de hoje (sem resultJson)
+let _activeQueueId = null;   // item em uso
+
+function toggleQueue() {
+  queueOpen ? closeQueue() : openQueue();
+}
+
+async function openQueue() {
+  queueOpen = true;
+  document.getElementById('queueSidebar').classList.add('open');
+  document.body.classList.add('queue-open');
+  document.getElementById('queueBtn').classList.add('on');
+  // inicializa o picker com hoje se ainda não tem valor
+  const picker = document.getElementById('queueDatePicker');
+  if (!picker.value) picker.value = new Date().toISOString().slice(0, 10);
+  updateQueueDateLabel();
+  await refreshQueue();
+}
+
+function setQueueToday() {
+  document.getElementById('queueDatePicker').value = new Date().toISOString().slice(0, 10);
+  updateQueueDateLabel();
+  refreshQueue();
+}
+
+function updateQueueDateLabel() {
+  const picker = document.getElementById('queueDatePicker');
+  if (!picker.value) return;
+  const d = new Date(picker.value + 'T12:00:00');
+  const today = new Date().toISOString().slice(0, 10);
+  const isToday = picker.value === today;
+  document.getElementById('queueDate').textContent = isToday
+    ? 'Hoje — ' + d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long' })
+    : d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+}
+
+function closeQueue() {
+  queueOpen = false;
+  document.getElementById('queueSidebar').classList.remove('open');
+  document.body.classList.remove('queue-open');
+  document.getElementById('queueBtn').classList.remove('on');
+}
+
+async function refreshQueue() {
+  if (!queueOpen) return;
+  updateQueueDateLabel();
+  try {
+    const all        = await fetch('/api/history').then(r => r.json());
+    const picker     = document.getElementById('queueDatePicker');
+    const filterDate = picker?.value || new Date().toISOString().slice(0, 10);
+    _queueCache = all.filter(h => h.createdAt?.startsWith(filterDate));
+
+    // agrupar por closer
+    const byCloser = {};
+    _queueCache.forEach(h => {
+      if (!byCloser[h.closer]) byCloser[h.closer] = [];
+      byCloser[h.closer].push(h);
+    });
+
+    // ordenar cada lista por horário da ligação
+    Object.values(byCloser).forEach(list =>
+      list.sort((a, b) => (a.callTime || '99:99').localeCompare(b.callTime || '99:99'))
+    );
+
+    const closers = Object.keys(byCloser);
+
+    // contador
+    const done  = _queueCache.filter(h => h.resultado).length;
+    const total = _queueCache.length;
+    document.getElementById('queueCount').textContent =
+      total ? `${total} script${total>1?'s':''} · ${done} concluído${done!==1?'s':''}` : '';
+
+    if (!closers.length) {
+      document.getElementById('queueTabs').innerHTML = '';
+      document.getElementById('queueList').innerHTML =
+        `<div class="queue-empty"><div class="queue-empty-icon">🌅</div>
+         Nenhum script nesta data.<br>
+         <span style="color:var(--accent);cursor:pointer" onclick="setQueueToday()">Voltar para hoje</span></div>`;
+      return;
+    }
+
+    // manter aba selecionada ou pegar a primeira
+    if (!queueTab || !byCloser[queueTab]) queueTab = closers[0];
+
+    // tabs
+    document.getElementById('queueTabs').innerHTML = closers.map(name => {
+      const done    = byCloser[name].filter(h => h.resultado).length;
+      const total   = byCloser[name].length;
+      const pct     = total ? Math.round(done / total * 100) : 0;
+      const badge   = done > 0 ? `<span style="font-size:9px;opacity:.75">${done}/${total}</span>` : '';
+      return `<button class="qtab${name===queueTab?' on':''}" onclick="selectQueueTab('${esc(name)}')">${esc(name)} ${badge}</button>`;
+    }).join('');
+
+    renderQueueList(byCloser[queueTab] || []);
+
+  } catch(e) {
+    document.getElementById('queueList').innerHTML =
+      `<div class="queue-empty" style="color:#791F1F">Erro ao carregar: ${esc(e.message)}</div>`;
+  }
+}
+
+function selectQueueTab(name) {
+  queueTab = name;
+  document.querySelectorAll('.qtab').forEach(t =>
+    t.classList.toggle('on', t.textContent.trim().startsWith(name))
+  );
+  const today = new Date().toISOString().slice(0, 10);
+  const items = _queueCache.filter(h => h.closer === name && h.createdAt?.startsWith(today));
+  items.sort((a, b) => (a.callTime || '99:99').localeCompare(b.callTime || '99:99'));
+  renderQueueList(items);
+}
+
+function renderQueueList(items) {
+  const el = document.getElementById('queueList');
+  if (!items.length) {
+    el.innerHTML = `<div class="queue-empty"><div class="queue-empty-icon">📭</div>Sem scripts para este closer hoje.</div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(item => {
+    const resCfg   = item.resultado ? RES_CFG[item.resultado] : null;
+    const score    = item.scoreValor;
+    const sColor   = score >= 8 ? '#085041' : score >= 5 ? '#B06000' : '#791F1F';
+    const isAB     = !!item.abGroup;
+    const isActive = item.id === _activeQueueId;
+    const isDone   = !!item.resultado;
+
+    const resBadge = resCfg
+      ? `<span class="hist-badge ${resCfg.cls}" style="font-size:9px;padding:1px 6px">${resCfg.label}</span>`
+      : `<span style="font-size:10px;color:var(--light)">Pendente</span>`;
+
+    const abBadge = isAB
+      ? `<span class="hist-badge hb-ab-${item.abGroup?.toLowerCase()}" style="font-size:9px;padding:1px 5px">A/B-${item.abGroup}</span>`
+      : '';
+
+    return `<div class="qitem${isActive?' qitem-active':''}${isDone?' qitem-done':''}" onclick="loadQueueItem(${item.id}, this)">
+      <div class="qitem-top">
+        <div class="qitem-name" title="${esc(item.leadNome)}">${esc(item.leadNome)}</div>
+        ${score != null ? `<span class="qitem-score" style="color:${sColor}">${score}</span>` : ''}
+      </div>
+      <div class="qitem-meta">
+        ${item.callTime ? `<span class="qitem-time">🕐 ${item.callTime}</span>` : ''}
+        ${abBadge}
+        ${resBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadQueueItem(id, el) {
+  // marca como ativo visualmente
+  _activeQueueId = id;
+  document.querySelectorAll('.qitem').forEach(i => i.classList.remove('qitem-active'));
+  if (el) el.classList.add('qitem-active');
+  // carrega o script (reutiliza loadHistory)
+  await loadHistory(id);
+}
+
+// ── Recording ──────────────────────────────────────────────────────────────
+let recState        = 'idle';   // 'idle' | 'recording' | 'stopped'
+let recFinalText    = '';
+let recRecognition  = null;
+let recTimerInt     = null;
+let recSeconds      = 0;
+let recPanelOpen    = false;
+
+function showRecPanel(show) {
+  document.getElementById('recPanel').style.display = show ? '' : 'none';
+  if (!show) resetRec();
+}
+
+function toggleRecPanel() {
+  recPanelOpen = !recPanelOpen;
+  document.getElementById('recBody').style.display = recPanelOpen ? '' : 'none';
+  document.getElementById('recToggle').classList.toggle('open', recPanelOpen);
+}
+
+function resetRec() {
+  stopRec(true);
+  recFinalText = '';
+  recState = 'idle';
+  recPanelOpen = false;
+  const el = document.getElementById('recTranscriptEl');
+  if (el) el.value = '';
+  const body = document.getElementById('recBody');
+  if (body) body.style.display = 'none';
+  const toggle = document.getElementById('recToggle');
+  if (toggle) toggle.classList.remove('open');
+  updateRecUI();
+}
+
+function toggleRecording() {
+  if (recState === 'recording') stopRec(false);
+  else startRec();
+}
+
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('⚠️ Transcrição automática requer Chrome ou Edge.\n\nNo Firefox, você pode digitar a transcrição manualmente no campo abaixo.');
+    recState = 'stopped';
+    updateRecUI();
+    return;
+  }
+
+  recFinalText = '';
+  recState = 'recording';
+  recSeconds = 0;
+  const timerEl = document.getElementById('recTimer');
+  if (timerEl) timerEl.textContent = '0:00';
+
+  recRecognition = new SR();
+  recRecognition.lang = 'pt-BR';
+  recRecognition.continuous = true;
+  recRecognition.interimResults = true;
+  recRecognition.maxAlternatives = 1;
+
+  recRecognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) recFinalText += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    const el = document.getElementById('recTranscriptEl');
+    if (el) el.value = (recFinalText + interim).trim();
+  };
+  recRecognition.onend = () => {
+    if (recState === 'recording') {
+      try { recRecognition.start(); } catch {}
+    }
+  };
+  recRecognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      alert('Permissão de microfone negada. Clique no cadeado na barra de endereços e permita o microfone.');
+      stopRec(false);
+    }
+  };
+  recRecognition.start();
+
+  clearInterval(recTimerInt);
+  recTimerInt = setInterval(() => {
+    recSeconds++;
+    const m = Math.floor(recSeconds / 60);
+    const s = recSeconds % 60;
+    const el = document.getElementById('recTimer');
+    if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+
+  updateRecUI();
+}
+
+function stopRec(silent = false) {
+  if (recRecognition) {
+    recRecognition.onend = null;
+    try { recRecognition.stop(); } catch {}
+    recRecognition = null;
+  }
+  clearInterval(recTimerInt);
+  recTimerInt = null;
+  if (!silent) {
+    recFinalText = document.getElementById('recTranscriptEl')?.value || recFinalText;
+    recState = 'stopped';
+    updateRecUI();
+    // Auto-analisa se tiver transcrição suficiente
+    const text = document.getElementById('recTranscriptEl')?.value.trim() || '';
+    if (text.length >= 30 && currentOutput?.id) {
+      analyzeCall();
+    }
+  }
+}
+
+function updateRecUI() {
+  const btn       = document.getElementById('recBtn');
+  const indicator = document.getElementById('recIndicator');
+  const actRow    = document.getElementById('recActionsRow');
+  const coachWrap = document.getElementById('recCoachingWrap');
+  if (!btn) return;
+
+  if (recState === 'recording') {
+    btn.textContent = '⏹ Parar Gravação';
+    btn.classList.add('stopping');
+    if (indicator) indicator.style.display = 'flex';
+    if (actRow)    actRow.style.display    = 'none';
+    if (coachWrap) coachWrap.style.display = 'none';
+  } else if (recState === 'stopped') {
+    btn.textContent = '🔄 Nova Gravação';
+    btn.classList.remove('stopping');
+    if (indicator) indicator.style.display = 'none';
+    if (actRow)    actRow.style.display    = 'flex';
+    if (coachWrap) coachWrap.style.display = '';
+  } else {
+    btn.textContent = '🎙️ Iniciar Gravação';
+    btn.classList.remove('stopping');
+    if (indicator) indicator.style.display = 'none';
+    if (actRow)    actRow.style.display    = 'none';
+    if (coachWrap) coachWrap.style.display = 'none';
+  }
+}
+
+async function saveTranscript() {
+  const text = document.getElementById('recTranscriptEl')?.value.trim();
+  if (!text || !currentOutput?.id) return;
+  await fetch(`/api/history/${currentOutput.id}/resultado`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcricao: text })
+  });
+  const msg = document.getElementById('recSavedMsg');
+  if (msg) { msg.style.display = 'inline'; setTimeout(() => msg.style.display='none', 2500); }
+}
+
+async function analyzeCall() {
+  const text = document.getElementById('recTranscriptEl')?.value.trim();
+  if (!text || text.length < 30) {
+    alert('Transcrição muito curta. Grave a ligação completa antes de analisar.');
+    return;
+  }
+  const btn = document.getElementById('coachingBtn');
+  const resultEl = document.getElementById('coachingResult');
+  btn.disabled = true; btn.textContent = '🔄 Analisando…';
+  resultEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:.65rem 0;color:var(--muted);font-size:12px"><div class="spin" style="width:16px;height:16px;border-width:2px"></div>Claude analisando a ligação…</div>';
+
+  try {
+    const resultado = document.querySelector('.rbtn.on')?.dataset?.val || null;
+    const res = await fetch('/api/analytics/coaching', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transcricao: text,
+        scriptJson: currentOutput?.result,
+        resultado,
+        closer: selectedCloser?.name
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    renderCoaching(data);
+  } catch(e) {
+    resultEl.innerHTML = `<p style="color:#791F1F;font-size:12px;padding:.4rem 0">⚠ ${esc(e.message)}</p>`;
+  }
+  btn.disabled = false; btn.textContent = '🧠 Analisar com IA';
+}
+
+function renderCoaching(d) {
+  const nota = Math.min(10, Math.max(1, Number(d.nota_geral)||0));
+  const nColor = nota>=8?'#085041':nota>=5?'#B06000':'#791F1F';
+  const ader  = Math.round(Math.min(100, Math.max(0, Number(d.aderencia_script)||0)));
+  const aColor = ader>=70?'#085041':ader>=40?'#B06000':'#791F1F';
+
+  let h = `<div class="coaching-card">`;
+  h += `<div class="coaching-top">
+    <div><div class="coaching-title">Coaching da Ligação</div></div>
+    <div class="coaching-nota" style="color:${nColor}">${nota}<span style="font-size:14px;font-weight:400;color:var(--muted)">/10</span></div>
+  </div>`;
+  if (d.resumo_coaching) h += `<p class="coaching-resumo">${esc(d.resumo_coaching)}</p>`;
+
+  h += `<div class="coaching-bar-label"><span>Aderência ao script</span><span style="color:${aColor};font-weight:600">${ader}%</span></div>
+  <div class="coaching-bar-track"><div class="coaching-bar-fill" style="width:${ader}%;background:${aColor}"></div></div>`;
+
+  if (d.pontos_fortes?.length) {
+    h += `<div class="coaching-section-title" style="color:#085041;margin-bottom:4px">✅ Pontos Fortes</div>`;
+    d.pontos_fortes.forEach(p => h += `<div class="coaching-item">• ${esc(p)}</div>`);
+    h += `<div style="margin-bottom:.6rem"></div>`;
+  }
+  if (d.pontos_melhora?.length) {
+    h += `<div class="coaching-section-title" style="color:#791F1F;margin-bottom:4px">🔴 Melhorar</div>`;
+    d.pontos_melhora.forEach(p => h += `<div class="coaching-item">• ${esc(p)}</div>`);
+    h += `<div style="margin-bottom:.6rem"></div>`;
+  }
+  if (d.momentos_criticos?.length) {
+    h += `<div class="coaching-section-title" style="color:#7A5200;margin-bottom:4px">⚡ Momentos Críticos</div>`;
+    d.momentos_criticos.forEach(m => {
+      h += `<div class="coaching-critico">
+        <div class="coaching-critico-trecho">"${esc(m.momento)}"</div>
+        <div class="coaching-critico-analise">${esc(m.analise)}</div>
+        <div class="coaching-critico-sug"><strong>→</strong> ${esc(m.sugestao)}</div>
+      </div>`;
+    });
+  }
+  if (d.proxima_acao) {
+    h += `<div class="coaching-proxima"><strong>🎯 Foque nisso agora:</strong> ${esc(d.proxima_acao)}</div>`;
+  }
+  h += `</div>`;
+  document.getElementById('coachingResult').innerHTML = h;
+}
+
+init();
+</script>
+</body>
+</html>
