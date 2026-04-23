@@ -1383,7 +1383,12 @@ async function loadQueueItem(id, el) {
   document.querySelectorAll('.qitem').forEach(i => i.classList.remove('qitem-active'));
   if (el) el.classList.add('qitem-active');
   await loadHistory(id);
-  showToast('✅ Script carregado — clique 👂 ou F2 para monitorar a ligação');
+  // Inicia monitoramento automático — calibra ambiente e grava ao detectar a ligação
+  setTimeout(() => {
+    if ((recState === 'idle' || recState === 'stopped') && currentOutput?.id) {
+      startMonitoring();
+    }
+  }, 400);
 }
 
 // ── Toast ───────────────────────────────────────────────────────────────────
