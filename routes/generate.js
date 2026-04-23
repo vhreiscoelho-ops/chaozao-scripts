@@ -208,7 +208,7 @@ router.post('/', async (req, res) => {
     res.json({ id, result: json });
 
   } catch (err) {
-    console.error('[generate]', err.message);
+    console.error('[generate] status:', err.status, '| type:', err.constructor?.name, '| msg:', err.message);
     const msg = err.status === 401 ? 'API Key inválida. Verifique o arquivo .env.'
       : err.status === 429 ? 'Limite de requisições atingido. Aguarde alguns segundos.'
       : err.message;

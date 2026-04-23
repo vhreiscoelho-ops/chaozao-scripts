@@ -18,6 +18,7 @@ app.get('*', (_req, res) =>
 );
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`\n🌱  Chãozão Platform → http://localhost:${PORT}\n`)
-);
+app.listen(PORT, () => {
+  console.log(`\n🌱  Chãozão Platform → http://localhost:${PORT}`);
+  console.log(`[startup] ANTHROPIC_API_KEY: ${process.env.ANTHROPIC_API_KEY ? '✅ presente (' + process.env.ANTHROPIC_API_KEY.slice(0,12) + '...)' : '❌ AUSENTE'}\n`);
+});
