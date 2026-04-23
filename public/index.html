@@ -302,8 +302,14 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .qitem-top { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:3px; }
 .qitem-name { font-size:12.5px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
 .qitem-score { font-family:'Syne',sans-serif; font-weight:700; font-size:12px; flex-shrink:0; }
+.qitem-del { background:none; border:none; color:var(--light); cursor:pointer; font-size:13px; padding:2px 5px; border-radius:4px; flex-shrink:0; opacity:0; transition:all .12s; line-height:1; }
+.qitem:hover .qitem-del { opacity:1; }
+.qitem-del:hover { color:#791F1F; background:#FDEAEA; opacity:1 !important; }
 .qitem-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .qitem-time { font-size:10.5px; color:var(--muted); }
+/* Toast */
+.toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(20px); background:#1A1915; color:#fff; font-size:13px; padding:.55rem 1.1rem; border-radius:20px; z-index:9999; opacity:0; transition:all .25s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 .queue-footer { padding:.65rem .85rem; border-top:1px solid var(--border); flex-shrink:0; }
 .queue-gen-btn { width:100%; padding:7px; background:var(--accent); color:#fff; border:none; border-radius:7px; font-family:'Syne',sans-serif; font-weight:700; font-size:12px; cursor:pointer; transition:background .2s; }
 .queue-gen-btn:hover { background:var(--accent-l); }
@@ -318,6 +324,7 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 .rec-tb-timer { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; color:#E24B4A; flex-shrink:0; }
 .rec-tb-btn { padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface); font-size:11.5px; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; white-space:nowrap; flex-shrink:0; transition:all .15s; }
 .rec-tb-btn:hover { background:var(--border); color:var(--text); }
+.rec-f2-badge { display:inline-block; background:rgba(0,0,0,.08); border:1px solid var(--border); border-radius:4px; font-size:9px; font-weight:700; padding:1px 5px; color:var(--muted); letter-spacing:.04em; margin-left:4px; vertical-align:middle; }
 @keyframes recPulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)} 50%{box-shadow:0 0 0 7px rgba(239,68,68,0)} }
 .coaching-wrap { margin-top:.6rem; }
 .coaching-card { border:1px solid var(--border); border-radius:10px; padding:.9rem 1.1rem; margin-top:.65rem; background:#FAFAF7; }
@@ -491,7 +498,7 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
       <button id="recMicBtn" class="rec-mic-btn" onclick="toggleRecording()" title="Gravar ligação">🎙️</button>
       <div style="flex:1">
         <div class="rec-tb-label" id="recTbLabel">Iniciar gravação da ligação</div>
-        <div class="rec-tb-sublabel" id="recTbSub">Transcrição em tempo real via Chrome</div>
+        <div class="rec-tb-sublabel" id="recTbSub">Transcrição em tempo real via Chrome <span class="rec-f2-badge">F2</span></div>
       </div>
       <div class="rec-tb-timer" id="recTimer" style="display:none">0:00</div>
       <button class="rec-tb-btn" id="recTranscriptToggle" onclick="toggleTranscriptPanel()" style="display:none">📝 Ver transcrição</button>
@@ -1347,6 +1354,7 @@ function renderQueueList(items) {
       <div class="qitem-top">
         <div class="qitem-name" title="${esc(item.leadNome)}">${esc(item.leadNome)}</div>
         ${score != null ? `<span class="qitem-score" style="color:${sColor}">${score}</span>` : ''}
+        <button class="qitem-del" onclick="deleteQueueItem(${item.id}, event)" title="Excluir script">✕</button>
       </div>
       <div class="qitem-meta">
         ${item.callTime ? `<span class="qitem-time">🕐 ${item.callTime}</span>` : ''}
@@ -1357,14 +1365,47 @@ function renderQueueList(items) {
   }).join('');
 }
 
+async function deleteQueueItem(id, event) {
+  event.stopPropagation();
+  if (!confirm('Remover este script da fila?')) return;
+  await fetch(`/api/history/${id}`, { method: 'DELETE' });
+  if (_activeQueueId === id) {
+    _activeQueueId = null;
+    resetOutput();
+  }
+  await refreshQueue();
+  showToast('🗑️ Script removido da fila');
+}
+
 async function loadQueueItem(id, el) {
-  // marca como ativo visualmente
   _activeQueueId = id;
   document.querySelectorAll('.qitem').forEach(i => i.classList.remove('qitem-active'));
   if (el) el.classList.add('qitem-active');
-  // carrega o script (reutiliza loadHistory)
   await loadHistory(id);
+  // Auto-inicia gravação se ainda não estiver gravando
+  setTimeout(() => {
+    if (recState === 'idle' && currentOutput?.id) {
+      startRec();
+      showToast('🎙️ Gravação iniciada — boa ligação!');
+    }
+  }, 700);
 }
+
+// ── Toast ───────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function showToast(msg, duration = 3000) {
+  const el = document.getElementById('globalToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ── Atalho de teclado F2 → toggle gravação ──────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'F2') { e.preventDefault(); toggleRecording(); }
+});
 
 // ── Recording ──────────────────────────────────────────────────────────────
 let recState        = 'idle';   // 'idle' | 'recording' | 'stopped'
@@ -1613,5 +1654,8 @@ function renderCoaching(d) {
 
 init();
 </script>
+
+<!-- Toast global -->
+<div class="toast" id="globalToast"></div>
 </body>
 </html>
