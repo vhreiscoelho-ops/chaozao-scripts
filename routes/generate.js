@@ -200,7 +200,8 @@ router.post('/', async (req, res) => {
     planVal   = '',
     briefing  = '',
     strategyA = 'urgencia',
-    strategyB = 'sonho'
+    strategyB = 'sonho',
+    linkedId  = null    // ID do script ao qual a proposta deve ser vinculada
   } = req.body;
 
   if (!briefing.trim())
@@ -242,12 +243,27 @@ router.post('/', async (req, res) => {
     const json = await callClaude(prompt);
 
     const store = load();
+
+    // ── Proposta vinculada a um script existente ──────────────────────────────
+    if (mode === 'proposal' && linkedId != null) {
+      const target = store.history.find(h => h.id === Number(linkedId));
+      if (target) {
+        target.proposalMsg      = json.mensagem || '';
+        target.proposalLeadNome = json.lead_nome || target.leadNome || '';
+        target.updatedAt        = new Date().toISOString();
+        save(store);
+        return res.json({ id: target.id, linked: true, result: json });
+      }
+    }
+
+    // ── Salva item normal ────────────────────────────────────────────────────
     const id = saveItem(store, {
       mode, closer, callTime, planVal,
       briefing: briefing.substring(0, 600),
       leadNome: json.lead_nome || 'Lead',
       scoreValor: json.score?.valor ?? null,
-      resultJson: json
+      resultJson: json,
+      ...(mode === 'proposal' ? { proposalMsg: json.mensagem || '' } : {})
     });
     if (store.history.length > 200) store.history.length = 200;
     save(store);

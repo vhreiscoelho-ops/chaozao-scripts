@@ -214,6 +214,13 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .s-cta-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.3rem; }
 .s-validade { font-size:11px; opacity:.65; margin-top:.4rem; }
 
+/* ── View tabs (Script | Proposta) ── */
+#viewTabWrap { display:none; flex-shrink:0; border-bottom:1px solid var(--border); background:var(--surface2); padding:.4rem .8rem; gap:6px; }
+#viewTabWrap.show { display:flex !important; }
+.vtab { background:transparent; border:1px solid var(--border); border-radius:20px; padding:.28rem .85rem; font-size:12px; font-weight:500; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+.vtab.on { background:var(--accent); color:#fff; border-color:transparent; }
+.vtab:hover:not(.on) { border-color:var(--accent-l); color:var(--accent); }
+
 /* ── Proposta: campos de entrada ── */
 #propFields input[type="text"],
 #propFields input[type="date"] {
@@ -724,6 +731,12 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
       <div id="coachingResult"></div>
     </div>
 
+    <!-- Abas Script / Proposta (visível quando o item tem os dois) -->
+    <div id="viewTabWrap" style="display:none;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:.4rem .8rem;display:none;gap:6px">
+      <button id="vtab-script"   class="vtab on"  onclick="switchViewTab('script')">📞 Script</button>
+      <button id="vtab-proposal" class="vtab"     onclick="switchViewTab('proposal')">📄 Proposta</button>
+    </div>
+
     <div id="out">
       <div class="estate">
         <div class="estate-icon">📞</div>
@@ -953,6 +966,7 @@ function resetOutput() {
   document.getElementById('cbtn').style.display = 'none';
   document.getElementById('resultadoBar').style.display = 'none';
   document.getElementById('abTabWrap').style.display = 'none';
+  showViewTabs(false);
   showRecPanel(false);
   currentOutput = null;
   currentABOutput = null;
@@ -1120,12 +1134,17 @@ async function gen() {
   document.getElementById('abTabWrap').style.display='none';
   showLoad();
 
+  // Vincula proposta ao script aberto (se houver)
+  const linkedId = (currentMode === 'proposal' && currentOutput?.mode === 'script')
+    ? currentOutput.id : null;
+
   const body = {
     mode: abMode ? 'ab' : currentMode,
     closer: selectedCloser?.name || 'Closer',
     callTime, planVal, briefing,
     strategyA: document.getElementById('stratA')?.value || 'urgencia',
-    strategyB: document.getElementById('stratB')?.value || 'sonho'
+    strategyB: document.getElementById('stratB')?.value || 'sonho',
+    linkedId
   };
 
   try {
@@ -1154,9 +1173,21 @@ async function gen() {
       document.getElementById('cbtn').style.display = 'flex';
       showResultadoBar('script', null);
 
+    } else if (data.linked) {
+      // ── Proposta vinculada ao script existente ─────────────────────────
+      currentOutput.proposalMsg      = data.result.mensagem || '';
+      currentOutput.proposalLeadNome = data.result.lead_nome || '';
+      showViewTabs(true, 'proposal');
+      renderProposal(data.result);
+      document.getElementById('osub').textContent = `${esc(data.result.lead_nome||'Lead')} · script + proposta`;
+      document.getElementById('cbtn').style.display = 'flex';
+
     } else {
       // ── Normal ────────────────────────────────────────────────────────
-      currentOutput = { id:data.id, result:data.result, mode:currentMode };
+      currentOutput = { id:data.id, result:data.result, mode:currentMode,
+                        proposalMsg: currentMode==='proposal' ? (data.result.mensagem||'') : null,
+                        proposalLeadNome: currentMode==='proposal' ? (data.result.lead_nome||'') : null };
+      showViewTabs(false);
       if (currentMode==='script') {
         renderScript(data.result);
         document.getElementById('osub').textContent = `Script para ${selectedCloser?.name||'Closer'} · ${callTime}`;
@@ -1175,6 +1206,29 @@ async function gen() {
   document.getElementById('bico').textContent='⚡';
   const label = abMode ? 'Gerar Variantes A/B' : currentMode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
   document.getElementById('btxt').textContent = label;
+}
+
+// ── View Tab (Script | Proposta) ───────────────────────────────────────────
+function showViewTabs(show, activeTab) {
+  const wrap = document.getElementById('viewTabWrap');
+  if (!show) { wrap.classList.remove('show'); return; }
+  wrap.classList.add('show');
+  document.getElementById('vtab-script').classList.toggle('on',   activeTab === 'script');
+  document.getElementById('vtab-proposal').classList.toggle('on', activeTab === 'proposal');
+}
+
+function switchViewTab(tab) {
+  if (!currentOutput) return;
+  document.getElementById('vtab-script').classList.toggle('on',   tab === 'script');
+  document.getElementById('vtab-proposal').classList.toggle('on', tab === 'proposal');
+  if (tab === 'script') {
+    renderScript(currentOutput.result);
+    document.getElementById('otitle').textContent = 'Script de Fechamento';
+  } else {
+    // Reconstrói objeto mínimo compatível com renderProposal
+    renderProposal({ mensagem: currentOutput.proposalMsg, lead_nome: currentOutput.proposalLeadNome });
+    document.getElementById('otitle').textContent = 'Proposta Comercial';
+  }
 }
 
 // ── A/B Tab Switcher ───────────────────────────────────────────────────────
@@ -1552,20 +1606,37 @@ async function loadHistory(id) {
   document.getElementById('abTabWrap').style.display='none';
   document.getElementById('cbtn').style.display='none';
   try {
-    const item=await fetch(`/api/history/${id}`).then(r=>r.json());
-    currentOutput={id:item.id,result:item.resultJson,mode:item.mode};
-    if(item.mode==='script'||item.abGroup){
+    const item = await fetch(`/api/history/${id}`).then(r=>r.json());
+    currentOutput = {
+      id: item.id, result: item.resultJson, mode: item.mode,
+      proposalMsg:      item.proposalMsg      || null,
+      proposalLeadNome: item.proposalLeadNome || null
+    };
+
+    const hasProposal = !!item.proposalMsg;
+    const isScript    = item.mode === 'script' || !!item.abGroup;
+
+    if (isScript && hasProposal) {
+      // ── Item com script + proposta: mostra abas, abre em script
+      showViewTabs(true, 'script');
       renderScript(item.resultJson);
-      document.getElementById('osub').textContent=`Script para ${esc(item.closer)} · ${item.callTime||''}`;
-      document.getElementById('otitle').textContent='Script de Fechamento';
+      document.getElementById('osub').textContent  = `${esc(item.leadNome)} · script + proposta`;
+      document.getElementById('otitle').textContent = 'Script de Fechamento';
+    } else if (isScript) {
+      showViewTabs(false);
+      renderScript(item.resultJson);
+      document.getElementById('osub').textContent  = `Script para ${esc(item.closer)} · ${item.callTime||''}`;
+      document.getElementById('otitle').textContent = 'Script de Fechamento';
     } else {
+      showViewTabs(false);
       renderProposal(item.resultJson);
-      document.getElementById('osub').textContent=`Proposta para ${esc(item.leadNome)} · ${esc(item.closer)}`;
-      document.getElementById('otitle').textContent='Proposta Comercial';
+      document.getElementById('osub').textContent  = `Proposta para ${esc(item.leadNome)} · ${esc(item.closer)}`;
+      document.getElementById('otitle').textContent = 'Proposta Comercial';
     }
-    document.getElementById('cbtn').style.display='flex';
-    showResultadoBar(item.mode,item);
-  } catch(e){showErr(e.message);}
+
+    document.getElementById('cbtn').style.display = 'flex';
+    showResultadoBar(item.mode, item);
+  } catch(e){ showErr(e.message); }
 }
 
 async function delHistory(e,id){
@@ -1841,6 +1912,9 @@ function renderQueueList(items) {
     const abBadge = isAB
       ? `<span class="hist-badge hb-ab-${item.abGroup?.toLowerCase()}" style="font-size:9px;padding:1px 5px">A/B-${item.abGroup}</span>`
       : '';
+    const propBadge = item.proposalMsg
+      ? `<span style="font-size:9px;padding:1px 5px;border-radius:20px;background:#E8F5E9;color:#085041;font-weight:600">📄 Proposta</span>`
+      : '';
 
     return `<div class="qitem${isActive?' qitem-active':''}${isDone?' qitem-done':''}" onclick="loadQueueItem(${item.id}, this)">
       <div class="qitem-top">
@@ -1851,6 +1925,7 @@ function renderQueueList(items) {
       <div class="qitem-meta">
         ${item.callTime ? `<span class="qitem-time">🕐 ${item.callTime}</span>` : ''}
         ${abBadge}
+        ${propBadge}
         ${resBadge}
       </div>
     </div>`;
