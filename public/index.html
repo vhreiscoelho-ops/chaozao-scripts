@@ -1568,17 +1568,14 @@ async function genFollowUp() {
 
 // ── Follow-up Render ──────────────────────────────────────────────────────
 function renderFollowUp(j) {
-  const diasBadgeClass = j.urgencia === 'baixa' ? 'ok' : j.urgencia === 'média' ? 'aviso' : 'alerta';
-  const diasEmoji      = j.urgencia === 'baixa' ? '🟢' : j.urgencia === 'média' ? '🟡' : '🔴';
   const labelMap = { suave:'fu-label-suave', urgencia:'fu-label-urgencia', valor:'fu-label-valor' };
 
   let h = `<div class="fu-wrap">`;
   h += `<h1>Follow-up — ${esc(j.lead_nome)}</h1>`;
-  h += `<p class="sub">${esc(j.canal)} · ${j.dias_parado} dia${j.dias_parado>1?'s':''} sem resposta · ${esc(selectedCloser?.name||'Closer')}</p>`;
-  h += `<div class="dias-badge ${diasBadgeClass}">${diasEmoji} Urgência ${esc(j.urgencia)} — ${j.dias_parado} dia${j.dias_parado>1?'s':''} parado</div>`;
+  h += `<p class="sub">${esc(_fuCanal)} · ${esc(selectedCloser?.name||'Closer')} · fechamento por mensagem</p>`;
 
   if (j.alerta) {
-    h += `<div class="s-aviso" style="margin-bottom:.9rem"><strong>💡 Estratégia:</strong> ${esc(j.alerta)}</div>`;
+    h += `<div class="s-aviso" style="margin-bottom:.9rem"><strong>🔍 Leitura do lead:</strong> ${esc(j.alerta)}</div>`;
   }
 
   h += `<div class="fu-sep">3 abordagens — escolha a que faz mais sentido</div>`;
@@ -1590,13 +1587,13 @@ function renderFollowUp(j) {
       <div class="fu-card-head">
         <span style="font-size:18px">${a.emoji}</span>
         <span class="fu-approach-label ${labelCls}">${esc(a.label)}</span>
-        <span class="fu-card-meta">⏱ ${esc(a.timing||'')}</span>
       </div>
       <div class="fu-card-body">
         <div class="fu-msg" id="${msgId}">${escFu(a.mensagem)}</div>
+        ${a.gatilho ? `<div style="margin-top:10px;padding:6px 10px;background:#f5f4f0;border-radius:7px;font-size:11.5px;color:var(--muted)"><strong style="color:var(--text)">Gatilho:</strong> ${esc(a.gatilho)}</div>` : ''}
       </div>
       <div class="fu-card-foot">
-        <div class="fu-dica"><strong>Quando usar:</strong> ${esc(a.dica)}</div>
+        <div class="fu-dica"><strong>Quando usar:</strong> ${esc(a.quando_usar||a.dica||'')}</div>
         <button class="fu-copy-btn" onclick="copyFuMsg('${msgId}',this)">📋 Copiar</button>
       </div>
     </div>`;
@@ -1606,7 +1603,7 @@ function renderFollowUp(j) {
     h += `<div class="s-card" style="margin-top:.5rem">
       <div class="s-hrow">
         <span class="s-badge sb-6">🚨</span>
-        <span class="s-etitle">Se nenhuma abordagem funcionar</span>
+        <span class="s-etitle">Se nenhuma mensagem funcionar</span>
       </div>
       <p style="font-size:13px;line-height:1.6;color:var(--muted)">${esc(j.proximo_passo)}</p>
     </div>`;

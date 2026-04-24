@@ -9,8 +9,13 @@ const client = new Anthropic({
 });
 
 // ─── System prompt (cacheável) ────────────────────────────────────────────────
-const FOLLOWUP_SYSTEM = `Você é um especialista sênior em follow-up de vendas do Chãozão, maior plataforma de imóveis rurais do Brasil.
-Analise dados de leads que receberam proposta e não responderam, e gere mensagens de follow-up altamente personalizadas.
+const FOLLOWUP_SYSTEM = `Você é um especialista sênior em fechamento de vendas por mensagem do Chãozão, maior plataforma de imóveis rurais do Brasil.
+Seu único objetivo: gerar mensagens que extraiam um SIM ou NÃO do lead via WhatsApp, sem precisar de ligação.
+Princípios que NUNCA negocia:
+1. Sem abertura genérica ("Olá, tudo bem?", "Oi, como vai?"). Vá direto ao ponto.
+2. Cada mensagem termina com uma pergunta binária de resposta fácil — o lead só precisa digitar "sim", "não", ou um emoji.
+3. Nada de pressão vazia. A urgência e o valor precisam ser concretos e específicos para aquele lead e plano.
+4. Tom: humano, direto, sem corporativismo.
 REGRA ABSOLUTA: Responda SEMPRE com JSON puro e válido. Nunca use markdown. Nunca adicione texto antes ou depois do JSON. Sua resposta DEVE começar com { e terminar com }. Nenhuma exceção.`;
 
 // ─── Extração robusta de JSON ─────────────────────────────────────────────────
@@ -36,64 +41,68 @@ router.post('/', async (req, res) => {
   const diasNum = parseInt(dias) || 0;
   const urgencia = diasNum === 0 ? 'não informado' : diasNum <= 2 ? 'baixa' : diasNum <= 5 ? 'média' : 'alta';
 
-  const prompt = `Analise os dados do lead abaixo e gere 3 mensagens de follow-up personalizadas. Retorne SOMENTE o JSON abaixo, começando com { e terminando com }. Sem markdown, sem texto fora do JSON.
+  const prompt = `Gere 3 mensagens de fechamento por mensagem (WhatsApp) para um lead que recebeu proposta e não respondeu. Objetivo: extrair um SIM ou NÃO sem precisar de ligação. Retorne SOMENTE o JSON abaixo, começando com { e terminando com }.
 
-DADOS DO LEAD:
+CONTEXTO DO LEAD:
 - Nome: ${nome}
 - Valor da proposta: ${valor}
-- Dias sem resposta: ${diasNum}
-- Plano / produto: ${plano || 'Não informado'}
-- Canal de envio: ${canal || 'WhatsApp'}
-- Perfil do lead: ${perfil || 'Não informado'}
-- Contexto adicional: ${contexto || 'Nenhum'}
-- Closer responsável: ${closer || 'Closer'}
-- Urgência calculada: ${urgencia}
+- Plano: ${plano || 'Chãozão'}
+- Perfil: ${perfil || 'não informado'}
+- Contexto / objeções mapeadas: ${contexto || 'nenhum'}
+- Closer: ${closer || 'Closer'}
+
+TÉCNICA DE CADA ABORDAGEM:
+
+1. TOQUE LEVE - Remove o desconforto de decidir.
+Técnica: Reconhece que ele está ocupado, tira a pressão, pede só um sinal de vida. A pergunta final deve ser do tipo "pode me mandar um sim ou não aqui mesmo?" ou "ainda faz sentido pra você?". Máximo 4 linhas. Sem emojis excessivos.
+
+2. PUXADA DIRETA - Provoca uma decisão agora.
+Técnica: Menciona algo concreto que muda se ele não decidir (prazo, condição, vaga, oportunidade que outra pessoa pode aproveitar). Não ameaça — apresenta o cenário real. A pergunta final exige um posicionamento claro. Tom: firme e respeitoso.
+
+3. REFORÇO CIRÚRGICO - Reacende o desejo pelo benefício específico.
+Técnica: Lembra UMA dor específica do lead (baseada no perfil/contexto) e conecta diretamente ao que ele ganha com o plano. Não lista benefícios genéricos — foca no que importa PRA ELE. Fecha com uma pergunta que só exige um "sim" para avançar.
 
 JSON esperado:
 {
-  "lead_nome": "string (primeiro nome do lead)",
-  "dias_parado": ${diasNum},
-  "urgencia": "${urgencia}",
-  "canal": "${canal || 'WhatsApp'}",
+  "lead_nome": "string (primeiro nome)",
   "abordagens": [
     {
       "tipo": "suave",
       "label": "Toque Leve",
       "emoji": "🌱",
-      "mensagem": "string (pronta para enviar, sem aspas externas, quebras com \\n)",
-      "dica": "string (quando usar)",
-      "timing": "string (ex: Manha, entre 9h-11h)"
+      "mensagem": "string (mensagem pronta, quebras com \\n, termina com pergunta binária)",
+      "gatilho": "string (o que essa mensagem ativa psicologicamente no lead)",
+      "quando_usar": "string (situação ideal para enviar esta versão)"
     },
     {
       "tipo": "urgencia",
-      "label": "Criar Urgencia",
-      "emoji": "⏰",
+      "label": "Puxada Direta",
+      "emoji": "🎯",
       "mensagem": "string",
-      "dica": "string",
-      "timing": "string"
+      "gatilho": "string",
+      "quando_usar": "string"
     },
     {
       "tipo": "valor",
-      "label": "Reforco de Valor",
-      "emoji": "💡",
+      "label": "Reforço Cirúrgico",
+      "emoji": "🔎",
       "mensagem": "string",
-      "dica": "string",
-      "timing": "string"
+      "gatilho": "string",
+      "quando_usar": "string"
     }
   ],
-  "alerta": "string (observacao estrategica sobre este lead)",
-  "proximo_passo": "string (o que fazer se nenhuma abordagem funcionar)"
+  "alerta": "string (leitura estratégica deste lead — por que ainda não respondeu e o que isso indica)",
+  "proximo_passo": "string (se nenhuma mensagem funcionar, o que fazer — seja específico)"
 }
 
-REGRAS:
-- Mensagens em pt-BR, linguagem natural, ${closer || 'Closer'} fala em 1a pessoa
-- PROIBIDO usar travessao (—) em qualquer parte. Use hifen simples (-) se precisar
-- Para WhatsApp: 3-5 linhas, emojis naturais e contextuais
-- Para E-mail: mais formal, tom profissional
-- Para Ligacao: script resumido do que dizer ao telefone
-- Urgencia: ${urgencia === 'não informado' ? 'calibre para tom neutro/profissional' : `${urgencia} (${diasNum} dia${diasNum > 1 ? 's' : ''} parado) — calibre o tom adequadamente`}
-- Nao use aspas externas na mensagem, apenas o texto puro
-- Retorne APENAS o JSON, sem nenhum texto antes ou depois`;
+REGRAS ABSOLUTAS:
+- PROIBIDO começar com "Olá tudo bem", "Oi, como vai", "Espero que esteja bem" ou qualquer abertura de aquecimento
+- PROIBIDO usar travessao (—). Use hifen simples (-) se precisar separar algo
+- Cada mensagem DEVE terminar com uma pergunta simples que o lead responde com sim, não, ou emoji
+- Use o nome do lead, o valor e o plano nas mensagens — nada de texto genérico
+- Se houver contexto/objeção, use-o na abordagem relevante
+- Tom: humano, direto, sem corpo de email corporativo
+- Retorne APENAS o JSON`;
 
   try {
     const stream = client.messages.stream({
