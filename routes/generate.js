@@ -132,40 +132,34 @@ PLANO 30 ANÚNCIOS (Anual R$ 450,00/mês | Semestral R$ 526,80/mês):
   - Ideal para: grandes imobiliárias rurais e fazendeiros com múltiplos imóveis`;
 
 function proposalPrompt(closer, planVal, briefing) {
-  return `Crie uma proposta comercial pós-reunião. Retorne SOMENTE o objeto JSON abaixo. NÃO inclua explicações, markdown, texto antes ou depois. Comece diretamente com { e termine com }.
-
-CONTEXTO: Proposta enviada APÓS a reunião. Closer e lead já conversaram e chegaram a um acordo. Seja direto — o lead já sabe o produto, não precisa ser convencido do zero.
+  // briefing aqui é construído pelo front: "Lead: X | Plano: Y | Valor: Z | Prazo: W | Desconto: ..."
+  return `Gere uma proposta comercial compacta para ser enviada via WhatsApp. Retorne SOMENTE o JSON abaixo. Comece com { e termine com }. Sem markdown, sem texto fora do JSON.
 
 DADOS:
 - Closer: ${closer}
-- Plano e valor acordado: ${planVal}
+- ${briefing}
 
-NOTAS DA REUNIÃO:
-${briefing}
-
-CATÁLOGO DE PLANOS E BENEFÍCIOS:
+CATÁLOGO DE BENEFÍCIOS POR PLANO:
 ${PLAN_CATALOG}
 
 JSON esperado:
-{${SCORE_SCHEMA}
-  "lead_nome": "string (primeiro nome ou nome completo extraído das notas)",
-  "plano": "string (nome comercial exato do plano — ex: 'Único Vitalício', '10 Anúncios Anual')",
-  "valor": "string (EXATAMENTE o valor de '${planVal}' — não invente nem altere)",
-  "validade": "string (prazo limite claro — ex: 'até sexta-feira, 30/04' ou 'válida por 3 dias úteis')",
-  "beneficios": ["string (benefício concreto do plano negociado — use o catálogo acima, apenas os do plano ${planVal})"],
-  "por_que_agora": ["string (razão específica para ESTE lead fechar agora, baseada nas notas)"],
-  "proximos_passos": ["string (passo curto e objetivo — máx 2 passos)"],
-  "followup_whatsapp": "string (mensagem completa pronta para copiar e enviar no WhatsApp. Tom casual e direto. Use o nome do lead, mencione o plano, o valor e o prazo. Máx 4 linhas. Sem formatação markdown — só texto puro com emojis naturais)"
+{
+  "lead_nome": "string (primeiro nome do lead)",
+  "mensagem": "string (mensagem WhatsApp COMPLETA, pronta para copiar e enviar)"
 }
 
-REGRAS:
-${SCORE_REGRA}
-- beneficios: 4 a 6 itens, SOMENTE do plano negociado (${planVal}) — não misture outros planos
-- valor: copie ipsis litteris de "${planVal}" — não reformate nem arredonde
-- validade: calcule a partir de hoje (${new Date().toLocaleDateString('pt-BR')}) — seja específico com dia da semana e data
-- por_que_agora: 2 a 3 razões concretas baseadas no perfil do lead (urgência real, não genérica)
-- proximos_passos: máximo 2 passos simples e diretos
-- followup_whatsapp: mensagem de cobrança/follow-up da proposta, não de apresentação. O lead já recebeu a proposta. Esta mensagem serve para fazer o closer cobrar resposta. Tom: amigável mas firme. Inclua o prazo. Termine com uma pergunta ou CTA claro`;
+REGRAS DA MENSAGEM:
+- Comece com: Olá, [primeiro nome]! 👋
+- 1 linha apresentando a proposta de forma direta
+- Bloco de plano e valor: use *asteriscos* para negrito no WhatsApp (ex: *Plano Único Vitalício — 3x R$ 399,33*)
+- Se houve desconto, mencione que é uma condição especial
+- Liste de 3 a 4 benefícios PRINCIPAIS do plano (use o catálogo acima, apenas os do plano informado), em tópicos com •
+- Termine OBRIGATORIAMENTE com: ⏰ *Proposta válida até [data limite informada]*
+- Última linha: CTA simples e direto (ex: "É só me confirmar aqui que envio o link de pagamento! 🤝")
+- Tom: caloroso, direto, sem exageros
+- Sem saudações corporativas, sem "prezado", sem assinatura
+- Máximo 15 linhas no total
+- Use \\n para quebras de linha dentro da string JSON`;
 }
 
 // ─── Chamada à API (streaming p/ evitar timeout e reduzir latência percebida) ──

@@ -214,15 +214,20 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .s-cta-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.3rem; }
 .s-validade { font-size:11px; opacity:.65; margin-top:.4rem; }
 
-/* ── Proposta: hero card ── */
-.prop-hero { background:var(--accent-bg); border:1.5px solid var(--accent-l); border-radius:12px; padding:1.1rem 1.3rem; margin-bottom:1rem; }
-.prop-hero-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem 1.2rem; }
-@media(max-width:480px){ .prop-hero-row { grid-template-columns:1fr; } }
-.prop-hero-item { display:flex; flex-direction:column; gap:2px; }
-.prop-hero-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); font-family:'Syne',sans-serif; }
-.prop-hero-val { font-size:14px; font-weight:600; color:var(--fg); }
-.prop-hero-price { font-size:18px; color:var(--accent); font-family:'Syne',sans-serif; }
-.prop-hero-prazo .prop-hero-val { color:#791F1F; }
+/* ── Proposta: campos de entrada ── */
+#propFields input[type="text"],
+#propFields input[type="date"] {
+  width:100%; padding:.55rem .75rem; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface); color:var(--fg); font-size:13px; font-family:'DM Sans',sans-serif;
+  box-sizing:border-box; transition:border-color .15s;
+}
+#propFields input:focus { outline:none; border-color:var(--accent); }
+#propFields textarea {
+  width:100%; padding:.55rem .75rem; border:1px solid var(--border); border-radius:8px;
+  background:var(--surface); color:var(--fg); font-size:13px; font-family:'DM Sans',sans-serif;
+  box-sizing:border-box; resize:vertical; transition:border-color .15s;
+}
+#propFields textarea:focus { outline:none; border-color:var(--accent); }
 
 /* ── Proposta: card WhatsApp follow-up ── */
 .prop-wa-card { border:1.5px solid #25D366; border-radius:12px; overflow:hidden; margin-top:.5rem; }
@@ -622,7 +627,8 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
         <label>Horário da ligação</label>
         <input id="callTime" type="time" value="09:30">
       </div>
-      <div class="field">
+      <!-- Campo SDR (modo script) -->
+      <div id="sdrWrap" class="field">
         <div class="label-row">
           <label style="margin:0" id="sdrLabel">Resumo do SDR</label>
           <span class="char-count" id="charCount">0 / 4000</span>
@@ -632,6 +638,26 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
           oninput="updateCharCount()"
           onkeydown="if(event.ctrlKey&&event.key==='Enter')gen()"></textarea>
       </div>
+
+      <!-- Campos de proposta (modo proposal) -->
+      <div id="propFields" style="display:none">
+        <div class="field">
+          <label>Nome do lead</label>
+          <input id="propLeadNome" type="text" placeholder="Ex: João Silva"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')gen()">
+        </div>
+        <div class="field">
+          <label>Data limite da proposta</label>
+          <input id="propDeadline" type="date">
+        </div>
+        <div class="field">
+          <label>Observação <span style="opacity:.55;font-weight:400">(opcional)</span></label>
+          <textarea id="propObs" rows="3" maxlength="400"
+            placeholder="Ex: cliente achou o valor alto mas topou, tem urgência para vender…"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')gen()"></textarea>
+        </div>
+      </div>
+
       <button class="gbtn" id="gbtn" onclick="gen()">
         <span id="bico">⚡</span>
         <span id="btxt">Gerar Script de Fechamento</span>
@@ -891,15 +917,16 @@ function setMode(mode) {
   document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
-  // Label e placeholder do briefing mudam conforme o modo
-  const sdrLabel = document.getElementById('sdrLabel');
-  const sdrEl    = document.getElementById('sdr');
+  // Alterna entre briefing SDR e campos de proposta
+  document.getElementById('sdrWrap').style.display    = mode==='script' ? '' : 'none';
+  document.getElementById('propFields').style.display = mode==='proposal' ? '' : 'none';
+  // Pré-seleciona data limite como daqui a 3 dias úteis se vazio
   if (mode === 'proposal') {
-    if (sdrLabel) sdrLabel.textContent = 'Notas da Reunião';
-    if (sdrEl)    sdrEl.placeholder    = 'Descreva o que foi discutido na reunião: perfil do lead, imóvel de interesse, valor negociado, objeções levantadas, condições acordadas…';
-  } else {
-    if (sdrLabel) sdrLabel.textContent = 'Resumo do SDR';
-    if (sdrEl)    sdrEl.placeholder    = 'Cole aqui o briefing completo do SDR…';
+    const dlEl = document.getElementById('propDeadline');
+    if (dlEl && !dlEl.value) {
+      const d = new Date(); d.setDate(d.getDate() + 3);
+      dlEl.value = d.toISOString().split('T')[0];
+    }
   }
   document.getElementById('btxt').textContent = mode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
   document.getElementById('otitle').textContent = mode==='script' ? 'Script de Fechamento' : 'Proposta Comercial';
@@ -1032,14 +1059,42 @@ function updateCharCount() {
 
 // ── Generate ───────────────────────────────────────────────────────────────
 async function gen() {
-  const briefing = document.getElementById('sdr').value.trim();
   const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
   const callTime = document.getElementById('callTime').value;
+  let briefing   = '';
 
-  if (!briefing) {
-    const el = document.getElementById('sdr');
-    el.style.borderColor='#E24B4A'; el.focus();
-    setTimeout(()=>el.style.borderColor='', 2000); return;
+  if (currentMode === 'proposal') {
+    // Campos simples de proposta
+    const leadNome = document.getElementById('propLeadNome').value.trim();
+    const deadline = document.getElementById('propDeadline').value;
+    const obs      = document.getElementById('propObs').value.trim();
+
+    if (!leadNome) {
+      const el = document.getElementById('propLeadNome');
+      el.style.borderColor='#E24B4A'; el.focus();
+      setTimeout(()=>el.style.borderColor='', 2000); return;
+    }
+    if (!deadline) {
+      const el = document.getElementById('propDeadline');
+      el.style.borderColor='#E24B4A'; el.focus();
+      setTimeout(()=>el.style.borderColor='', 2000); return;
+    }
+
+    // Formata data limite legível
+    const [y,m,d] = deadline.split('-');
+    const dtObj   = new Date(+y, +m-1, +d);
+    const dias    = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+    const meses   = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const dtFmt   = `${dias[dtObj.getDay()]}, ${dtObj.getDate()} de ${meses[dtObj.getMonth()]}`;
+
+    briefing = `Lead: ${leadNome} | Plano e valor: ${planVal} | Data limite da proposta: ${dtFmt}${obs ? ' | Observação: ' + obs : ''}`;
+  } else {
+    briefing = document.getElementById('sdr').value.trim();
+    if (!briefing) {
+      const el = document.getElementById('sdr');
+      el.style.borderColor='#E24B4A'; el.focus();
+      setTimeout(()=>el.style.borderColor='', 2000); return;
+    }
   }
 
   const btn = document.getElementById('gbtn');
@@ -1225,57 +1280,21 @@ function copyFollowup(btn) {
 }
 
 function renderProposal(j) {
+  const msg = j.mensagem || j.followup_whatsapp || '';
   let h = `<div class="script-wrap">`;
   h += scoreCard(j.score);
-
-  // ── Cabeçalho direto ────────────────────────────────────────────────────
   h += `<h1>Proposta para ${esc(j.lead_nome||'Lead')}</h1>`;
+  h += `<p class="sub" style="margin-bottom:1rem">Mensagem pronta — copie e envie pelo WhatsApp</p>`;
 
-  // ── Card hero: nome · plano · valor · prazo ──────────────────────────────
-  h += `<div class="prop-hero">
-    <div class="prop-hero-row">
-      <div class="prop-hero-item"><span class="prop-hero-label">Cliente</span><span class="prop-hero-val">${esc(j.lead_nome||'—')}</span></div>
-      <div class="prop-hero-item"><span class="prop-hero-label">Plano</span><span class="prop-hero-val">${esc(j.plano||'—')}</span></div>
-      <div class="prop-hero-item prop-hero-valor"><span class="prop-hero-label">Valor acordado</span><span class="prop-hero-val prop-hero-price">${esc(j.valor||'—')}</span></div>
-      <div class="prop-hero-item prop-hero-prazo"><span class="prop-hero-label">⏰ Válida até</span><span class="prop-hero-val">${esc(j.validade||'—')}</span></div>
+  // ── Card WhatsApp ─────────────────────────────────────────────────────
+  h += `<div class="prop-wa-card">
+    <div class="prop-wa-header">
+      <span class="prop-wa-icon">💬</span>
+      <span class="prop-wa-title">Mensagem WhatsApp</span>
+      <button class="prop-wa-copy" onclick="copyFollowup(this)">📋 Copiar mensagem</button>
     </div>
+    <div class="prop-wa-msg">${esc(msg)}</div>
   </div>`;
-
-  // ── Benefícios do plano ────────────────────────────────────────────────
-  if (j.beneficios?.length) {
-    h += `<div class="s-card">
-      <div class="s-hrow"><span class="s-badge sb-3">✅</span><span class="s-etitle">O que está incluso no ${esc(j.plano||'plano')}</span></div>
-      <ul class="s-list">${j.beneficios.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
-  // ── Por que fechar agora ───────────────────────────────────────────────
-  if (j.por_que_agora?.length) {
-    h += `<div class="s-card">
-      <div class="s-hrow"><span class="s-badge sb-2">⚡</span><span class="s-etitle">Por que fechar agora</span></div>
-      <ul class="s-list">${j.por_que_agora.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
-    </div>`;
-  }
-
-  // ── Próximos passos ───────────────────────────────────────────────────
-  if (j.proximos_passos?.length) {
-    h += `<div class="s-card">
-      <div class="s-hrow"><span class="s-badge sb-5">→</span><span class="s-etitle">Próximos Passos</span></div>
-      <div>${j.proximos_passos.map((p,i) => `<div class="s-step"><div class="s-step-num">${i+1}</div><div class="s-step-text">${esc(p)}</div></div>`).join('')}</div>
-    </div>`;
-  }
-
-  // ── Follow-up WhatsApp ────────────────────────────────────────────────
-  if (j.followup_whatsapp) {
-    h += `<div class="prop-wa-card">
-      <div class="prop-wa-header">
-        <span class="prop-wa-icon">💬</span>
-        <span class="prop-wa-title">Mensagem de Follow-up — WhatsApp</span>
-        <button class="prop-wa-copy" onclick="copyFollowup(this)">📋 Copiar mensagem</button>
-      </div>
-      <div class="prop-wa-msg">${esc(j.followup_whatsapp)}</div>
-    </div>`;
-  }
 
   h += `</div>`;
   document.getElementById('out').innerHTML = h;
