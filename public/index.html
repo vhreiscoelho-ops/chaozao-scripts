@@ -214,6 +214,23 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .s-cta-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.3rem; }
 .s-validade { font-size:11px; opacity:.65; margin-top:.4rem; }
 
+/* ── Proposta inline (dentro do resultado bar) ── */
+#propInlineSection { border-top:1px solid var(--border); margin-top:.75rem; padding-top:.6rem; }
+.prop-inline-toggle { width:100%; background:none; border:1px dashed var(--border); border-radius:8px; padding:.45rem .8rem; font-size:12px; font-weight:600; color:var(--accent); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:all .15s; font-family:'DM Sans',sans-serif; }
+.prop-inline-toggle:hover { background:var(--accent-bg); border-color:var(--accent-l); }
+#propInlineForm { padding-top:.65rem; }
+.prop-inline-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+@media(max-width:420px){ .prop-inline-grid { grid-template-columns:1fr; } }
+.prop-inline-field { display:flex; flex-direction:column; gap:3px; }
+.prop-inline-field label { font-size:10.5px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.prop-inline-field input,.prop-inline-field textarea { padding:.42rem .65rem; border:1px solid var(--border); border-radius:7px; background:var(--surface); color:var(--fg); font-size:12.5px; font-family:'DM Sans',sans-serif; box-sizing:border-box; transition:border-color .15s; width:100%; }
+.prop-inline-field input:focus,.prop-inline-field textarea:focus { outline:none; border-color:var(--accent); }
+.prop-inline-field textarea { resize:none; }
+.prop-inline-btn { margin-top:.65rem; width:100%; background:var(--accent); color:#fff; border:none; border-radius:8px; padding:.52rem; font-size:13px; font-weight:600; cursor:pointer; font-family:'Syne',sans-serif; transition:opacity .15s; display:flex; align-items:center; justify-content:center; gap:.4rem; }
+.prop-inline-btn:hover { opacity:.88; }
+.prop-inline-btn:disabled { opacity:.55; cursor:not-allowed; }
+.prop-inline-done { display:flex; align-items:center; justify-content:space-between; padding:.5rem .7rem; background:#E8F5E9; border-radius:8px; font-size:12px; font-weight:600; color:#085041; margin-top:.5rem; }
+
 /* ── View tabs (Script | Proposta) ── */
 #viewTabWrap { display:none; flex-shrink:0; border-bottom:1px solid var(--border); background:var(--surface2); padding:.4rem .8rem; gap:6px; }
 #viewTabWrap.show { display:flex !important; }
@@ -732,7 +749,7 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
     </div>
 
     <!-- Abas Script / Proposta (visível quando o item tem os dois) -->
-    <div id="viewTabWrap" style="display:none;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface2);padding:.4rem .8rem;display:none;gap:6px">
+    <div id="viewTabWrap" style="display:none">
       <button id="vtab-script"   class="vtab on"  onclick="switchViewTab('script')">📞 Script</button>
       <button id="vtab-proposal" class="vtab"     onclick="switchViewTab('proposal')">📄 Proposta</button>
     </div>
@@ -761,6 +778,42 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
         <div class="obs-footer">
           <button class="obs-save" onclick="saveObservacao()">Salvar anotação</button>
           <span class="obs-saved" id="obsSaved">✓ Salvo</span>
+        </div>
+      </div>
+
+      <!-- Proposta inline (aparece abaixo do resultado quando modo = script) -->
+      <div id="propInlineSection" style="display:none">
+        <button class="prop-inline-toggle" id="propInlineToggle" onclick="togglePropInline()">
+          <span>📄 Gerar Proposta Comercial</span>
+          <span id="propInlineArrow" style="font-size:10px;opacity:.6">▼</span>
+        </button>
+        <div id="propInlineForm" style="display:none">
+          <div class="prop-inline-grid">
+            <div class="prop-inline-field">
+              <label>Nome do lead</label>
+              <input id="piLeadNome" type="text" placeholder="Ex: João Silva"
+                onkeydown="if(event.ctrlKey&&event.key==='Enter')genProposalInline()">
+            </div>
+            <div class="prop-inline-field">
+              <label>Válida até</label>
+              <input id="piDeadline" type="date">
+            </div>
+          </div>
+          <div class="prop-inline-field" style="margin-top:.5rem">
+            <label>Observação <span style="opacity:.5;font-weight:400">(opcional)</span></label>
+            <textarea id="piObs" rows="2" placeholder="Ex: cliente achou o valor alto mas topou, tem urgência…"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')genProposalInline()"></textarea>
+          </div>
+          <button class="prop-inline-btn" id="propInlineBtn" onclick="genProposalInline()">
+            <span id="propInlineBico">⚡</span> Gerar Proposta
+          </button>
+        </div>
+        <!-- Estado: proposta já gerada -->
+        <div id="propInlineDone" style="display:none">
+          <div class="prop-inline-done">
+            <span>✅ Proposta gerada</span>
+            <button onclick="switchViewTab('proposal')" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;font-weight:600;padding:0">Ver proposta →</button>
+          </div>
         </div>
       </div>
     </div>
@@ -966,6 +1019,12 @@ function resetOutput() {
   document.getElementById('cbtn').style.display = 'none';
   document.getElementById('resultadoBar').style.display = 'none';
   document.getElementById('abTabWrap').style.display = 'none';
+  document.getElementById('propInlineSection').style.display = 'none';
+  document.getElementById('propInlineForm').style.display    = 'none';
+  document.getElementById('propInlineDone').style.display    = 'none';
+  document.getElementById('piLeadNome').value = '';
+  document.getElementById('piDeadline').value = '';
+  document.getElementById('piObs').value      = '';
   showViewTabs(false);
   showRecPanel(false);
   currentOutput = null;
@@ -1369,19 +1428,141 @@ function renderProposal(j) {
 
 // ── Resultado Bar ──────────────────────────────────────────────────────────
 function showResultadoBar(mode, item) {
-  showRecPanel(mode === 'script');   // painel de gravação só para scripts
+  showRecPanel(mode === 'script');
   const bar = document.getElementById('resultadoBar');
-  bar.style.display='';
-  document.getElementById('resultadoTitle').textContent = mode==='script'?'Como foi a ligação?':'Qual foi o resultado da proposta?';
-  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
-  document.getElementById('obsArea').style.display='none';
-  document.getElementById('obsText').value='';
-  document.getElementById('obsSaved').style.display='none';
-  if(item?.resultado){
-    const btn=document.querySelector(`.rbtn[data-val="${item.resultado}"]`);
-    if(btn)btn.classList.add('on');
-    document.getElementById('obsArea').style.display='';
-    if(item.observacao)document.getElementById('obsText').value=item.observacao;
+  bar.style.display = '';
+  document.getElementById('resultadoTitle').textContent = mode==='script' ? 'Como foi a ligação?' : 'Qual foi o resultado da proposta?';
+  document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('on'));
+  document.getElementById('obsArea').style.display = 'none';
+  document.getElementById('obsText').value = '';
+  document.getElementById('obsSaved').style.display = 'none';
+  if (item?.resultado) {
+    const btn = document.querySelector(`.rbtn[data-val="${item.resultado}"]`);
+    if (btn) btn.classList.add('on');
+    document.getElementById('obsArea').style.display = '';
+    if (item.observacao) document.getElementById('obsText').value = item.observacao;
+  }
+
+  // Seção de proposta inline — só para scripts
+  const propSec   = document.getElementById('propInlineSection');
+  const propDone  = document.getElementById('propInlineDone');
+  const propForm  = document.getElementById('propInlineForm');
+  const propToggle= document.getElementById('propInlineToggle');
+  if (mode === 'script') {
+    propSec.style.display = '';
+    const hasProposal = !!(item?.proposalMsg || currentOutput?.proposalMsg);
+    propDone.style.display  = hasProposal ? '' : 'none';
+    propToggle.style.display= hasProposal ? 'none' : '';
+    propForm.style.display  = 'none';
+    document.getElementById('propInlineArrow').textContent = '▼';
+    // Pré-preenche nome e data se ainda não preenchido
+    const nomeEl = document.getElementById('piLeadNome');
+    const dateEl = document.getElementById('piDeadline');
+    if (nomeEl && !nomeEl.value) {
+      nomeEl.value = item?.leadNome || currentOutput?.result?.lead_nome || '';
+    }
+    if (dateEl && !dateEl.value) {
+      const d = new Date(); d.setDate(d.getDate() + 3);
+      dateEl.value = d.toISOString().split('T')[0];
+    }
+  } else {
+    propSec.style.display = 'none';
+  }
+}
+
+// ── Proposta inline: toggle formulário ────────────────────────────────────
+function togglePropInline() {
+  const form  = document.getElementById('propInlineForm');
+  const arrow = document.getElementById('propInlineArrow');
+  const open  = form.style.display === 'none';
+  form.style.display  = open ? '' : 'none';
+  arrow.textContent   = open ? '▲' : '▼';
+  if (open) document.getElementById('piLeadNome').focus();
+}
+
+// ── Proposta inline: gerar e vincular ao script atual ─────────────────────
+async function genProposalInline() {
+  if (!currentOutput?.id) return;
+
+  const leadNome = document.getElementById('piLeadNome').value.trim();
+  const deadline = document.getElementById('piDeadline').value;
+  const obs      = document.getElementById('piObs').value.trim();
+
+  if (!leadNome) {
+    const el = document.getElementById('piLeadNome');
+    el.style.borderColor = '#E24B4A'; el.focus();
+    setTimeout(() => el.style.borderColor = '', 2000); return;
+  }
+  if (!deadline) {
+    const el = document.getElementById('piDeadline');
+    el.style.borderColor = '#E24B4A'; el.focus();
+    setTimeout(() => el.style.borderColor = '', 2000); return;
+  }
+
+  // Formata data por extenso
+  const [y,m,d]  = deadline.split('-');
+  const dtObj    = new Date(+y, +m-1, +d);
+  const dias     = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  const meses    = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const dtFmt    = `${dias[dtObj.getDay()]}, ${dtObj.getDate()} de ${meses[dtObj.getMonth()]}`;
+
+  // Desconto do seletor principal
+  const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
+  const pct      = Math.max(0, parseFloat(document.getElementById('discountPct')?.value) || 0);
+  const base     = _planSelected.base;
+  const isMes    = _planSelected.label === 'mes';
+  const fmtCur   = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmt      = v => fmtCur(v) + (isMes ? '/mes' : '');
+  let discountInfo = '';
+  if (pct > 0 && base) {
+    const disc = base * (1 - pct / 100);
+    const sav  = base - disc;
+    discountInfo = ` | Valor integral: ${fmt(base)} | Desconto: ${pct}% | Valor negociado: ${fmt(disc)} | Economia: ${fmtCur(sav)}`;
+  }
+
+  const briefing = `Lead: ${leadNome} | Plano: ${planVal}${discountInfo} | Data limite: ${dtFmt}${obs ? ' | Obs: ' + obs : ''}`;
+
+  // UI: loading
+  const btn = document.getElementById('propInlineBtn');
+  btn.disabled = true;
+  document.getElementById('propInlineBico').textContent = '⏳';
+
+  try {
+    const res  = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'proposal',
+        closer: selectedCloser?.name || 'Closer',
+        planVal, briefing,
+        linkedId: currentOutput.id
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao gerar proposta');
+
+    // Atualiza currentOutput com a proposta vinculada
+    currentOutput.proposalMsg      = data.result.mensagem || '';
+    currentOutput.proposalLeadNome = data.result.lead_nome || leadNome;
+
+    // Mostra abas e muda para aba proposta
+    showViewTabs(true, 'proposal');
+    renderProposal(data.result);
+    document.getElementById('osub').textContent = `${esc(leadNome)} · script + proposta`;
+
+    // Atualiza seção inline: esconde form, mostra "✅ gerada"
+    document.getElementById('propInlineForm').style.display   = 'none';
+    document.getElementById('propInlineToggle').style.display = 'none';
+    document.getElementById('propInlineDone').style.display   = '';
+    document.getElementById('propInlineArrow').textContent    = '▼';
+
+    refreshQueue();
+    showToast('✅ Proposta gerada e vinculada ao script!');
+  } catch(e) {
+    showToast('⚠️ ' + e.message, 4000);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('propInlineBico').textContent = '⚡';
   }
 }
 
@@ -1812,13 +1993,6 @@ function updateQueueDateLabel() {
   document.getElementById('queueDate').textContent = isToday
     ? 'Hoje — ' + d.toLocaleDateString('pt-BR', { day:'2-digit', month:'long' })
     : d.toLocaleDateString('pt-BR', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-}
-
-function closeQueue() {
-  queueOpen = false;
-  document.getElementById('queueSidebar').classList.remove('open');
-  document.body.classList.remove('queue-open');
-  document.getElementById('queueBtn').classList.remove('on');
 }
 
 async function refreshQueue() {
