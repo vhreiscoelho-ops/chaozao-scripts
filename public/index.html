@@ -1087,7 +1087,20 @@ async function gen() {
     const meses   = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
     const dtFmt   = `${dias[dtObj.getDay()]}, ${dtObj.getDate()} de ${meses[dtObj.getMonth()]}`;
 
-    briefing = `Lead: ${leadNome} | Plano e valor: ${planVal} | Data limite da proposta: ${dtFmt}${obs ? ' | Observação: ' + obs : ''}`;
+    // Calcula desconto e economia para passar à IA
+    const pct    = Math.max(0, parseFloat(document.getElementById('discountPct')?.value) || 0);
+    const base   = _planSelected.base;
+    const isMes  = _planSelected.label === 'mes';
+    const fmtCur = v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const fmt    = v => fmtCur(v) + (isMes ? '/mes' : '');
+    let discountInfo = '';
+    if (pct > 0 && base) {
+      const discounted = base * (1 - pct / 100);
+      const savings    = base - discounted;
+      discountInfo = ` | Valor integral (sem desconto): ${fmt(base)} | Desconto: ${pct}% | Valor negociado: ${fmt(discounted)} | Economia do lead: ${fmtCur(savings)}`;
+    }
+
+    briefing = `Lead: ${leadNome} | Plano: ${planVal}${discountInfo} | Data limite: ${dtFmt}${obs ? ' | Obs: ' + obs : ''}`;
   } else {
     briefing = document.getElementById('sdr').value.trim();
     if (!briefing) {

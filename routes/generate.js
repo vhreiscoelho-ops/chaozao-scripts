@@ -149,16 +149,19 @@ JSON esperado:
 }
 
 REGRAS DA MENSAGEM:
+- PROIBIDO usar travessão (—) em qualquer parte do texto. Use hífen simples (-) se precisar separar algo.
 - Comece com: Olá, [primeiro nome]! 👋
-- 1 linha apresentando a proposta de forma direta
-- Bloco de plano e valor: use *asteriscos* para negrito no WhatsApp (ex: *Plano Único Vitalício — 3x R$ 399,33*)
-- Se houve desconto, mencione que é uma condição especial
-- Liste de 3 a 4 benefícios PRINCIPAIS do plano (use o catálogo acima, apenas os do plano informado), em tópicos com •
-- Termine OBRIGATORIAMENTE com: ⏰ *Proposta válida até [data limite informada]*
-- Última linha: CTA simples e direto (ex: "É só me confirmar aqui que envio o link de pagamento! 🤝")
-- Tom: caloroso, direto, sem exageros
-- Sem saudações corporativas, sem "prezado", sem assinatura
-- Máximo 15 linhas no total
+- 1 linha curta e direta apresentando a proposta
+- Bloco de investimento (escolha conforme os dados):
+    * SEM desconto: *[nome do plano] - [valor]*
+    * COM desconto: linha 1: ~[valor integral]~ *[valor negociado]* | linha 2: 💰 Você economiza [valor da economia]
+- Liste de 3 a 4 benefícios principais do plano (catálogo acima, apenas os do plano informado), em tópicos com •
+- Antes do final: ⏰ *Proposta válida até [data limite informada]*
+- Penúltima linha: CTA simples e direto (ex: "É só me confirmar aqui que envio o link de pagamento! 🤝")
+- Última linha OBRIGATÓRIA: 🌐 https://chaozao.com.br/
+- Tom: caloroso, direto, sem exageros corporativos
+- Sem "prezado", sem assinatura, sem saudações formais
+- Máximo 16 linhas no total
 - Use \\n para quebras de linha dentro da string JSON`;
 }
 
