@@ -135,12 +135,13 @@ router.post('/briefing', async (req, res) => {
 
   try {
     const prompt  = scriptPrompt(closer, callTime, planVal, briefing, strategy);
-    const message = await client.messages.create({
+    const stream  = client.messages.stream({
       model:      'claude-sonnet-4-6',
-      max_tokens: 8000,
+      max_tokens: 5000,
       system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: prompt }],
     });
+    const message = await stream.finalMessage();
     const raw  = (message.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
 

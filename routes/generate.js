@@ -90,46 +90,93 @@ ${SCORE_REGRA}
 - personalizar COMPLETAMENTE para o perfil do lead`;
 }
 
+// ─── Catálogo de benefícios por plano ────────────────────────────────────────
+const PLAN_CATALOG = `
+PLANO ÚNICO VITALÍCIO (À vista R$ 1.198,00 | ou 3× R$ 399,33):
+  - 1 anúncio ativo permanente na maior plataforma de imóveis rurais do Brasil
+  - Acesso vitalício sem mensalidades — paga uma vez, anuncia para sempre
+  - Sem renovação automática nem surpresas no bolso
+  - Fotos ilimitadas por anúncio e descrição completa do imóvel
+  - Aparece nas buscas orgânicas e no mapa interativo do Chãozão
+  - Ideal para: proprietário com 1 imóvel que quer vender ou alugar sem pressa
+
+PLANO 5 ANÚNCIOS (Anual R$ 184,80/mês | Semestral R$ 217,20/mês):
+  - Até 5 anúncios ativos simultaneamente
+  - Destaque nas buscas regionais — aparece antes dos anúncios gratuitos
+  - Painel de analytics com visualizações e contatos por anúncio
+  - Suporte prioritário por WhatsApp
+  - Ideal para: corretor independente ou proprietário com pequeno portfólio
+
+PLANO 10 ANÚNCIOS (Anual R$ 223,20/mês | Semestral R$ 260,40/mês):
+  - Até 10 anúncios ativos simultaneamente
+  - Destaque premium nas buscas + selo "Verificado" em todos os anúncios
+  - Analytics avançado com comparativo de mercado regional
+  - Leads qualificados encaminhados diretamente ao closer
+  - Suporte prioritário com gerente de conta
+  - Ideal para: imobiliária rural de pequeno/médio porte
+
+PLANO 20 ANÚNCIOS (Anual R$ 358,80/mês | Semestral R$ 420,00/mês):
+  - Até 20 anúncios ativos simultaneamente
+  - Destaque máximo nas buscas + página de perfil da empresa no Chãozão
+  - Analytics completo com relatórios exportáveis e histórico de leads
+  - Integração com CRM via webhook
+  - Gerente de conta dedicado
+  - Ideal para: imobiliária ou produtor rural com portfólio ativo
+
+PLANO 30 ANÚNCIOS (Anual R$ 450,00/mês | Semestral R$ 526,80/mês):
+  - Até 30 anúncios ativos simultaneamente
+  - Máxima visibilidade — topo garantido nos resultados de busca
+  - Perfil verificado e destacado como Parceiro Premium Chãozão
+  - Relatórios personalizados + integração CRM com suporte técnico
+  - Gerente de conta dedicado + suporte prioritário 7 dias por semana
+  - Ideal para: grandes imobiliárias rurais e fazendeiros com múltiplos imóveis`;
+
 function proposalPrompt(closer, planVal, briefing) {
-  return `Crie uma proposta comercial personalizada. Retorne SOMENTE o objeto JSON abaixo. NÃO inclua explicações, markdown, texto antes ou depois. Comece sua resposta diretamente com { e termine com }.
+  return `Crie uma proposta comercial pós-reunião. Retorne SOMENTE o objeto JSON abaixo. NÃO inclua explicações, markdown, texto antes ou depois. Comece diretamente com { e termine com }.
+
+CONTEXTO: Proposta enviada APÓS a reunião. Closer e lead já conversaram e chegaram a um acordo. Seja direto — o lead já sabe o produto, não precisa ser convencido do zero.
 
 DADOS:
 - Closer: ${closer}
-- Plano: ${planVal}
+- Plano e valor acordado: ${planVal}
 
-BRIEFING DO SDR:
+NOTAS DA REUNIÃO:
 ${briefing}
+
+CATÁLOGO DE PLANOS E BENEFÍCIOS:
+${PLAN_CATALOG}
 
 JSON esperado:
 {${SCORE_SCHEMA}
-  "lead_nome": "string",
-  "subtitulo": "string (Proposta Comercial · imóvel · cidade · Closer: nome)",
-  "resumo": "string (2-3 frases apresentando a proposta ao lead)",
-  "alerta": { "tipo": "verde|aviso", "titulo": "string", "texto": "string" },
-  "stats": [{ "label": "string", "val": "string", "sub": "string" }],
-  "por_que_chaozao": ["string"],
-  "solucao": { "titulo": "string", "descricao": "string", "beneficios": ["string"] },
-  "investimento": { "plano": "string", "condicoes": "string", "inclui": ["string"] },
-  "proximos_passos": ["string"],
-  "validade": "string",
-  "cta": "string"
+  "lead_nome": "string (primeiro nome ou nome completo extraído das notas)",
+  "plano": "string (nome comercial exato do plano — ex: 'Único Vitalício', '10 Anúncios Anual')",
+  "valor": "string (EXATAMENTE o valor de '${planVal}' — não invente nem altere)",
+  "validade": "string (prazo limite claro — ex: 'até sexta-feira, 30/04' ou 'válida por 3 dias úteis')",
+  "beneficios": ["string (benefício concreto do plano negociado — use o catálogo acima, apenas os do plano ${planVal})"],
+  "por_que_agora": ["string (razão específica para ESTE lead fechar agora, baseada nas notas)"],
+  "proximos_passos": ["string (passo curto e objetivo — máx 2 passos)"],
+  "followup_whatsapp": "string (mensagem completa pronta para copiar e enviar no WhatsApp. Tom casual e direto. Use o nome do lead, mencione o plano, o valor e o prazo. Máx 4 linhas. Sem formatação markdown — só texto puro com emojis naturais)"
 }
 
 REGRAS:
 ${SCORE_REGRA}
-- stats: exatamente 4 cards (Lead, Imóvel, Investimento, Validade)
-- por_que_chaozao: 3 a 5 razões específicas para ESTE lead
-- linguagem calorosa, consultiva e personalizada`;
+- beneficios: 4 a 6 itens, SOMENTE do plano negociado (${planVal}) — não misture outros planos
+- valor: copie ipsis litteris de "${planVal}" — não reformate nem arredonde
+- validade: calcule a partir de hoje (${new Date().toLocaleDateString('pt-BR')}) — seja específico com dia da semana e data
+- por_que_agora: 2 a 3 razões concretas baseadas no perfil do lead (urgência real, não genérica)
+- proximos_passos: máximo 2 passos simples e diretos
+- followup_whatsapp: mensagem de cobrança/follow-up da proposta, não de apresentação. O lead já recebeu a proposta. Esta mensagem serve para fazer o closer cobrar resposta. Tom: amigável mas firme. Inclua o prazo. Termine com uma pergunta ou CTA claro`;
 }
 
-// ─── Chamada à API ─────────────────────────────────────────────────────────────
+// ─── Chamada à API (streaming p/ evitar timeout e reduzir latência percebida) ──
 async function callClaude(prompt) {
-  const message = await client.messages.create({
+  const stream = client.messages.stream({
     model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+    max_tokens: 5000,
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: prompt }]
   });
+  const message = await stream.finalMessage();
   const raw = (message.content || []).map(c => c.text || '').join('');
   return extractJson(raw);
 }

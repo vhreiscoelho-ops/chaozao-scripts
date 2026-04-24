@@ -13,6 +13,17 @@ const RES_LABELS = {
   reagendou: '📅 Reagendou', sem_perfil: '❌ Sem perfil', perdeu: '🔴 Perdeu'
 };
 
+// System prompts estáveis (cacheáveis — economiza tokens e latência em chamadas repetidas)
+const INSIGHTS_SYSTEM = `Você é um consultor de vendas sênior especializado em análise de performance comercial de imóveis rurais (Chãozão).
+Analise dados de ligações e identifique padrões CONCRETOS e ACIONÁVEIS entre o que fechou e o que não fechou.
+Seja brutalmente honesto — não suavize padrões negativos.
+REGRA ABSOLUTA: responda SEMPRE com JSON puro e válido, começando com { e terminando com }. Nunca use markdown.`;
+
+const COACHING_SYSTEM = `Você é um coach de vendas sênior especializado em imóveis rurais (Chãozão).
+Analise transcrições de ligações e forneça coaching direto e acionável para o closer.
+Avalie a EXECUÇÃO do closer, não apenas o resultado final. Seja brutalmente honesto — elogios genéricos não ajudam ninguém a crescer.
+REGRA ABSOLUTA: responda SEMPRE com JSON puro e válido, começando com { e terminando com }. Nunca use markdown.`;
+
 // ─── GET /api/analytics ───────────────────────────────────────────────────────
 router.get('/', (_req, res) => {
   const { history } = load();
@@ -132,9 +143,7 @@ router.post('/insights', async (_req, res) => {
   const winSample  = vencedores.slice(0, 10).map(summarize);
   const loseSample = perdedores.slice(0,  8).map(summarize);
 
-  const prompt = `Você é um consultor de vendas sênior especializado em análise de performance comercial.
-
-Analise os dados abaixo de ligações de venda do Chãozão (imóveis rurais) e identifique padrões concretos entre o que FECHOU e o que NÃO fechou.
+  const prompt = `Analise os dados abaixo de ligações de venda e identifique padrões concretos entre o que FECHOU e o que NÃO fechou.
 
 SCRIPTS QUE FECHARAM (${winSample.length} casos):
 ${JSON.stringify(winSample, null, 2)}
@@ -157,7 +166,6 @@ Retorne APENAS este JSON:
 }
 
 REGRAS:
-- Seja brutalmente honesto — não suavize padrões negativos
 - Foque em padrões ACIONÁVEIS, não em observações óbvias
 - padroes_vencedores: 3 a 5 padrões com impacto alto ou médio
 - padroes_perdedores: 2 a 3 padrões
@@ -165,11 +173,13 @@ REGRAS:
 - Retorne APENAS o JSON`;
 
   try {
-    const message = await client.messages.create({
+    const stream = client.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
+      system: [{ type: 'text', text: INSIGHTS_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: prompt }]
     });
+    const message = await stream.finalMessage();
     const raw  = (message.content || []).map(c => c.text || '').join('');
     const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
     res.json(json);
@@ -189,7 +199,7 @@ router.post('/coaching', async (req, res) => {
   const etapas   = (scriptJson?.etapas   || []).map(e => e.titulo).join(', ');
   const objecoes = (scriptJson?.objecoes || []).map(o => o.titulo).join('; ');
 
-  const prompt = `Você é um coach de vendas sênior especializado em imóveis rurais. Analise a transcrição desta ligação do Chãozão e forneça coaching direto e acionável para o closer.
+  const prompt = `Analise a transcrição desta ligação e forneça coaching direto e acionável para o closer.
 
 CONTEXTO DO SCRIPT PLANEJADO:
 - Etapas previstas: ${etapas || 'Não informado'}
@@ -216,15 +226,16 @@ REGRAS:
 - pontos_fortes: 2 a 3 itens concretos baseados na transcrição
 - pontos_melhora: 2 a 3 itens com ação clara e específica
 - momentos_criticos: 0 a 2 momentos decisivos identificados na transcrição
-- aderencia_script: % de etapas do script que foram executadas
-- Seja brutalmente honesto — elogios genéricos não ajudam o closer a crescer`;
+- aderencia_script: % de etapas do script que foram executadas`;
 
   try {
-    const message = await client.messages.create({
+    const stream = client.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
+      system: [{ type: 'text', text: COACHING_SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: prompt }]
     });
+    const message = await stream.finalMessage();
     const raw  = (message.content || []).map(c => c.text || '').join('');
     const text = raw.trim();
     let json;

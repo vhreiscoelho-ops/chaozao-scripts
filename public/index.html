@@ -214,6 +214,25 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .s-cta-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; margin-bottom:.3rem; }
 .s-validade { font-size:11px; opacity:.65; margin-top:.4rem; }
 
+/* ── Proposta: hero card ── */
+.prop-hero { background:var(--accent-bg); border:1.5px solid var(--accent-l); border-radius:12px; padding:1.1rem 1.3rem; margin-bottom:1rem; }
+.prop-hero-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem 1.2rem; }
+@media(max-width:480px){ .prop-hero-row { grid-template-columns:1fr; } }
+.prop-hero-item { display:flex; flex-direction:column; gap:2px; }
+.prop-hero-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--accent); font-family:'Syne',sans-serif; }
+.prop-hero-val { font-size:14px; font-weight:600; color:var(--fg); }
+.prop-hero-price { font-size:18px; color:var(--accent); font-family:'Syne',sans-serif; }
+.prop-hero-prazo .prop-hero-val { color:#791F1F; }
+
+/* ── Proposta: card WhatsApp follow-up ── */
+.prop-wa-card { border:1.5px solid #25D366; border-radius:12px; overflow:hidden; margin-top:.5rem; }
+.prop-wa-header { background:#25D366; display:flex; align-items:center; gap:.5rem; padding:.6rem 1rem; }
+.prop-wa-icon { font-size:16px; }
+.prop-wa-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; color:#fff; flex:1; }
+.prop-wa-copy { background:#fff; color:#128C7E; border:none; border-radius:20px; padding:.28rem .8rem; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+.prop-wa-copy:hover { opacity:.85; }
+.prop-wa-msg { padding:.9rem 1.1rem; font-size:13px; line-height:1.65; color:var(--fg); white-space:pre-wrap; background:#F0FFF4; }
+
 /* ── Resultado Bar ── */
 .resultado-bar { border-top:1px solid var(--border); padding:1rem 1.4rem 1.1rem; background:var(--surface2); flex-shrink:0; }
 .resultado-title { font-size:10.5px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.65rem; }
@@ -605,7 +624,7 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
       </div>
       <div class="field">
         <div class="label-row">
-          <label style="margin:0">Resumo do SDR</label>
+          <label style="margin:0" id="sdrLabel">Resumo do SDR</label>
           <span class="char-count" id="charCount">0 / 4000</span>
         </div>
         <textarea id="sdr" rows="14" maxlength="4000"
@@ -671,17 +690,11 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
         </div>
       </div>
       <div class="rec-tb-timer" id="recTimer" style="display:none">0:00</div>
-      <button class="rec-tb-btn" id="recTranscriptToggle" onclick="toggleTranscriptPanel()" style="display:none">📝 Ver transcrição</button>
     </div>
-    <!-- Painel de transcrição (expansível) -->
+    <!-- Painel de coaching (aparece após parar a gravação) -->
     <div id="recTranscriptPanel" style="display:none;border-bottom:1px solid var(--border);padding:.75rem 1.2rem;background:#FAFAF7;flex-shrink:0">
-      <textarea id="recTranscriptEl" rows="4" style="font-size:12px;margin-bottom:.5rem;border-radius:8px"
-        placeholder="Transcrição aparece aqui em tempo real…" oninput="recFinalText=this.value"></textarea>
-      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-        <button class="obs-save" onclick="saveTranscript()" style="font-size:11.5px">💾 Salvar no histórico</button>
-        <button class="insights-btn" id="coachingBtn" onclick="analyzeCall()" style="padding:6px 10px;font-size:11.5px">🧠 Analisar com IA</button>
-        <span class="obs-saved" id="recSavedMsg" style="display:none">✓ Salvo</span>
-      </div>
+      <!-- Transcrição fica oculta — usada só internamente para o Claude -->
+      <textarea id="recTranscriptEl" style="display:none" oninput="recFinalText=this.value"></textarea>
       <div id="coachingResult"></div>
     </div>
 
@@ -878,6 +891,16 @@ function setMode(mode) {
   document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
+  // Label e placeholder do briefing mudam conforme o modo
+  const sdrLabel = document.getElementById('sdrLabel');
+  const sdrEl    = document.getElementById('sdr');
+  if (mode === 'proposal') {
+    if (sdrLabel) sdrLabel.textContent = 'Notas da Reunião';
+    if (sdrEl)    sdrEl.placeholder    = 'Descreva o que foi discutido na reunião: perfil do lead, imóvel de interesse, valor negociado, objeções levantadas, condições acordadas…';
+  } else {
+    if (sdrLabel) sdrLabel.textContent = 'Resumo do SDR';
+    if (sdrEl)    sdrEl.placeholder    = 'Cole aqui o briefing completo do SDR…';
+  }
   document.getElementById('btxt').textContent = mode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
   document.getElementById('otitle').textContent = mode==='script' ? 'Script de Fechamento' : 'Proposta Comercial';
   resetOutput();
@@ -897,7 +920,7 @@ function resetOutput() {
     <div class="estate">
       <div class="estate-icon">${currentMode==='script'?'📞':'📄'}</div>
       <h3>${abMode?'Duas variantes prontas em segundos': currentMode==='script'?'Script pronto em segundos':'Proposta pronta em segundos'}</h3>
-      <p>${abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':'Preencha o briefing e clique em gerar.'}</p>
+      <p>${abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':currentMode==='script'?'Preencha o briefing do SDR ao lado e clique em gerar.':'Descreva o que foi discutido na reunião e o plano negociado.'}</p>
     </div>`;
   document.getElementById('osub').textContent = 'Aguardando briefing…';
   document.getElementById('cbtn').style.display = 'none';
@@ -1191,22 +1214,71 @@ function renderScript(j) {
 }
 
 // ── Render Proposal ────────────────────────────────────────────────────────
+function copyFollowup(btn) {
+  const txt = btn.closest('.prop-wa-card').querySelector('.prop-wa-msg').textContent;
+  navigator.clipboard.writeText(txt).then(() => {
+    btn.textContent = '✅ Copiado!';
+    setTimeout(() => { btn.innerHTML = '📋 Copiar mensagem'; }, 2000);
+  }).catch(() => {
+    btn.textContent = 'Selecione manualmente';
+  });
+}
+
 function renderProposal(j) {
-  let h=`<div class="script-wrap">`;
-  h+=scoreCard(j.score);
-  h+=`<h1>Proposta Comercial — ${esc(j.lead_nome)}</h1><p class="sub">${esc(j.subtitulo)}</p>`;
-  if(j.alerta)h+=alertBox(j.alerta.tipo,j.alerta.titulo,j.alerta.texto);
-  if(j.resumo)h+=`<div class="s-verde">${esc(j.resumo)}</div>`;
-  h+=`<div class="s-grid">`;
-  (j.stats||[]).forEach(s=>{h+=`<div class="s-stat"><div class="s-stat-label">${esc(s.label)}</div><div class="s-stat-val">${esc(s.val)}</div><div class="s-stat-sub">${esc(s.sub)}</div></div>`;});
-  h+=`</div>`;
-  if(j.por_que_chaozao?.length){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-2">★</span><span class="s-etitle">Por que o Chãozão?</span></div><ul class="s-list">${j.por_que_chaozao.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;}
-  if(j.solucao){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-3">💡</span><span class="s-etitle">${esc(j.solucao.titulo)}</span></div><p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6">${esc(j.solucao.descricao)}</p><ul class="s-list">${(j.solucao.beneficios||[]).map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div>`;}
-  if(j.investimento){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-4">💰</span><span class="s-etitle">Investimento</span></div><div class="s-destaque"><strong>${esc(j.investimento.plano)}</strong> — ${esc(j.investimento.condicoes)}</div>`;if(j.investimento.inclui?.length)h+=`<ul class="s-list" style="margin-top:8px">${j.investimento.inclui.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>`;h+=`</div>`;}
-  if(j.proximos_passos?.length){h+=`<div class="s-card"><div class="s-hrow"><span class="s-badge sb-5">→</span><span class="s-etitle">Próximos Passos</span></div><div>${j.proximos_passos.map((p,i)=>`<div class="s-step"><div class="s-step-num">${i+1}</div><div class="s-step-text">${esc(p)}</div></div>`).join('')}</div></div>`;}
-  if(j.cta){h+=`<div class="s-cta"><div class="s-cta-title">${esc(j.cta)}</div>${j.validade?`<div class="s-validade">⏰ Oferta válida por ${esc(j.validade)}</div>`:''}</div>`;}
-  h+=`</div>`;
-  document.getElementById('out').innerHTML=h;
+  let h = `<div class="script-wrap">`;
+  h += scoreCard(j.score);
+
+  // ── Cabeçalho direto ────────────────────────────────────────────────────
+  h += `<h1>Proposta para ${esc(j.lead_nome||'Lead')}</h1>`;
+
+  // ── Card hero: nome · plano · valor · prazo ──────────────────────────────
+  h += `<div class="prop-hero">
+    <div class="prop-hero-row">
+      <div class="prop-hero-item"><span class="prop-hero-label">Cliente</span><span class="prop-hero-val">${esc(j.lead_nome||'—')}</span></div>
+      <div class="prop-hero-item"><span class="prop-hero-label">Plano</span><span class="prop-hero-val">${esc(j.plano||'—')}</span></div>
+      <div class="prop-hero-item prop-hero-valor"><span class="prop-hero-label">Valor acordado</span><span class="prop-hero-val prop-hero-price">${esc(j.valor||'—')}</span></div>
+      <div class="prop-hero-item prop-hero-prazo"><span class="prop-hero-label">⏰ Válida até</span><span class="prop-hero-val">${esc(j.validade||'—')}</span></div>
+    </div>
+  </div>`;
+
+  // ── Benefícios do plano ────────────────────────────────────────────────
+  if (j.beneficios?.length) {
+    h += `<div class="s-card">
+      <div class="s-hrow"><span class="s-badge sb-3">✅</span><span class="s-etitle">O que está incluso no ${esc(j.plano||'plano')}</span></div>
+      <ul class="s-list">${j.beneficios.map(b => `<li>${esc(b)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // ── Por que fechar agora ───────────────────────────────────────────────
+  if (j.por_que_agora?.length) {
+    h += `<div class="s-card">
+      <div class="s-hrow"><span class="s-badge sb-2">⚡</span><span class="s-etitle">Por que fechar agora</span></div>
+      <ul class="s-list">${j.por_que_agora.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  // ── Próximos passos ───────────────────────────────────────────────────
+  if (j.proximos_passos?.length) {
+    h += `<div class="s-card">
+      <div class="s-hrow"><span class="s-badge sb-5">→</span><span class="s-etitle">Próximos Passos</span></div>
+      <div>${j.proximos_passos.map((p,i) => `<div class="s-step"><div class="s-step-num">${i+1}</div><div class="s-step-text">${esc(p)}</div></div>`).join('')}</div>
+    </div>`;
+  }
+
+  // ── Follow-up WhatsApp ────────────────────────────────────────────────
+  if (j.followup_whatsapp) {
+    h += `<div class="prop-wa-card">
+      <div class="prop-wa-header">
+        <span class="prop-wa-icon">💬</span>
+        <span class="prop-wa-title">Mensagem de Follow-up — WhatsApp</span>
+        <button class="prop-wa-copy" onclick="copyFollowup(this)">📋 Copiar mensagem</button>
+      </div>
+      <div class="prop-wa-msg">${esc(j.followup_whatsapp)}</div>
+    </div>`;
+  }
+
+  h += `</div>`;
+  document.getElementById('out').innerHTML = h;
 }
 
 // ── Resultado Bar ──────────────────────────────────────────────────────────
@@ -1842,8 +1914,8 @@ function resetRec() {
   if (el) el.value = '';
   const panel = document.getElementById('recTranscriptPanel');
   if (panel) panel.style.display = 'none';
-  const btn = document.getElementById('recTranscriptToggle');
-  if (btn) btn.textContent = '📝 Ver transcrição';
+  const coachEl = document.getElementById('coachingResult');
+  if (coachEl) coachEl.innerHTML = '';
   updateRecUI();
 }
 
@@ -2040,8 +2112,22 @@ function stopRec(silent = false) {
     recFinalText = document.getElementById('recTranscriptEl')?.value || recFinalText;
     recState = 'stopped';
     updateRecUI();
-    const text = document.getElementById('recTranscriptEl')?.value.trim() || '';
-    if (text.length >= 30 && currentOutput?.id) analyzeCall();
+    // Abre o painel de coaching e dispara análise automaticamente
+    const panel = document.getElementById('recTranscriptPanel');
+    if (panel) panel.style.display = '';
+    const text = (recFinalText || '').trim();
+    if (text.length >= 30 && currentOutput?.id) {
+      analyzeCall();
+    } else {
+      const resultEl = document.getElementById('coachingResult');
+      if (resultEl) {
+        resultEl.innerHTML = text.length < 30
+          ? `<p style="color:#791F1F;font-size:12px;padding:.4rem 0">⚠ Gravação curta demais para análise. Tente novamente com a ligação completa.</p>`
+          : !currentOutput?.id
+            ? `<p style="color:#B06000;font-size:12px;padding:.4rem 0">⚠ Gere um script primeiro para que o Claude compare a ligação com o planejado.</p>`
+            : '';
+      }
+    }
   }
 }
 
@@ -2051,8 +2137,6 @@ function updateRecUI() {
   const label     = document.getElementById('recTbLabel');
   const sub       = document.getElementById('recTbSub');
   const timer     = document.getElementById('recTimer');
-  const toggleBtn = document.getElementById('recTranscriptToggle');
-  const coachBtn  = document.getElementById('coachingBtn');
   if (!micBtn) return;
 
   const f2hint   = ' <span class="rec-f2-badge">F2</span>';
@@ -2070,19 +2154,15 @@ function updateRecUI() {
     if (levelWrap) levelWrap.style.display = vadCalibrating ? 'none' : 'flex';
     if (sensWrap)  sensWrap.style.display  = vadCalibrating ? 'none' : 'flex';
     if (timer)     timer.style.display    = 'none';
-    if (toggleBtn) toggleBtn.style.display = 'none';
-    if (coachBtn)  coachBtn.style.display  = 'none';
   } else if (recState === 'recording') {
     micBtn.textContent        = '⏹';
     micBtn.style.background   = '#dc2626';
     micBtn.style.animation    = 'recPulse 1.2s ease-in-out infinite';
     if (label)     label.innerHTML  = 'Gravando ligação…';
-    if (sub)       sub.innerHTML    = 'Clique para parar' + f2hint;
+    if (sub)       sub.innerHTML    = 'Clique para parar e receber coaching' + f2hint;
     if (levelWrap) levelWrap.style.display = 'none';
     if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = '';
-    if (toggleBtn) toggleBtn.style.display = '';
-    if (coachBtn)  coachBtn.style.display  = 'none';
   } else if (recState === 'stopped') {
     micBtn.textContent        = '🔄';
     micBtn.style.background   = '#4b5563';
@@ -2092,8 +2172,6 @@ function updateRecUI() {
     if (levelWrap) levelWrap.style.display = 'none';
     if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = '';
-    if (toggleBtn) { toggleBtn.style.display = ''; toggleBtn.textContent = '📝 Ocultar'; }
-    if (coachBtn)  coachBtn.style.display  = '';
     const panel = document.getElementById('recTranscriptPanel');
     if (panel) panel.style.display = '';
   } else { // idle
@@ -2105,8 +2183,6 @@ function updateRecUI() {
     if (levelWrap) levelWrap.style.display = 'none';
     if (sensWrap)  sensWrap.style.display  = 'none';
     if (timer)     timer.style.display    = 'none';
-    if (toggleBtn) toggleBtn.style.display = 'none';
-    if (coachBtn)  coachBtn.style.display  = 'none';
   }
 }
 
@@ -2123,15 +2199,17 @@ async function saveTranscript() {
 }
 
 async function analyzeCall() {
-  const text = document.getElementById('recTranscriptEl')?.value.trim();
+  const text = (document.getElementById('recTranscriptEl')?.value || recFinalText || '').trim();
+  const resultEl = document.getElementById('coachingResult');
   if (!text || text.length < 30) {
-    alert('Transcrição muito curta. Grave a ligação completa antes de analisar.');
+    if (resultEl) resultEl.innerHTML = `<p style="color:#791F1F;font-size:12px;padding:.4rem 0">⚠ Gravação curta demais para análise.</p>`;
     return;
   }
-  const btn = document.getElementById('coachingBtn');
-  const resultEl = document.getElementById('coachingResult');
-  btn.disabled = true; btn.textContent = '🔄 Analisando…';
-  resultEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:.65rem 0;color:var(--muted);font-size:12px"><div class="spin" style="width:16px;height:16px;border-width:2px"></div>Claude analisando a ligação…</div>';
+  if (!currentOutput?.id) {
+    if (resultEl) resultEl.innerHTML = `<p style="color:#B06000;font-size:12px;padding:.4rem 0">⚠ Gere um script primeiro para comparar com a ligação.</p>`;
+    return;
+  }
+  if (resultEl) resultEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:.65rem 0;color:var(--muted);font-size:12px"><div class="spin" style="width:16px;height:16px;border-width:2px"></div>Claude ouvindo e analisando a ligação…</div>';
 
   try {
     const resultado = document.querySelector('.rbtn.on')?.dataset?.val || null;
@@ -2148,10 +2226,17 @@ async function analyzeCall() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     renderCoaching(data);
+    // Salva silenciosamente no histórico para métricas futuras
+    try {
+      await fetch(`/api/history/${currentOutput.id}/resultado`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcricao: text })
+      });
+    } catch {}
   } catch(e) {
-    resultEl.innerHTML = `<p style="color:#791F1F;font-size:12px;padding:.4rem 0">⚠ ${esc(e.message)}</p>`;
+    if (resultEl) resultEl.innerHTML = `<p style="color:#791F1F;font-size:12px;padding:.4rem 0">⚠ ${esc(e.message)}</p>`;
   }
-  btn.disabled = false; btn.textContent = '🧠 Analisar com IA';
 }
 
 function renderCoaching(d) {
