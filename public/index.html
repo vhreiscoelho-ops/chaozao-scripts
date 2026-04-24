@@ -80,33 +80,52 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .discount-input-box input::-webkit-inner-spin-button,
 .discount-input-box input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
 .discount-input-box .pct-sign { font-size:12px; color:var(--muted); padding-right:8px; font-weight:500; flex-shrink:0; }
-.plan-final-row { display:flex; align-items:center; gap:6px; margin-top:6px; padding:6px 10px; background:var(--accent-bg); border-radius:7px; border:1px solid rgba(74,122,37,.2); }
+.plan-final-row { display:flex; align-items:center; gap:7px; margin-top:6px; padding:7px 11px; background:var(--accent-bg); border-radius:8px; border:1px solid rgba(74,122,37,.22); animation:fadeSlide .18s ease-out; }
 .plan-final-row.hidden { display:none; }
-.plan-original { font-size:11px; color:var(--light); text-decoration:line-through; }
+.plan-original { font-size:11px; color:var(--light); text-decoration:line-through; font-family:'Syne',sans-serif; }
 .plan-arrow { font-size:11px; color:var(--muted); }
-.plan-discounted { font-size:12.5px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; }
-.plan-disc-badge { margin-left:auto; font-size:10px; font-weight:700; background:var(--accent); color:#fff; border-radius:4px; padding:1px 5px; }
+.plan-discounted { font-size:13px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; }
+.plan-disc-badge { margin-left:auto; font-size:10px; font-weight:700; background:var(--accent); color:#fff; border-radius:4px; padding:2px 6px; letter-spacing:.02em; }
+.plan-save { font-size:10.5px; color:var(--muted); margin-top:4px; padding-left:2px; }
+.plan-save.hidden { display:none; }
+.plan-save b { color:var(--accent); font-weight:700; }
+@keyframes fadeSlide { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
 /* Custom Plan Dropdown */
 .plan-dd-wrap { position:relative; }
-.plan-dd-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); padding:0 11px; height:37px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); transition:border-color .2s,box-shadow .2s; text-align:left; }
+.plan-dd-trigger { width:100%; display:flex; align-items:center; gap:8px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); padding:0 11px; height:37px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); transition:border-color .15s,box-shadow .15s,background .15s; text-align:left; }
 .plan-dd-trigger:hover { border-color:var(--accent-l); background:var(--surface); }
-.plan-dd-trigger.open { border-color:var(--accent-l); box-shadow:0 0 0 3px rgba(74,122,37,.11); background:var(--surface); border-bottom-left-radius:0; border-bottom-right-radius:0; }
-.plan-dd-ttext { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.plan-dd-ttext.ph { color:var(--muted); }
-.plan-dd-arrow { font-size:9px; color:var(--muted); flex-shrink:0; transition:transform .2s; line-height:1; }
-.plan-dd-trigger.open .plan-dd-arrow { transform:rotate(180deg); }
-.plan-dd-panel { position:absolute; top:100%; left:0; right:0; z-index:300; background:var(--surface); border:1px solid var(--accent-l); border-top:none; border-bottom-left-radius:var(--r); border-bottom-right-radius:var(--r); box-shadow:0 10px 28px rgba(0,0,0,.22); overflow:hidden; max-height:300px; overflow-y:auto; display:none; }
-.plan-dd-panel.show { display:block; }
-.plan-dd-group { padding:6px 0; }
+.plan-dd-trigger.open { border-color:var(--accent-l); box-shadow:0 0 0 3px rgba(74,122,37,.12); background:var(--surface); border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.plan-dd-tbadge { font-size:9.5px; font-weight:700; color:var(--accent); background:rgba(74,122,37,.15); border-radius:4px; padding:2px 6px; flex-shrink:0; letter-spacing:.02em; }
+.plan-dd-tname { color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+.plan-dd-tprice { font-size:12.5px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; flex-shrink:0; }
+.plan-dd-ttext.ph { color:var(--muted); flex:1; }
+.plan-dd-arrow { font-size:9px; color:var(--muted); flex-shrink:0; transition:transform .2s; line-height:1; margin-left:4px; }
+.plan-dd-trigger.open .plan-dd-arrow { transform:rotate(180deg); color:var(--accent); }
+
+.plan-dd-panel { position:absolute; top:100%; left:0; right:0; z-index:300; background:var(--surface); border:1px solid var(--accent-l); border-top:none; border-bottom-left-radius:var(--r); border-bottom-right-radius:var(--r); box-shadow:0 12px 32px rgba(0,0,0,.24); overflow:hidden; max-height:360px; overflow-y:auto; display:none; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.plan-dd-panel.show { display:block; animation:fadeSlide .15s ease-out; }
+.plan-dd-panel::-webkit-scrollbar { width:6px; }
+.plan-dd-panel::-webkit-scrollbar-track { background:transparent; }
+.plan-dd-panel::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+.plan-dd-panel::-webkit-scrollbar-thumb:hover { background:var(--light); }
+
+.plan-dd-group { padding:4px 0 6px; }
 .plan-dd-group + .plan-dd-group { border-top:1px solid var(--border); }
-.plan-dd-glabel { font-size:9.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; padding:4px 12px 3px; }
-.plan-dd-item { display:flex; align-items:center; justify-content:space-between; padding:7px 12px; cursor:pointer; transition:background .13s; gap:10px; }
+.plan-dd-glabel { display:flex; align-items:center; gap:6px; font-size:9.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; padding:7px 14px 4px; }
+.plan-dd-glabel::before { content:''; width:3px; height:3px; border-radius:50%; background:var(--accent); opacity:.5; }
+
+/* Grid alignment: [check 16] [badge 78] [name flex] [price auto] */
+.plan-dd-item { display:grid; grid-template-columns:14px 76px 1fr auto; align-items:center; gap:10px; padding:8px 14px; cursor:pointer; transition:background .12s; }
 .plan-dd-item:hover { background:var(--surface2); }
 .plan-dd-item.active { background:var(--accent-bg); }
-.plan-dd-item-l { display:flex; align-items:center; gap:7px; min-width:0; }
-.plan-dd-badge { font-size:10px; font-weight:700; color:var(--accent); background:rgba(74,122,37,.13); border-radius:4px; padding:2px 6px; flex-shrink:0; white-space:nowrap; }
+.plan-dd-check { font-size:11px; color:var(--accent); opacity:0; transition:opacity .15s; line-height:1; }
+.plan-dd-item.active .plan-dd-check { opacity:1; }
+.plan-dd-badge { font-size:10px; font-weight:700; color:var(--accent); background:rgba(74,122,37,.13); border-radius:4px; padding:3px 7px; text-align:center; white-space:nowrap; letter-spacing:.02em; }
+.plan-dd-item.active .plan-dd-badge { background:var(--accent); color:#fff; }
 .plan-dd-name { font-size:12.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.plan-dd-price { font-size:12px; font-weight:600; color:var(--accent); font-family:'Syne',sans-serif; flex-shrink:0; white-space:nowrap; }
+.plan-dd-item.active .plan-dd-name { color:var(--accent); font-weight:600; }
+.plan-dd-price { font-size:12.5px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; white-space:nowrap; font-variant-numeric:tabular-nums; }
 
 /* ── Output Panel ── */
 .opanel { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); overflow:hidden; min-height:520px; display:flex; flex-direction:column; }
@@ -509,99 +528,56 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
         <div class="plan-row">
           <!-- Custom Plan Dropdown -->
           <div class="plan-dd-wrap" id="planDdWrap">
-            <button type="button" class="plan-dd-trigger" id="planDdTrigger" onclick="togglePlanDd(event)">
-              <span class="plan-dd-ttext" id="planDdText">Único Vitalício — 3x &nbsp;R$ 399,33</span>
+            <button type="button" class="plan-dd-trigger" id="planDdTrigger" onclick="togglePlanDd(event)" aria-haspopup="listbox" aria-expanded="false">
+              <span class="plan-dd-tbadge" id="planDdTBadge">3×</span>
+              <span class="plan-dd-tname" id="planDdTName">Único Vitalício</span>
+              <span class="plan-dd-tprice" id="planDdTPrice">R$ 399,33</span>
               <span class="plan-dd-arrow">▼</span>
             </button>
-            <div class="plan-dd-panel" id="planDdPanel">
-              <!-- Plano Único Vitalício -->
+            <div class="plan-dd-panel" id="planDdPanel" role="listbox">
               <div class="plan-dd-group">
-                <div class="plan-dd-glabel">Plano Único Vitalício</div>
-                <div class="plan-dd-item" data-value="Plano Único Vitalício — À vista R$ 1.198,00" data-base="1198.00" data-label="avista" data-display="Único Vitalício — À vista &nbsp;R$ 1.198,00" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">À vista</span>
-                    <span class="plan-dd-name">Único Vitalício</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 1.198,00</span>
+                <div class="plan-dd-glabel">Único Vitalício</div>
+                <div class="plan-dd-item"        data-value="Plano Único Vitalício — À vista R$ 1.198,00" data-base="1198.00" data-label="avista" data-name="Único Vitalício"    data-btext="À vista"    data-ptext="R$ 1.198,00" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">À vista</span><span class="plan-dd-name">Único Vitalício</span><span class="plan-dd-price">R$ 1.198,00</span>
                 </div>
-                <div class="plan-dd-item active" data-value="Plano Único Vitalício — 3x R$ 399,33" data-base="1198.00" data-label="3x" data-display="Único Vitalício — 3x &nbsp;R$ 399,33" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">3×</span>
-                    <span class="plan-dd-name">Único Vitalício</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 399,33</span>
+                <div class="plan-dd-item active" data-value="Plano Único Vitalício — 3x R$ 399,33"        data-base="1198.00" data-label="3x"     data-name="Único Vitalício"    data-btext="3×"         data-ptext="R$ 399,33"   onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">3×</span><span class="plan-dd-name">Único Vitalício</span><span class="plan-dd-price">R$ 399,33</span>
                 </div>
               </div>
-              <!-- Plano 5 Anúncios -->
               <div class="plan-dd-group">
-                <div class="plan-dd-glabel">Plano 5 Anúncios</div>
-                <div class="plan-dd-item" data-value="Plano 5 Anúncios — Anual R$ 184,80/mês" data-base="184.80" data-label="mes" data-display="5 Anúncios — Anual &nbsp;R$ 184,80/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Anual</span>
-                    <span class="plan-dd-name">5 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 184,80/mês</span>
+                <div class="plan-dd-glabel">5 Anúncios</div>
+                <div class="plan-dd-item" data-value="Plano 5 Anúncios — Anual R$ 184,80/mês"     data-base="184.80" data-label="mes" data-name="5 Anúncios"  data-btext="Anual"     data-ptext="R$ 184,80/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Anual</span><span class="plan-dd-name">5 Anúncios</span><span class="plan-dd-price">R$ 184,80/mês</span>
                 </div>
-                <div class="plan-dd-item" data-value="Plano 5 Anúncios — Semestral R$ 217,20/mês" data-base="217.20" data-label="mes" data-display="5 Anúncios — Semestral &nbsp;R$ 217,20/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Semestral</span>
-                    <span class="plan-dd-name">5 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 217,20/mês</span>
+                <div class="plan-dd-item" data-value="Plano 5 Anúncios — Semestral R$ 217,20/mês" data-base="217.20" data-label="mes" data-name="5 Anúncios"  data-btext="Semestral" data-ptext="R$ 217,20/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Semestral</span><span class="plan-dd-name">5 Anúncios</span><span class="plan-dd-price">R$ 217,20/mês</span>
                 </div>
               </div>
-              <!-- Plano 10 Anúncios -->
               <div class="plan-dd-group">
-                <div class="plan-dd-glabel">Plano 10 Anúncios</div>
-                <div class="plan-dd-item" data-value="Plano 10 Anúncios — Anual R$ 223,20/mês" data-base="223.20" data-label="mes" data-display="10 Anúncios — Anual &nbsp;R$ 223,20/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Anual</span>
-                    <span class="plan-dd-name">10 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 223,20/mês</span>
+                <div class="plan-dd-glabel">10 Anúncios</div>
+                <div class="plan-dd-item" data-value="Plano 10 Anúncios — Anual R$ 223,20/mês"     data-base="223.20" data-label="mes" data-name="10 Anúncios" data-btext="Anual"     data-ptext="R$ 223,20/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Anual</span><span class="plan-dd-name">10 Anúncios</span><span class="plan-dd-price">R$ 223,20/mês</span>
                 </div>
-                <div class="plan-dd-item" data-value="Plano 10 Anúncios — Semestral R$ 260,40/mês" data-base="260.40" data-label="mes" data-display="10 Anúncios — Semestral &nbsp;R$ 260,40/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Semestral</span>
-                    <span class="plan-dd-name">10 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 260,40/mês</span>
+                <div class="plan-dd-item" data-value="Plano 10 Anúncios — Semestral R$ 260,40/mês" data-base="260.40" data-label="mes" data-name="10 Anúncios" data-btext="Semestral" data-ptext="R$ 260,40/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Semestral</span><span class="plan-dd-name">10 Anúncios</span><span class="plan-dd-price">R$ 260,40/mês</span>
                 </div>
               </div>
-              <!-- Plano 20 Anúncios -->
               <div class="plan-dd-group">
-                <div class="plan-dd-glabel">Plano 20 Anúncios</div>
-                <div class="plan-dd-item" data-value="Plano 20 Anúncios — Anual R$ 358,80/mês" data-base="358.80" data-label="mes" data-display="20 Anúncios — Anual &nbsp;R$ 358,80/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Anual</span>
-                    <span class="plan-dd-name">20 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 358,80/mês</span>
+                <div class="plan-dd-glabel">20 Anúncios</div>
+                <div class="plan-dd-item" data-value="Plano 20 Anúncios — Anual R$ 358,80/mês"     data-base="358.80" data-label="mes" data-name="20 Anúncios" data-btext="Anual"     data-ptext="R$ 358,80/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Anual</span><span class="plan-dd-name">20 Anúncios</span><span class="plan-dd-price">R$ 358,80/mês</span>
                 </div>
-                <div class="plan-dd-item" data-value="Plano 20 Anúncios — Semestral R$ 420,00/mês" data-base="420.00" data-label="mes" data-display="20 Anúncios — Semestral &nbsp;R$ 420,00/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Semestral</span>
-                    <span class="plan-dd-name">20 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 420,00/mês</span>
+                <div class="plan-dd-item" data-value="Plano 20 Anúncios — Semestral R$ 420,00/mês" data-base="420.00" data-label="mes" data-name="20 Anúncios" data-btext="Semestral" data-ptext="R$ 420,00/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Semestral</span><span class="plan-dd-name">20 Anúncios</span><span class="plan-dd-price">R$ 420,00/mês</span>
                 </div>
               </div>
-              <!-- Plano 30 Anúncios -->
               <div class="plan-dd-group">
-                <div class="plan-dd-glabel">Plano 30 Anúncios</div>
-                <div class="plan-dd-item" data-value="Plano 30 Anúncios — Anual R$ 450,00/mês" data-base="450.00" data-label="mes" data-display="30 Anúncios — Anual &nbsp;R$ 450,00/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Anual</span>
-                    <span class="plan-dd-name">30 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 450,00/mês</span>
+                <div class="plan-dd-glabel">30 Anúncios</div>
+                <div class="plan-dd-item" data-value="Plano 30 Anúncios — Anual R$ 450,00/mês"     data-base="450.00" data-label="mes" data-name="30 Anúncios" data-btext="Anual"     data-ptext="R$ 450,00/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Anual</span><span class="plan-dd-name">30 Anúncios</span><span class="plan-dd-price">R$ 450,00/mês</span>
                 </div>
-                <div class="plan-dd-item" data-value="Plano 30 Anúncios — Semestral R$ 526,80/mês" data-base="526.80" data-label="mes" data-display="30 Anúncios — Semestral &nbsp;R$ 526,80/mês" onclick="selectPlan(this)">
-                  <div class="plan-dd-item-l">
-                    <span class="plan-dd-badge">Semestral</span>
-                    <span class="plan-dd-name">30 Anúncios</span>
-                  </div>
-                  <span class="plan-dd-price">R$ 526,80/mês</span>
+                <div class="plan-dd-item" data-value="Plano 30 Anúncios — Semestral R$ 526,80/mês" data-base="526.80" data-label="mes" data-name="30 Anúncios" data-btext="Semestral" data-ptext="R$ 526,80/mês" onclick="selectPlan(this)">
+                  <span class="plan-dd-check">✓</span><span class="plan-dd-badge">Semestral</span><span class="plan-dd-name">30 Anúncios</span><span class="plan-dd-price">R$ 526,80/mês</span>
                 </div>
               </div>
             </div>
@@ -622,6 +598,7 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
           <span class="plan-discounted" id="planDiscounted"></span>
           <span class="plan-disc-badge" id="planDiscBadge"></span>
         </div>
+        <div class="plan-save hidden" id="planSaveRow">Você economiza <b id="planSaveVal"></b></div>
         <input type="hidden" id="planVal" value="Plano Único Vitalício — 3x R$ 399,33">
       </div>
       <div class="field" id="callTimeWrap">
@@ -941,12 +918,23 @@ let _planSelected = {
 };
 
 function togglePlanDd(e) {
-  e.stopPropagation();
+  e?.stopPropagation();
   const panel   = document.getElementById('planDdPanel');
   const trigger = document.getElementById('planDdTrigger');
   const isOpen  = panel.classList.contains('show');
   panel.classList.toggle('show', !isOpen);
   trigger.classList.toggle('open', !isOpen);
+  trigger.setAttribute('aria-expanded', !isOpen);
+  if (!isOpen) {
+    const active = panel.querySelector('.plan-dd-item.active');
+    if (active) active.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+function closePlanDd() {
+  document.getElementById('planDdPanel')?.classList.remove('show');
+  const t = document.getElementById('planDdTrigger');
+  if (t) { t.classList.remove('open'); t.setAttribute('aria-expanded', 'false'); }
 }
 
 function selectPlan(el) {
@@ -957,18 +945,21 @@ function selectPlan(el) {
     base:  parseFloat(el.dataset.base || '0'),
     label: el.dataset.label
   };
-  const textEl = document.getElementById('planDdText');
-  textEl.innerHTML = el.dataset.display || el.dataset.value;
-  textEl.classList.remove('ph');
-  document.getElementById('planDdPanel').classList.remove('show');
-  document.getElementById('planDdTrigger').classList.remove('open');
+  document.getElementById('planDdTBadge').textContent = el.dataset.btext || '';
+  document.getElementById('planDdTName').textContent  = el.dataset.name  || '';
+  document.getElementById('planDdTPrice').textContent = el.dataset.ptext || '';
+  closePlanDd();
   onPlanChange();
 }
 
+// Fecha ao clicar fora e com ESC
 document.addEventListener('click', e => {
-  if (!document.getElementById('planDdWrap')?.contains(e.target)) {
-    document.getElementById('planDdPanel')?.classList.remove('show');
-    document.getElementById('planDdTrigger')?.classList.remove('open');
+  if (!document.getElementById('planDdWrap')?.contains(e.target)) closePlanDd();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('planDdPanel')?.classList.contains('show')) {
+    closePlanDd();
+    document.getElementById('planDdTrigger')?.focus();
   }
 });
 
@@ -980,24 +971,31 @@ function onPlanChange() {
   const planText = _planSelected.value;
   const hidden   = document.getElementById('planVal');
   const finalRow = document.getElementById('planFinalRow');
+  const saveRow  = document.getElementById('planSaveRow');
   const origEl   = document.getElementById('planOriginal');
   const discEl   = document.getElementById('planDiscounted');
   const badgeEl  = document.getElementById('planDiscBadge');
+  const saveEl   = document.getElementById('planSaveVal');
 
   hidden.value = planText;
 
   if (!planText || pct <= 0 || !base) {
     finalRow?.classList.add('hidden');
+    saveRow?.classList.add('hidden');
     return;
   }
 
-  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (isMes ? '/mês' : '');
+  const fmtCur = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt    = v => fmtCur(v) + (isMes ? '/mês' : '');
   const discounted = base * (1 - pct / 100);
+  const savings    = base - discounted;
 
   if (origEl)  origEl.textContent  = fmt(base);
   if (discEl)  discEl.textContent  = fmt(discounted);
   if (badgeEl) badgeEl.textContent = `-${pct}%`;
+  if (saveEl)  saveEl.textContent  = fmtCur(savings) + (isMes ? '/mês' : '');
   finalRow?.classList.remove('hidden');
+  saveRow?.classList.remove('hidden');
 
   const planName = planText.split('—')[0].trim();
   hidden.value   = `${planName} — ${fmt(discounted)} (${pct}% off)`;
