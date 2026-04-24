@@ -722,23 +722,6 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
             onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
         </div>
         <div class="field">
-          <label>Valor da proposta</label>
-          <input id="fu-valor" type="text" placeholder="Ex: 3x R$ 399,33"
-            onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="field">
-            <label>Dias sem resposta</label>
-            <input id="fu-dias" type="number" placeholder="Ex: 3" min="1"
-              onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
-          </div>
-          <div class="field">
-            <label>Plano / produto</label>
-            <input id="fu-plano" type="text" placeholder="Ex: Único Vitalício"
-              onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
-          </div>
-        </div>
-        <div class="field">
           <label>Canal de envio</label>
           <div class="canal-pills" id="canal-pills">
             <button class="canal-pill on" onclick="pickCanal(this,'WhatsApp')">💬 WhatsApp</button>
@@ -1523,23 +1506,21 @@ function pickCanal(btn, name) {
 // ── Follow-up Generate ────────────────────────────────────────────────────
 async function genFollowUp() {
   const nome     = document.getElementById('fu-nome').value.trim();
-  const valor    = document.getElementById('fu-valor').value.trim();
-  const dias     = document.getElementById('fu-dias').value.trim();
-  const plano    = document.getElementById('fu-plano').value.trim();
   const perfil   = document.getElementById('fu-perfil').value.trim();
   const contexto = document.getElementById('fu-contexto').value.trim();
 
+  // Valor e plano derivados do seletor principal
+  const valor = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
+  const plano = (_planSelected.value || '').split(/[—–-]/)[0].trim().replace(/^Plano\s*/i, '');
+
   // Validação
-  const invalid = [];
-  if (!nome)  invalid.push('fu-nome');
-  if (!valor) invalid.push('fu-valor');
-  if (!dias)  invalid.push('fu-dias');
-  invalid.forEach(id => {
-    const el = document.getElementById(id);
+  if (!nome) {
+    const el = document.getElementById('fu-nome');
     el.style.borderColor = '#E24B4A';
     setTimeout(() => el.style.borderColor = '', 2000);
-  });
-  if (invalid.length) { document.getElementById(invalid[0]).focus(); return; }
+    el.focus();
+    return;
+  }
 
   const btn = document.getElementById('gbtn');
   btn.disabled = true;
@@ -1548,7 +1529,7 @@ async function genFollowUp() {
   document.getElementById('cbtn').style.display = 'none';
   document.getElementById('resultadoBar').style.display = 'none';
 
-  const diasNum = parseInt(dias);
+  const diasNum = 0; // não coletado pelo formulário
   document.getElementById('out').innerHTML = `<div class="estate" style="gap:14px">
     <div class="spin" style="border-top-color:#8A4A00"></div>
     <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
@@ -1564,7 +1545,7 @@ async function genFollowUp() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        nome, valor, dias: diasNum, plano, canal: _fuCanal, perfil, contexto,
+        nome, valor, plano, canal: _fuCanal, perfil, contexto,
         closer: selectedCloser?.name || 'Closer'
       })
     });
@@ -1573,7 +1554,7 @@ async function genFollowUp() {
 
     renderFollowUp(data);
     document.getElementById('osub').textContent =
-      `Follow-up para ${esc(nome)} · ${diasNum} dia${diasNum>1?'s':''} parado · ${_fuCanal}`;
+      `Follow-up para ${esc(nome)} · ${_fuCanal}`;
 
   } catch(e) {
     document.getElementById('out').innerHTML =

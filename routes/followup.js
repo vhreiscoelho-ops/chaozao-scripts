@@ -29,12 +29,12 @@ function extractJson(text) {
 router.post('/', async (req, res) => {
   const { nome, valor, dias, plano, canal, perfil, contexto, closer } = req.body;
 
-  if (!nome || !valor || !dias) {
-    return res.status(400).json({ error: 'Campos obrigatórios: nome, valor, dias.' });
+  if (!nome || !valor) {
+    return res.status(400).json({ error: 'Campos obrigatórios: nome, valor.' });
   }
 
-  const diasNum = parseInt(dias) || 1;
-  const urgencia = diasNum <= 2 ? 'baixa' : diasNum <= 5 ? 'média' : 'alta';
+  const diasNum = parseInt(dias) || 0;
+  const urgencia = diasNum === 0 ? 'não informado' : diasNum <= 2 ? 'baixa' : diasNum <= 5 ? 'média' : 'alta';
 
   const prompt = `Analise os dados do lead abaixo e gere 3 mensagens de follow-up personalizadas. Retorne SOMENTE o JSON abaixo, começando com { e terminando com }. Sem markdown, sem texto fora do JSON.
 
@@ -91,7 +91,7 @@ REGRAS:
 - Para WhatsApp: 3-5 linhas, emojis naturais e contextuais
 - Para E-mail: mais formal, tom profissional
 - Para Ligacao: script resumido do que dizer ao telefone
-- Urgencia ${urgencia} (${diasNum} dia${diasNum > 1 ? 's' : ''} parado) — calibre o tom adequadamente
+- Urgencia: ${urgencia === 'não informado' ? 'calibre para tom neutro/profissional' : `${urgencia} (${diasNum} dia${diasNum > 1 ? 's' : ''} parado) — calibre o tom adequadamente`}
 - Nao use aspas externas na mensagem, apenas o texto puro
 - Retorne APENAS o JSON, sem nenhum texto antes ou depois`;
 
