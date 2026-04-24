@@ -13,6 +13,7 @@ app.use('/api/closers',    require('./routes/closers'));
 app.use('/api/history',    require('./routes/history'));
 app.use('/api/analytics',  require('./routes/analytics'));
 app.use('/api/webhook',    require('./routes/webhook'));
+app.use('/api/followup',   require('./routes/followup'));
 
 app.get('*', (_req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'index.html'))

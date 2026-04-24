@@ -262,6 +262,35 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .prop-wa-copy:hover { opacity:.85; }
 .prop-wa-msg { padding:.9rem 1.1rem; font-size:13px; line-height:1.65; color:var(--fg); white-space:pre-wrap; background:#F0FFF4; }
 
+/* ── Follow-up ── */
+.fu-wrap { padding:1.2rem 1.4rem; font-family:'DM Sans',sans-serif; }
+.fu-wrap h1 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:.15rem; }
+.fu-wrap .sub { font-size:13px; color:var(--muted); margin-bottom:1rem; }
+.fu-card { background:#fff; border-radius:12px; border:.5px solid var(--border); overflow:hidden; margin-bottom:.85rem; }
+.fu-card-head { padding:9px 13px; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--border); background:#FAFAF7; }
+.fu-approach-label { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 10px; border-radius:20px; }
+.fu-label-suave   { background:#E1F5EE; color:#085041; }
+.fu-label-urgencia{ background:#FAEEDA; color:#633806; }
+.fu-label-valor   { background:#EEEDFE; color:#3C3489; }
+.fu-card-meta { margin-left:auto; font-size:11px; color:var(--light); }
+.fu-card-body { padding:13px 14px; }
+.fu-msg { font-size:13.5px; line-height:1.75; color:var(--fg); white-space:pre-wrap; }
+.fu-card-foot { padding:8px 13px; background:#FAFAF7; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.fu-dica { font-size:11.5px; color:var(--muted); line-height:1.5; flex:1; }
+.fu-dica strong { color:var(--accent); }
+.fu-copy-btn { padding:4px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:11.5px; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap; flex-shrink:0; }
+.fu-copy-btn:hover { border-color:var(--accent-l); color:var(--accent); }
+.canal-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.canal-pill { padding:5px 13px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); font-size:12px; cursor:pointer; color:var(--muted); transition:all .15s; font-family:'DM Sans',sans-serif; }
+.canal-pill:hover { border-color:var(--accent-l); color:var(--accent); }
+.canal-pill.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+.dias-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; padding:3px 10px; border-radius:20px; font-weight:500; margin-bottom:.9rem; }
+.dias-badge.ok     { background:#E1F5EE; color:#085041; }
+.dias-badge.aviso  { background:#FFF5DC; color:#7A5200; }
+.dias-badge.alerta { background:#FDEAEA; color:#791F1F; }
+.fu-sep { display:flex; align-items:center; gap:10px; margin:.8rem 0; color:var(--light); font-size:11px; }
+.fu-sep::before,.fu-sep::after { content:''; flex:1; height:.5px; background:var(--border); }
+
 /* ── Resultado Bar ── */
 .resultado-bar { border-top:1px solid var(--border); padding:1rem 1.4rem 1.1rem; background:var(--surface2); flex-shrink:0; }
 .resultado-title { font-size:10.5px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:.65rem; }
@@ -494,6 +523,9 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
   <button id="sbmode-proposal" class="sb-item sb-mode" onclick="setMode('proposal')">
     <span class="sb-icon">📄</span> Proposta Comercial
   </button>
+  <button id="sbmode-followup" class="sb-item sb-mode" onclick="setMode('followup')">
+    <span class="sb-icon">🔁</span> Follow-up de Proposta
+  </button>
 
   <hr class="sb-divider">
 
@@ -679,6 +711,51 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
           <textarea id="propObs" rows="3" maxlength="400"
             placeholder="Ex: cliente achou o valor alto mas topou, tem urgência para vender…"
             onkeydown="if(event.ctrlKey&&event.key==='Enter')gen()"></textarea>
+        </div>
+      </div>
+
+      <!-- Campos de follow-up (modo followup) -->
+      <div id="followupFields" style="display:none">
+        <div class="field">
+          <label>Nome do lead</label>
+          <input id="fu-nome" type="text" placeholder="Ex: Rafael Martins"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
+        </div>
+        <div class="field">
+          <label>Valor da proposta</label>
+          <input id="fu-valor" type="text" placeholder="Ex: 3x R$ 399,33"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field">
+            <label>Dias sem resposta</label>
+            <input id="fu-dias" type="number" placeholder="Ex: 3" min="1"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
+          </div>
+          <div class="field">
+            <label>Plano / produto</label>
+            <input id="fu-plano" type="text" placeholder="Ex: Único Vitalício"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Canal de envio</label>
+          <div class="canal-pills" id="canal-pills">
+            <button class="canal-pill on" onclick="pickCanal(this,'WhatsApp')">💬 WhatsApp</button>
+            <button class="canal-pill"    onclick="pickCanal(this,'E-mail')">📧 E-mail</button>
+            <button class="canal-pill"    onclick="pickCanal(this,'Ligação')">📞 Ligação</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Perfil do lead <span style="opacity:.5;font-weight:400">(opcional)</span></label>
+          <input id="fu-perfil" type="text" placeholder="Ex: Proprietário rural, interior de MG"
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()">
+        </div>
+        <div class="field">
+          <label>Contexto <span style="opacity:.5;font-weight:400">(opcional)</span></label>
+          <textarea id="fu-contexto" rows="3"
+            placeholder="Ex: Disse que ia pensar. Dor principal: receber curiosos. Tem 2 imóveis rurais."
+            onkeydown="if(event.ctrlKey&&event.key==='Enter')genFollowUp()"></textarea>
         </div>
       </div>
 
@@ -983,9 +1060,10 @@ function setMode(mode) {
   document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
-  // Alterna entre briefing SDR e campos de proposta
-  document.getElementById('sdrWrap').style.display    = mode==='script' ? '' : 'none';
-  document.getElementById('propFields').style.display = mode==='proposal' ? '' : 'none';
+  // Alterna entre briefing SDR, campos de proposta e campos de follow-up
+  document.getElementById('sdrWrap').style.display       = mode==='script' ? '' : 'none';
+  document.getElementById('propFields').style.display    = mode==='proposal' ? '' : 'none';
+  document.getElementById('followupFields').style.display = mode==='followup' ? '' : 'none';
   // Pré-seleciona data limite como daqui a 3 dias úteis se vazio
   if (mode === 'proposal') {
     const dlEl = document.getElementById('propDeadline');
@@ -994,8 +1072,12 @@ function setMode(mode) {
       dlEl.value = d.toISOString().split('T')[0];
     }
   }
-  document.getElementById('btxt').textContent = mode==='script' ? 'Gerar Script de Fechamento' : 'Gerar Proposta Comercial';
-  document.getElementById('otitle').textContent = mode==='script' ? 'Script de Fechamento' : 'Proposta Comercial';
+  document.getElementById('btxt').textContent =
+    mode==='script' ? 'Gerar Script de Fechamento' :
+    mode==='proposal' ? 'Gerar Proposta Comercial' : 'Gerar Follow-up';
+  document.getElementById('otitle').textContent =
+    mode==='script' ? 'Script de Fechamento' :
+    mode==='proposal' ? 'Proposta Comercial' : 'Follow-up de Proposta';
   resetOutput();
   if (mode!=='script' && abMode) { abMode=false; document.getElementById('abToggleBtn').classList.remove('on'); }
 }
@@ -1009,11 +1091,14 @@ function toggleAB() {
 }
 
 function resetOutput() {
+  const modeIcon = currentMode==='script'?'📞':currentMode==='proposal'?'📄':'🔁';
+  const modeTitle = abMode?'Duas variantes prontas em segundos':currentMode==='script'?'Script pronto em segundos':currentMode==='proposal'?'Proposta pronta em segundos':'3 abordagens em segundos';
+  const modeDesc = abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':currentMode==='script'?'Preencha o briefing do SDR ao lado e clique em gerar.':currentMode==='proposal'?'Descreva o que foi discutido na reunião e o plano negociado.':'Preencha os dados do lead parado e clique em gerar.';
   document.getElementById('out').innerHTML = `
     <div class="estate">
-      <div class="estate-icon">${currentMode==='script'?'📞':'📄'}</div>
-      <h3>${abMode?'Duas variantes prontas em segundos': currentMode==='script'?'Script pronto em segundos':'Proposta pronta em segundos'}</h3>
-      <p>${abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':currentMode==='script'?'Preencha o briefing do SDR ao lado e clique em gerar.':'Descreva o que foi discutido na reunião e o plano negociado.'}</p>
+      <div class="estate-icon">${modeIcon}</div>
+      <h3>${modeTitle}</h3>
+      <p>${modeDesc}</p>
     </div>`;
   document.getElementById('osub').textContent = 'Aguardando briefing…';
   document.getElementById('cbtn').style.display = 'none';
@@ -1132,6 +1217,7 @@ function updateCharCount() {
 
 // ── Generate ───────────────────────────────────────────────────────────────
 async function gen() {
+  if (currentMode === 'followup') { genFollowUp(); return; }
   const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
   const callTime = document.getElementById('callTime').value;
   let briefing   = '';
@@ -1424,6 +1510,143 @@ function renderProposal(j) {
 
   h += `</div>`;
   document.getElementById('out').innerHTML = h;
+}
+
+// ── Follow-up Canal ────────────────────────────────────────────────────────
+let _fuCanal = 'WhatsApp';
+function pickCanal(btn, name) {
+  document.querySelectorAll('#canal-pills .canal-pill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  _fuCanal = name;
+}
+
+// ── Follow-up Generate ────────────────────────────────────────────────────
+async function genFollowUp() {
+  const nome     = document.getElementById('fu-nome').value.trim();
+  const valor    = document.getElementById('fu-valor').value.trim();
+  const dias     = document.getElementById('fu-dias').value.trim();
+  const plano    = document.getElementById('fu-plano').value.trim();
+  const perfil   = document.getElementById('fu-perfil').value.trim();
+  const contexto = document.getElementById('fu-contexto').value.trim();
+
+  // Validação
+  const invalid = [];
+  if (!nome)  invalid.push('fu-nome');
+  if (!valor) invalid.push('fu-valor');
+  if (!dias)  invalid.push('fu-dias');
+  invalid.forEach(id => {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#E24B4A';
+    setTimeout(() => el.style.borderColor = '', 2000);
+  });
+  if (invalid.length) { document.getElementById(invalid[0]).focus(); return; }
+
+  const btn = document.getElementById('gbtn');
+  btn.disabled = true;
+  document.getElementById('bico').textContent = '⏳';
+  document.getElementById('btxt').textContent = 'Gerando abordagens…';
+  document.getElementById('cbtn').style.display = 'none';
+  document.getElementById('resultadoBar').style.display = 'none';
+
+  const diasNum = parseInt(dias);
+  document.getElementById('out').innerHTML = `<div class="estate" style="gap:14px">
+    <div class="spin" style="border-top-color:#8A4A00"></div>
+    <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+      <div class="lstep" style="animation-delay:0s">Analisando histórico do lead…</div>
+      <div class="lstep" style="animation-delay:.9s">Calculando melhor abordagem…</div>
+      <div class="lstep" style="animation-delay:1.8s">Criando mensagens personalizadas…</div>
+      <div class="lstep" style="animation-delay:2.7s">Ajustando tom e urgência…</div>
+    </div>
+  </div>`;
+
+  try {
+    const res  = await fetch('/api/followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome, valor, dias: diasNum, plano, canal: _fuCanal, perfil, contexto,
+        closer: selectedCloser?.name || 'Closer'
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
+
+    renderFollowUp(data);
+    document.getElementById('osub').textContent =
+      `Follow-up para ${esc(nome)} · ${diasNum} dia${diasNum>1?'s':''} parado · ${_fuCanal}`;
+
+  } catch(e) {
+    document.getElementById('out').innerHTML =
+      `<div class="estate"><div class="estate-icon">⚠️</div><h3>Erro</h3><p>${esc(e.message)}</p></div>`;
+  }
+
+  btn.disabled = false;
+  document.getElementById('bico').textContent = '🔁';
+  document.getElementById('btxt').textContent = 'Gerar Follow-up';
+}
+
+// ── Follow-up Render ──────────────────────────────────────────────────────
+function renderFollowUp(j) {
+  const diasBadgeClass = j.urgencia === 'baixa' ? 'ok' : j.urgencia === 'média' ? 'aviso' : 'alerta';
+  const diasEmoji      = j.urgencia === 'baixa' ? '🟢' : j.urgencia === 'média' ? '🟡' : '🔴';
+  const labelMap = { suave:'fu-label-suave', urgencia:'fu-label-urgencia', valor:'fu-label-valor' };
+
+  let h = `<div class="fu-wrap">`;
+  h += `<h1>Follow-up — ${esc(j.lead_nome)}</h1>`;
+  h += `<p class="sub">${esc(j.canal)} · ${j.dias_parado} dia${j.dias_parado>1?'s':''} sem resposta · ${esc(selectedCloser?.name||'Closer')}</p>`;
+  h += `<div class="dias-badge ${diasBadgeClass}">${diasEmoji} Urgência ${esc(j.urgencia)} — ${j.dias_parado} dia${j.dias_parado>1?'s':''} parado</div>`;
+
+  if (j.alerta) {
+    h += `<div class="s-aviso" style="margin-bottom:.9rem"><strong>💡 Estratégia:</strong> ${esc(j.alerta)}</div>`;
+  }
+
+  h += `<div class="fu-sep">3 abordagens — escolha a que faz mais sentido</div>`;
+
+  (j.abordagens || []).forEach((a, idx) => {
+    const labelCls = labelMap[a.tipo] || 'fu-label-suave';
+    const msgId    = `fu-msg-${idx}`;
+    h += `<div class="fu-card">
+      <div class="fu-card-head">
+        <span style="font-size:18px">${a.emoji}</span>
+        <span class="fu-approach-label ${labelCls}">${esc(a.label)}</span>
+        <span class="fu-card-meta">⏱ ${esc(a.timing||'')}</span>
+      </div>
+      <div class="fu-card-body">
+        <div class="fu-msg" id="${msgId}">${escFu(a.mensagem)}</div>
+      </div>
+      <div class="fu-card-foot">
+        <div class="fu-dica"><strong>Quando usar:</strong> ${esc(a.dica)}</div>
+        <button class="fu-copy-btn" onclick="copyFuMsg('${msgId}',this)">📋 Copiar</button>
+      </div>
+    </div>`;
+  });
+
+  if (j.proximo_passo) {
+    h += `<div class="s-card" style="margin-top:.5rem">
+      <div class="s-hrow">
+        <span class="s-badge sb-6">🚨</span>
+        <span class="s-etitle">Se nenhuma abordagem funcionar</span>
+      </div>
+      <p style="font-size:13px;line-height:1.6;color:var(--muted)">${esc(j.proximo_passo)}</p>
+    </div>`;
+  }
+
+  h += `</div>`;
+  document.getElementById('out').innerHTML = h;
+}
+
+function escFu(str) {
+  return esc(str || '').replace(/\n/g, '<br>');
+}
+
+function copyFuMsg(elId, btn) {
+  const el = document.getElementById(elId);
+  const text = el ? el.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copiado!';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => { btn.textContent = 'Selecione manualmente'; });
 }
 
 // ── Resultado Bar ──────────────────────────────────────────────────────────
