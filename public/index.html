@@ -72,14 +72,21 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .gbtn:disabled { opacity:.55; cursor:not-allowed; }
 .hint { font-size:10.5px; color:var(--light); text-align:center; margin-top:6px; }
 /* Plano + Desconto */
-.plan-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:start; }
-.discount-wrap { display:flex; flex-direction:column; gap:2px; min-width:90px; }
-.discount-input-row { display:flex; align-items:center; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; transition:border-color .2s,box-shadow .2s; }
-.discount-input-row:focus-within { border-color:var(--accent-l); box-shadow:0 0 0 3px rgba(74,122,37,.11); }
-.discount-input-row input { width:46px; border:none; background:transparent; padding:9px 6px 9px 10px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; }
-.discount-input-row span { padding-right:8px; font-size:13px; color:var(--muted); }
-.plan-final { font-size:11px; color:var(--accent); font-weight:600; line-height:1.3; min-height:14px; }
-.plan-sub-select { width:100%; margin-top:5px; font-size:12px; }
+.plan-row { display:grid; grid-template-columns:1fr 80px; gap:8px; align-items:end; }
+.plan-select-wrap { display:flex; flex-direction:column; gap:0; }
+.discount-wrap { display:flex; flex-direction:column; gap:0; }
+.discount-label-row { display:flex; align-items:center; gap:4px; margin-bottom:5px; }
+.discount-input-box { display:flex; align-items:center; background:var(--surface2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; height:37px; transition:border-color .2s,box-shadow .2s; }
+.discount-input-box:focus-within { border-color:var(--accent-l); box-shadow:0 0 0 3px rgba(74,122,37,.11); background:var(--surface); }
+.discount-input-box input { width:100%; border:none; background:transparent; padding:0 4px 0 10px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; text-align:center; }
+.discount-input-box input::-webkit-inner-spin-button,
+.discount-input-box input::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.discount-input-box .pct-sign { font-size:12px; color:var(--muted); padding-right:8px; font-weight:500; flex-shrink:0; }
+.plan-final-row { display:flex; align-items:center; gap:5px; margin-top:6px; padding:5px 9px; background:var(--accent-bg); border-radius:7px; border:1px solid rgba(74,122,37,.2); min-height:28px; }
+.plan-final-row.hidden { display:none; }
+.plan-original { font-size:11px; color:var(--light); text-decoration:line-through; }
+.plan-arrow { font-size:10px; color:var(--muted); }
+.plan-discounted { font-size:12px; font-weight:700; color:var(--accent); font-family:'Syne',sans-serif; }
 
 /* ── Output Panel ── */
 .opanel { background:var(--surface); border:1px solid var(--border); border-radius:var(--rl); overflow:hidden; min-height:520px; display:flex; flex-direction:column; }
@@ -475,45 +482,51 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
         <div class="cpills" id="cpills"><span style="font-size:12px;color:var(--muted)">Carregando…</span></div>
       </div>
       <div class="field">
-        <div class="label-row"><label style="margin:0">Plano</label></div>
+        <div class="label-row" style="margin-bottom:5px">
+          <label style="margin:0">Plano</label>
+          <label style="margin:0;color:var(--muted)">Desconto</label>
+        </div>
         <div class="plan-row">
-          <div>
+          <div class="plan-select-wrap">
             <select id="planSelect" onchange="onPlanChange()">
               <option value="">— Selecione o plano —</option>
               <optgroup label="Plano Único Vitalício">
-                <option value="Plano Único Vitalício — à vista R$ 1.198,00" data-base="1198.00" data-label="à vista">Único Vitalício — À vista R$ 1.198,00</option>
-                <option value="Plano Único Vitalício — 3x R$ 399,33" data-base="1198.00" data-label="3x R$ 399,33" selected>Único Vitalício — 3x R$ 399,33</option>
+                <option value="Plano Único Vitalício — à vista R$ 1.198,00" data-base="1198.00" data-label="avista">Único Vitalício — À vista R$ 1.198,00</option>
+                <option value="Plano Único Vitalício — 3x R$ 399,33" data-base="1198.00" data-label="3x" selected>Único Vitalício — 3x R$ 399,33</option>
               </optgroup>
               <optgroup label="Plano 5 Anúncios">
-                <option value="Plano 5 Anúncios — Anual R$ 184,80/mês" data-base="2217.60" data-label="Anual R$ 184,80/mês">5 Anúncios — Anual R$ 184,80/mês</option>
-                <option value="Plano 5 Anúncios — Semestral R$ 217,20/mês" data-base="1303.20" data-label="Semestral R$ 217,20/mês">5 Anúncios — Semestral R$ 217,20/mês</option>
+                <option value="Plano 5 Anúncios — Anual R$ 184,80/mês" data-base="184.80" data-label="mes">5 Anúncios — Anual R$ 184,80/mês</option>
+                <option value="Plano 5 Anúncios — Semestral R$ 217,20/mês" data-base="217.20" data-label="mes">5 Anúncios — Semestral R$ 217,20/mês</option>
               </optgroup>
               <optgroup label="Plano 10 Anúncios">
-                <option value="Plano 10 Anúncios — Anual R$ 223,20/mês" data-base="2678.40" data-label="Anual R$ 223,20/mês">10 Anúncios — Anual R$ 223,20/mês</option>
-                <option value="Plano 10 Anúncios — Semestral R$ 260,40/mês" data-base="1562.40" data-label="Semestral R$ 260,40/mês">10 Anúncios — Semestral R$ 260,40/mês</option>
+                <option value="Plano 10 Anúncios — Anual R$ 223,20/mês" data-base="223.20" data-label="mes">10 Anúncios — Anual R$ 223,20/mês</option>
+                <option value="Plano 10 Anúncios — Semestral R$ 260,40/mês" data-base="260.40" data-label="mes">10 Anúncios — Semestral R$ 260,40/mês</option>
               </optgroup>
               <optgroup label="Plano 20 Anúncios">
-                <option value="Plano 20 Anúncios — Anual R$ 358,80/mês" data-base="4305.60" data-label="Anual R$ 358,80/mês">20 Anúncios — Anual R$ 358,80/mês</option>
-                <option value="Plano 20 Anúncios — Semestral R$ 420,00/mês" data-base="2520.00" data-label="Semestral R$ 420,00/mês">20 Anúncios — Semestral R$ 420,00/mês</option>
+                <option value="Plano 20 Anúncios — Anual R$ 358,80/mês" data-base="358.80" data-label="mes">20 Anúncios — Anual R$ 358,80/mês</option>
+                <option value="Plano 20 Anúncios — Semestral R$ 420,00/mês" data-base="420.00" data-label="mes">20 Anúncios — Semestral R$ 420,00/mês</option>
               </optgroup>
               <optgroup label="Plano 30 Anúncios">
-                <option value="Plano 30 Anúncios — Anual R$ 450,00/mês" data-base="5400.00" data-label="Anual R$ 450,00/mês">30 Anúncios — Anual R$ 450,00/mês</option>
-                <option value="Plano 30 Anúncios — Semestral R$ 526,80/mês" data-base="3160.80" data-label="Semestral R$ 526,80/mês">30 Anúncios — Semestral R$ 526,80/mês</option>
+                <option value="Plano 30 Anúncios — Anual R$ 450,00/mês" data-base="450.00" data-label="mes">30 Anúncios — Anual R$ 450,00/mês</option>
+                <option value="Plano 30 Anúncios — Semestral R$ 526,80/mês" data-base="526.80" data-label="mes">30 Anúncios — Semestral R$ 526,80/mês</option>
               </optgroup>
             </select>
           </div>
           <div class="discount-wrap">
-            <label style="margin:0;font-size:9.5px">Desconto %</label>
-            <div class="discount-input-row">
+            <div class="discount-input-box">
               <input id="discountPct" type="number" min="0" max="99" step="1"
                 placeholder="0" oninput="onPlanChange()">
-              <span>%</span>
+              <span class="pct-sign">%</span>
             </div>
-            <div class="plan-final" id="planFinal"></div>
           </div>
         </div>
-        <!-- campo oculto que alimenta o gerador -->
-        <input type="hidden" id="planVal" value="3x R$ 399,33">
+        <!-- Resultado do desconto -->
+        <div class="plan-final-row hidden" id="planFinalRow">
+          <span class="plan-original" id="planOriginal"></span>
+          <span class="plan-arrow">→</span>
+          <span class="plan-discounted" id="planDiscounted"></span>
+        </div>
+        <input type="hidden" id="planVal" value="Plano Único Vitalício — 3x R$ 399,33">
       </div>
       <div class="field" id="callTimeWrap">
         <label>Horário da ligação</label>
@@ -827,40 +840,35 @@ function resetOutput() {
 // ── Seletor de Plano + Desconto ────────────────────────────────────────────
 function onPlanChange() {
   const sel      = document.getElementById('planSelect');
-  const opt      = sel.options[sel.selectedIndex];
-  const pct      = Math.max(0, Math.min(99, parseFloat(document.getElementById('discountPct').value) || 0));
-  const baseStr  = opt?.dataset?.base;
-  const label    = opt?.dataset?.label || '';
+  const opt      = sel?.options[sel.selectedIndex];
+  const pct      = Math.max(0, Math.min(99, parseFloat(document.getElementById('discountPct')?.value) || 0));
+  const base     = parseFloat(opt?.dataset?.base || '0');
+  const isMes    = opt?.dataset?.label === 'mes';
   const planText = opt?.value || '';
-  const finalEl  = document.getElementById('planFinal');
   const hidden   = document.getElementById('planVal');
+  const finalRow = document.getElementById('planFinalRow');
+  const origEl   = document.getElementById('planOriginal');
+  const discEl   = document.getElementById('planDiscounted');
 
-  if (!planText) {
-    if (finalEl) finalEl.textContent = '';
-    hidden.value = '';
+  hidden.value = planText;
+
+  if (!planText || pct <= 0 || !base) {
+    finalRow?.classList.add('hidden');
     return;
   }
 
-  if (pct > 0 && baseStr) {
-    const base    = parseFloat(baseStr);
-    const final   = base * (1 - pct / 100);
-    // formata igual ao padrão: se label tem "/mês" mostra valor mensal
-    const isMonthly = label.includes('/mês');
-    const finalVal  = isMonthly ? final / (label.includes('Anual') ? 12 : 6) : final;
-    const fmtFinal  = finalVal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const fmtBase   = (isMonthly ? base / (label.includes('Anual') ? 12 : 6) : base)
-                        .toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (finalEl) finalEl.innerHTML = `<span style="text-decoration:line-through;color:var(--light);font-weight:400">R$ ${fmtBase}</span> → <strong>R$ ${fmtFinal}${isMonthly?'/mês':''}</strong>`;
-    // monta texto para a IA
-    const descLabel = isMonthly ? `R$ ${fmtFinal}/mês (${pct}% off)` : `R$ ${fmtFinal} (${pct}% off)`;
-    hidden.value = planText.split('—')[0].trim() + ' — ' + descLabel;
-  } else {
-    if (finalEl) finalEl.textContent = '';
-    hidden.value = planText;
-  }
+  const fmt = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (isMes ? '/mês' : '');
+  const discounted = base * (1 - pct / 100);
+
+  if (origEl)   origEl.textContent   = fmt(base);
+  if (discEl)   discEl.textContent   = fmt(discounted);
+  finalRow?.classList.remove('hidden');
+
+  // texto para a IA com desconto
+  const planName = planText.split('—')[0].trim();
+  hidden.value   = `${planName} — ${fmt(discounted)} (${pct}% off)`;
 }
 
-// inicializa o valor oculto com o plano padrão selecionado
 window.addEventListener('DOMContentLoaded', () => { onPlanChange(); });
 
 // ── Char Counter ───────────────────────────────────────────────────────────
