@@ -142,6 +142,7 @@ REGRA DE OURO DO FECHAMENTO:
 O fechamento NUNCA deve ser "se você quiser, posso enviar mais informações".
 Deve ser: "Então vamos fechar hoje? Se não der hoje, me diz uma data e eu mando a proposta com tudo que a gente conversou — você olha e me dá o sim."
 Adapte essa lógica para o tom e plano do lead.`;
+}
 
 // ─── Catálogo de benefícios por plano ────────────────────────────────────────
 const PLAN_CATALOG = `
