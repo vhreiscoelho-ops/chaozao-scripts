@@ -181,7 +181,17 @@ REGRAS:
     });
     const message = await stream.finalMessage();
     const raw  = (message.content || []).map(c => c.text || '').join('');
-    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const t    = raw.trim();
+    let json;
+    try { json = JSON.parse(t); } catch {
+      const cb = t.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+      if (cb) { try { json = JSON.parse(cb[1].trim()); } catch {} }
+      if (!json) {
+        const bounds = t.match(/\{[\s\S]+\}/);
+        if (bounds) json = JSON.parse(bounds[0]);
+        else throw new Error('JSON inválido na resposta da IA');
+      }
+    }
     res.json(json);
   } catch(err) {
     console.error('[insights]', err.message);

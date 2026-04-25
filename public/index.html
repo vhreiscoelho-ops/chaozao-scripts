@@ -1200,7 +1200,7 @@ function updateCharCount() {
 
 // ── Generate ───────────────────────────────────────────────────────────────
 async function gen() {
-  if (currentMode === 'followup') { genFollowUp(); return; }
+  if (currentMode === 'followup') { await genFollowUp(); refreshQueue(); return; }
   const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
   const callTime = document.getElementById('callTime').value;
   let briefing   = '';
@@ -2259,8 +2259,7 @@ function selectQueueTab(name) {
   document.querySelectorAll('.qtab').forEach(t =>
     t.classList.toggle('on', t.textContent.trim().startsWith(name))
   );
-  const today = new Date().toISOString().slice(0, 10);
-  const items = _queueCache.filter(h => h.closer === name && h.createdAt?.startsWith(today));
+  const items = _queueCache.filter(h => h.closer === name);
   items.sort((a, b) => (a.callTime || '99:99').localeCompare(b.callTime || '99:99'));
   renderQueueList(items);
 }
@@ -2378,14 +2377,6 @@ function showRecPanel(show) {
   if (!show) resetRec();
 }
 
-function toggleTranscriptPanel() {
-  const panel = document.getElementById('recTranscriptPanel');
-  const btn   = document.getElementById('recTranscriptToggle');
-  if (!panel) return;
-  const open = panel.style.display === 'none' || panel.style.display === '';
-  panel.style.display = open ? '' : 'none';
-  if (btn) btn.textContent = open ? '📝 Ocultar' : '📝 Ver transcrição';
-}
 
 function resetRec() {
   stopVAD();

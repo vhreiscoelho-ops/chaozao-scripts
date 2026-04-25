@@ -1,6 +1,5 @@
 const express  = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
-const { load } = require('../store');
 
 const router = express.Router();
 const client = new Anthropic({
