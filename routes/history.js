@@ -3,6 +3,48 @@ const { load, save } = require('../store');
 
 const router = express.Router();
 
+// Pendências diárias agrupadas por closer
+router.get('/pending', (_req, res) => {
+  const { history } = load();
+  const now = new Date();
+
+  // Proposta enviada aguardando resposta (resultado === 'proposta' há mais de 1 dia)
+  const propostas = history.filter(h =>
+    h.resultado === 'proposta' &&
+    h.mode === 'script' &&
+    (now - new Date(h.createdAt)) > 86_400_000  // >1 dia
+  );
+
+  // Reagendados (resultado === 'reagendou') — sempre pendente até fechar
+  const reagendados = history.filter(h => h.resultado === 'reagendou');
+
+  // Scripts gerados hoje sem resultado ainda
+  const today = now.toISOString().slice(0, 10);
+  const semResultado = history.filter(h =>
+    h.resultado === null &&
+    h.mode === 'script' &&
+    h.createdAt.startsWith(today)
+  );
+
+  // Agrupa por closer
+  const byCloser = {};
+  const add = (item, tipo, diasEspera) => {
+    const c = item.closer || 'Sem closer';
+    if (!byCloser[c]) byCloser[c] = [];
+    byCloser[c].push({ ...item, _tipo: tipo, _diasEspera: diasEspera });
+  };
+
+  propostas.forEach(h => {
+    const dias = Math.floor((now - new Date(h.createdAt)) / 86_400_000);
+    add(h, 'proposta_aguardando', dias);
+  });
+  reagendados.forEach(h => add(h, 'reagendado', null));
+  semResultado.forEach(h => add(h, 'sem_resultado_hoje', null));
+
+  const total = propostas.length + reagendados.length + semResultado.length;
+  res.json({ total, byCloser });
+});
+
 // Lista sem payload pesado
 router.get('/', (_req, res) => {
   const { history } = load();

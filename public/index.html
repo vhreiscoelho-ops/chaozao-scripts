@@ -628,6 +628,11 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
     <span class="sb-icon">📋</span> Fila do Dia
     <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
   </button>
+  <button class="sb-item sb-mode" id="sbmode-pending" onclick="setMode('pending')">
+    <span class="sb-icon">📋</span>
+    <span>Pendências do Dia</span>
+    <span id="pendingBadge" style="display:none;margin-left:auto;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
+  </button>
   <button class="sb-item" onclick="openDashboard()">
     <span class="sb-icon">📊</span> Dashboard
   </button>
@@ -1099,7 +1104,97 @@ let currentABView  = 'a';
 let _loadTimer     = null;
 
 // ── Init ───────────────────────────────────────────────────────────────────
-async function init() { await loadClosers(); }
+async function init() { await loadClosers(); loadPendingBadge(); }
+
+// ── Pendências ─────────────────────────────────────────────────────────────
+async function loadPendingBadge() {
+  try {
+    const res = await fetch('/api/history/pending');
+    const data = await res.json();
+    const badge = document.getElementById('pendingBadge');
+    if (badge && data.total > 0) {
+      badge.textContent = data.total;
+      badge.style.display = '';
+    }
+  } catch {}
+}
+
+async function loadPending() {
+  document.getElementById('out').innerHTML = `<div class="estate"><div class="spin"></div></div>`;
+  try {
+    const res = await fetch('/api/history/pending');
+    const data = await res.json();
+    renderPending(data);
+    const badge = document.getElementById('pendingBadge');
+    if (data.total > 0) {
+      badge.textContent = data.total;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {
+    document.getElementById('out').innerHTML =
+      `<div class="estate"><div class="estate-icon">⚠️</div><p>${esc(e.message)}</p></div>`;
+  }
+}
+
+function renderPending(data) {
+  if (data.total === 0) {
+    document.getElementById('out').innerHTML = `
+      <div class="estate">
+        <div class="estate-icon">✅</div>
+        <h3>Tudo em dia!</h3>
+        <p>Nenhuma pendência no momento.</p>
+      </div>`;
+    return;
+  }
+
+  let h = `<div style="padding:.25rem 1.5rem 1.5rem">`;
+  h += `<h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:1.25rem;padding-top:1.25rem">`
+    + `📋 Pendências do Dia <span style="font-size:14px;font-weight:400;color:var(--muted)">${data.total} item${data.total>1?'s':''}</span></h2>`;
+
+  const tipoConfig = {
+    proposta_aguardando: { icon:'📄', label:'Proposta aguardando', bg:'#FFF5DC', color:'#8A5C00', border:'#F5D78A' },
+    reagendado:          { icon:'📅', label:'Reagendado',          bg:'#EBF3FF', color:'#1D4E89', border:'#B3CFEE' },
+    sem_resultado_hoje:  { icon:'⏳', label:'Sem resultado hoje',   bg:'#F5F4EF', color:'#7A7769', border:'#DDD9CE' },
+  };
+
+  Object.entries(data.byCloser).forEach(([closer, items]) => {
+    h += `<div style="margin-bottom:1.5rem">`;
+    h += `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">`
+       + `${esc(closer)} — ${items.length} pendência${items.length>1?'s':''}</div>`;
+
+    items.forEach(item => {
+      const cfg = tipoConfig[item._tipo] || tipoConfig.sem_resultado_hoje;
+      const score = item.scoreValor != null ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:var(--accent-bg);color:var(--accent);font-weight:600;margin-left:6px">★ ${item.scoreValor}</span>` : '';
+      const diasText = item._diasEspera != null
+        ? `<span style="font-size:11.5px;color:${item._diasEspera >= 3 ? '#E24B4A' : '#8A5C00'};font-weight:600">${item._diasEspera} dia${item._diasEspera>1?'s':''} aguardando</span>`
+        : '';
+
+      h += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:10px">`;
+      h += `<div style="flex:1;min-width:0">`;
+      h += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">`;
+      h += `<span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:10px;background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.border}">${cfg.icon} ${cfg.label}</span>`;
+      h += diasText;
+      h += `</div>`;
+      h += `<div style="font-size:14px;font-weight:500;color:var(--text)">${esc(item.leadNome)}${score}</div>`;
+      if (item.planVal) h += `<div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(item.planVal)}</div>`;
+      h += `</div>`;
+      h += `<button onclick="openFromPending(${item.id})" style="padding:6px 13px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Ver →</button>`;
+      h += `</div>`;
+    });
+
+    h += `</div>`;
+  });
+
+  h += `</div>`;
+  document.getElementById('out').innerHTML = h;
+}
+
+function openFromPending(id) {
+  setMode('script');
+  loadHistory(id);
+}
 
 // ── Closers ────────────────────────────────────────────────────────────────
 async function loadClosers() {
@@ -1133,14 +1228,22 @@ function pick(btn, id, name) {
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.sb-mode').forEach(t=>t.classList.remove('on'));
-  document.getElementById('sbmode-'+mode).classList.add('on');
+  const sbEl = document.getElementById('sbmode-'+mode);
+  if (sbEl) sbEl.classList.add('on');
+
+  // No modo pending: esconde painel de input e mostra painel de pendências
+  const isPending = mode === 'pending';
   document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
-  // Alterna entre briefing SDR, campos de proposta e campos de follow-up
   document.getElementById('sdrWrap').style.display       = mode==='script' ? '' : 'none';
   document.getElementById('propFields').style.display    = mode==='proposal' ? '' : 'none';
   document.getElementById('followupFields').style.display = mode==='followup' ? '' : 'none';
+
+  // Esconde botão gerar e hint no modo pending
+  document.getElementById('gbtn').style.display  = isPending ? 'none' : '';
+  document.querySelector('.hint').style.display  = isPending ? 'none' : '';
+
   // Pré-seleciona data limite como daqui a 3 dias úteis se vazio
   if (mode === 'proposal') {
     const dlEl = document.getElementById('propDeadline');
@@ -1149,6 +1252,23 @@ function setMode(mode) {
       dlEl.value = d.toISOString().split('T')[0];
     }
   }
+
+  if (isPending) {
+    document.getElementById('otitle').textContent = 'Pendências do Dia';
+    document.getElementById('osub').textContent   = 'Propostas, reagendados e sem resultado';
+    document.getElementById('cbtn').style.display = 'none';
+    document.getElementById('resultadoBar').style.display = 'none';
+    document.getElementById('abTabWrap').style.display    = 'none';
+    document.getElementById('propInlineSection').style.display = 'none';
+    showViewTabs(false);
+    showRecPanel(false);
+    currentOutput = null;
+    currentABOutput = null;
+    loadPending();
+    if (abMode) { abMode=false; document.getElementById('abToggleBtn').classList.remove('on'); }
+    return;
+  }
+
   document.getElementById('btxt').textContent =
     mode==='script' ? 'Gerar Script de Fechamento' :
     mode==='proposal' ? 'Gerar Proposta Comercial' : 'Gerar Follow-up';
