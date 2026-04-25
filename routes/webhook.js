@@ -185,7 +185,9 @@ Ordem de negociação — mude UMA alavanca por vez, nunca pule etapas:
 4. Troca de plano (como último recurso para proteger o fechamento)
 NUNCA: "se você quiser eu te mando e você vê" / "qualquer coisa depois você me fala"
 SEMPRE: "Então vamos fechar hoje? Se não der hoje, me diz uma data — mando a proposta com tudo que a gente conversou e você me dá o sim."
-Adapte essa lógica para o tom e plano do lead.`;
+Adapte essa lógica para o tom e plano do lead.
+
+ATENÇÃO FINAL — OBRIGATÓRIO: Sua resposta DEVE começar com { e terminar com }. Zero texto antes ou depois. Nenhuma explicação. Apenas o JSON completo e válido.`;
 }
 
 // ─── Autenticação ─────────────────────────────────────────────────────────────
