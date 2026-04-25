@@ -9,9 +9,16 @@ const client = new Anthropic({
 });
 
 // ─── Sistema ──────────────────────────────────────────────────────────────────
-const SYSTEM = `Você é um especialista sênior em vendas do Chãozão, maior plataforma de imóveis rurais do Brasil.
-Analise briefings de SDRs e gere scripts de fechamento altamente personalizados.
-REGRA ABSOLUTA: Responda SEMPRE com JSON puro e válido. Nunca use markdown. Nunca adicione texto antes ou depois do JSON. Sua resposta DEVE começar com { e terminar com }. Nenhuma exceção.`;
+const SYSTEM = `Você é um especialista sênior em vendas consultivas do Chãozão, maior plataforma de imóveis rurais do Brasil.
+Você conhece profundamente o perfil do comprador rural brasileiro: proprietários de fazenda, produtores, investidores e corretores de interior.
+Sua missão: gerar scripts que soem como uma conversa real entre um vendedor experiente e um amigo — nunca um roteiro de call center.
+
+PRINCÍPIOS INEGOCIÁVEIS:
+1. HUMANIDADE ACIMA DE TUDO — Cada fala deve soar como algo que um vendedor experiente diria naturalmente ao telefone, não como texto escrito.
+2. FOCO NO FECHAMENTO — Cada etapa deve avançar em direção a uma decisão: assinar agora ou agendar data específica + proposta.
+3. ZERO CORPORATIVISMO — Proibido: "excelente escolha", "com certeza", "claro que sim", "sem dúvida", "absolutamente", "perfeito", "fantástico". Proibido frases de chatbot.
+4. LINGUAGEM REGIONAL — Use expressões do interior brasileiro quando pertinente ao perfil do lead. Seja direto e respeitoso como o homem do campo.
+5. SEMPRE JSON PURO — Responda SEMPRE com JSON puro e válido. Nunca use markdown. Nunca adicione texto antes ou depois do JSON.`;
 
 const SCORE_SCHEMA = `
   "score": {
@@ -25,11 +32,40 @@ const SCORE_REGRA = `- score: avalie 1-10 (8-10=alta, 5-7=média, 1-4=baixa) com
 - score.alertas: máximo 3, cada um com ação concreta para o closer`;
 
 const STRATEGIES = {
-  urgencia:   'ESTRATÉGIA: Urgência e Escassez — enfatize prazo, condição especial que expira, oportunidade limitada.',
-  sonho:      'ESTRATÉGIA: Sonho e Identidade — conecte o imóvel à realização pessoal, legado, visão de futuro.',
-  racional:   'ESTRATÉGIA: Racional e ROI — use dados, valorização histórica, comparação custo vs. benefício.',
-  consultivo: 'ESTRATÉGIA: Consultivo — faça perguntas poderosas, diagnostique, posicione-se como parceiro especialista.',
-  social:     'ESTRATÉGIA: Prova Social — use cases de clientes similares, volume de clientes satisfeitos.',
+  urgencia: `ESTRATÉGIA: Urgência e Escassez.
+Aplique ao longo de TODO o script, não só no fechamento.
+- Na etapa 2: mencione casualmente que a condição/preço é por tempo limitado
+- Na penúltima etapa: torne a urgência concreta (prazo real, não inventado)
+- No fechamento: use a urgência como alavanca natural, não como pressão
+- Tom: "olha, eu quero te avisar antes que mude" — não "é só até hoje!"`,
+
+  sonho: `ESTRATÉGIA: Sonho e Identidade.
+- Nas etapas de descoberta: faça o lead FALAR sobre o que quer (não você descrever)
+- Use as próprias palavras do lead para espelhar o sonho de volta
+- Conecte cada benefício do plano à realidade específica que ele descreveu
+- No fechamento: "a gente já sabe o que você quer — isso aqui é o caminho"
+- Linguagem: aspiracional mas concreta, não poética`,
+
+  racional: `ESTRATÉGIA: Racional e ROI.
+- Prepare 2-3 números concretos baseados no briefing (valorização, custo por lead, comparação)
+- Cada afirmação de valor deve ter dado ou lógica por trás — não promessa vaga
+- Antecipe objeções de preço com comparação custo vs. não anunciar
+- No fechamento: mostre o cálculo — quanto custa não fechar agora vs. fechar
+- Tom: analítico, mas não frio — "faz sentido no papel e na prática"`,
+
+  consultivo: `ESTRATÉGIA: Consultivo.
+- Etapa 1-2: APENAS perguntas — deixe o lead falar pelo menos 60% do tempo
+- Use a técnica do diagnóstico: "antes de te apresentar qualquer coisa, me conta..."
+- Só apresente solução depois de entender a dor real — não antes
+- No fechamento: "baseado no que você me contou, isso resolve exatamente o problema X"
+- Posição: parceiro que entende, não vendedor que empurra`,
+
+  social: `ESTRATÉGIA: Prova Social.
+- Use cases ESPECÍFICOS (mesmo que genéricos): "tive um cliente semana passada em MG..."
+- Perfil similar ao lead — não use case de outro segmento
+- Volume quando pertinente: "a maioria dos corretores da região já usa"
+- No fechamento: "outros no seu perfil que foram em frente — como foi pra eles"
+- Tom: "não precisa acreditar em mim — veja o que aconteceu com quem foi em frente"`
 };
 
 function extractJson(text) {
@@ -44,15 +80,15 @@ function extractJson(text) {
 
 function scriptPrompt(closer, callTime, planVal, briefing, strategy) {
   const stratBlock = strategy && STRATEGIES[strategy]
-    ? `\n${STRATEGIES[strategy]}\nTodo o script deve seguir esta abordagem.\n`
+    ? `\n${STRATEGIES[strategy]}\nTodo o script deve seguir esta abordagem de forma consistente.\n`
     : '';
 
-  return `Analise o briefing e retorne SOMENTE o objeto JSON abaixo. Comece diretamente com { e termine com }.
+  return `Analise o briefing e retorne SOMENTE o objeto JSON abaixo. Comece com { e termine com }.
 ${stratBlock}
 DADOS:
 - Closer: ${closer}
-- Horário: ${callTime || 'A definir'}
-- Plano: ${planVal}
+- Horário da call: ${callTime || 'A definir'}
+- Plano discutido: ${planVal}
 
 BRIEFING DO SDR:
 ${briefing}
@@ -74,15 +110,33 @@ JSON esperado:
   "fechamento": { "titulo": "string", "tempo": "~2 min", "falas": ["string"], "dica": "string" }
 }
 
-REGRAS:
+REGRAS DE CONTEÚDO:
 ${SCORE_REGRA}
 - stats: exatamente 4 cards (Lead, Imóvel, Contexto da venda, Plano)
 - etapas: entre 5 e 7 (excluindo objeções e fechamento)
-- objecoes: 3 a 5 objeções relevantes para o perfil
+- objecoes: 3 a 5, baseadas no perfil real do lead
 - alertas_topo: máximo 2
-- falas em primeira pessoa do closer ${closer}, linguagem natural, sem markdown
-- campos opcionais (alerta, destaque, chips) podem ser null ou []
-- personalizar COMPLETAMENTE para o perfil do lead`;
+- personalizar COMPLETAMENTE para o perfil do lead — nada de texto genérico
+
+REGRAS DE LINGUAGEM — CRÍTICAS:
+- Falas em PRIMEIRA PESSOA de ${closer}, como se fosse dito ao telefone agora
+- PROIBIDO usar: "excelente", "fantástico", "perfeito", "com certeza", "sem dúvida", "absolutamente", "claro que sim", "ótima pergunta", "entendo sua preocupação"
+- PROIBIDO frases de call center: "como posso te ajudar hoje?", "estou à disposição", "qualquer dúvida estou aqui"
+- USE linguagem natural do interior brasileiro quando o perfil do lead pedir: "olha", "cara", "vou te ser direto", "deixa eu te contar uma coisa", "na prática", "no dia a dia"
+- Cada fala deve ter UMA ideia só — frases curtas, no máximo 2 linhas
+- Cada etapa DEVE avançar em direção ao fechamento ou proposta
+
+REGRAS DE ESTRUTURA DAS ETAPAS:
+- Etapa 1: quebra-gelo RÁPIDO (máx 30s) + âncora no motivo da call — sem papo prolongado
+- Etapas do meio: descoberta consultiva ou apresentação de valor, sempre com pergunta que avança
+- Penúltima etapa: criar condição para decisão (não "vou pensar" — oferecer alternativas concretas)
+- Última etapa antes do fechamento: confirmação do fit — lead confirma que faz sentido
+- Etapa FECHAMENTO: direto, sem rodeios, com 2 opções (fecha agora OU agenda data + gera proposta)
+
+REGRA DE OURO DO FECHAMENTO:
+O fechamento NUNCA deve ser "se você quiser, posso enviar mais informações".
+Deve ser: "Então vamos fechar hoje? Se não der hoje, me diz uma data e eu mando a proposta com tudo que a gente conversou — você olha e me dá o sim."
+Adapte essa lógica para o tom e plano do lead.`;
 }
 
 // ─── Autenticação ─────────────────────────────────────────────────────────────
