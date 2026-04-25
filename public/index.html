@@ -505,6 +505,100 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 .ab-perf-strat { font-size:13px; font-weight:500; flex:1; }
 .ab-perf-taxa { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; }
 .ab-perf-sub { font-size:11px; color:var(--muted); }
+
+/* ── Modo Ao Vivo ── */
+#liveOverlay {
+  position:fixed; inset:0; z-index:9999;
+  background:#0F1A0A;
+  display:flex; flex-direction:column;
+  font-family:'DM Sans',sans-serif;
+  color:#F0EDE4;
+}
+.live-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 1.5rem; border-bottom:1px solid rgba(255,255,255,.1);
+  flex-shrink:0;
+}
+.live-close {
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.6); border-radius:8px; padding:6px 14px;
+  font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.live-close:hover { background:rgba(255,255,255,.15); color:#fff; }
+.live-timer {
+  font-family:'Syne',sans-serif; font-size:22px; font-weight:700;
+  color:#A8D97F; letter-spacing:.05em;
+}
+.live-lead { font-size:13px; color:rgba(255,255,255,.45); }
+.live-progress {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:.9rem 1.5rem; flex-shrink:0;
+}
+.live-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:rgba(255,255,255,.2); border:none; cursor:pointer;
+  transition:all .2s; padding:0;
+}
+.live-dot.done { background:rgba(168,217,127,.5); }
+.live-dot.active { background:#A8D97F; transform:scale(1.3); }
+.live-step-info {
+  text-align:center; padding:.2rem 1.5rem .6rem; flex-shrink:0;
+  font-size:13px; color:rgba(255,255,255,.4);
+}
+.live-card {
+  flex:1; overflow-y:auto; margin:0 1.5rem;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  border-radius:14px; padding:1.5rem;
+  min-height:0;
+}
+.live-card-title {
+  font-family:'Syne',sans-serif; font-size:18px; font-weight:700;
+  color:#A8D97F; margin-bottom:1rem; letter-spacing:-.01em;
+}
+.live-fala {
+  font-size:15px; line-height:1.75; color:#F0EDE4;
+  border-left:3px solid rgba(168,217,127,.4);
+  padding:10px 14px; margin:8px 0;
+  background:rgba(255,255,255,.04); border-radius:0 8px 8px 0;
+  font-style:italic;
+}
+.live-fala-sep { border:none; border-top:.5px solid rgba(255,255,255,.08); margin:8px 0; }
+.live-dica {
+  margin:.7rem 1.5rem 0; flex-shrink:0;
+  font-size:12.5px; color:rgba(255,255,255,.5);
+  padding:8px 12px; background:rgba(255,255,255,.04);
+  border-radius:8px; line-height:1.5;
+}
+.live-dica strong { color:#A8D97F; }
+.live-chips {
+  display:flex; flex-wrap:wrap; gap:6px;
+  padding:.6rem 1.5rem; flex-shrink:0;
+}
+.live-chip {
+  padding:4px 12px; border-radius:20px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  font-size:11.5px; color:rgba(255,255,255,.6);
+}
+.live-nav {
+  display:flex; gap:10px; padding:1rem 1.5rem;
+  border-top:1px solid rgba(255,255,255,.1); flex-shrink:0;
+}
+.live-btn-sec {
+  flex:1; padding:12px; border-radius:10px;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.7); font-size:15px; font-weight:500;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.live-btn-sec:hover { background:rgba(255,255,255,.14); color:#fff; }
+.live-btn-sec:disabled { opacity:.3; cursor:not-allowed; }
+.live-btn-pri {
+  flex:2; padding:12px; border-radius:10px;
+  background:#4A7A25; border:1px solid #5E9A30;
+  color:#fff; font-size:15px; font-weight:600;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s;
+}
+.live-btn-pri:hover { background:#5E9A30; }
 </style>
 </head>
 <body>
@@ -1432,6 +1526,9 @@ function alertBox(tipo,titulo,texto){
 
 function renderScript(j) {
   let h=`<div class="script-wrap">`;
+  if (j?.etapas?.length) {
+    h+=`<button onclick="openLiveMode()" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#2D5016;border:1px solid #4A7A25;border-radius:9px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:1rem;width:100%;justify-content:center;">▶ Iniciar Modo Ao Vivo</button>`;
+  }
   h+=scoreCard(j.score);
   h+=`<h1>Script de ligação — ${esc(j.lead_nome)}</h1><p class="sub">${esc(j.subtitulo)}</p>`;
   (j.alertas_topo||[]).forEach(a=>{h+=alertBox(a.tipo,a.titulo,a.texto);});
@@ -2756,9 +2853,152 @@ function renderCoaching(d) {
 }
 
 init();
+
+// ── Modo Ao Vivo ────────────────────────────────────────────────────────────
+let _liveStep = 0;
+let _liveSteps = [];
+let _liveTimerInt = null;
+let _liveSeconds = 0;
+let _liveKeyHandler = null;
+
+function openLiveMode() {
+  const j = currentOutput?.result;
+  if (!j?.etapas?.length) return;
+
+  _liveSteps = [...(j.etapas || [])];
+  if (j.fechamento) {
+    _liveSteps.push({
+      titulo: j.fechamento.titulo || 'Fechamento',
+      tempo: j.fechamento.tempo || '~2 min',
+      falas: j.fechamento.falas || [],
+      dica: j.fechamento.dica || '',
+      chips: [],
+      _isFechamento: true
+    });
+  }
+
+  _liveStep = 0;
+  _liveSeconds = 0;
+
+  document.getElementById('liveLead').textContent = j.lead_nome || 'Lead';
+  document.getElementById('liveOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  _liveTimerInt = setInterval(() => {
+    _liveSeconds++;
+    const m = String(Math.floor(_liveSeconds / 60)).padStart(2, '0');
+    const s = String(_liveSeconds % 60).padStart(2, '0');
+    document.getElementById('liveTimer').textContent = `${m}:${s}`;
+  }, 1000);
+
+  _liveKeyHandler = e => {
+    if (e.key === 'ArrowRight') liveNav(1);
+    else if (e.key === 'ArrowLeft') liveNav(-1);
+    else if (e.key === 'Escape') closeLiveMode();
+  };
+  document.addEventListener('keydown', _liveKeyHandler);
+
+  renderLiveStep();
+}
+
+function closeLiveMode() {
+  clearInterval(_liveTimerInt);
+  _liveTimerInt = null;
+  if (_liveKeyHandler) {
+    document.removeEventListener('keydown', _liveKeyHandler);
+    _liveKeyHandler = null;
+  }
+  document.getElementById('liveOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+  if (currentOutput?.id) showResultadoBar(currentOutput.mode || 'script', null);
+}
+
+function liveNav(dir) {
+  const next = _liveStep + dir;
+  if (next < 0 || next >= _liveSteps.length) return;
+  _liveStep = next;
+  renderLiveStep();
+}
+
+function liveJump(i) {
+  _liveStep = i;
+  renderLiveStep();
+}
+
+function renderLiveStep() {
+  const step = _liveSteps[_liveStep];
+  const total = _liveSteps.length;
+  const isLast = _liveStep === total - 1;
+
+  // Progress dots
+  const dotsEl = document.getElementById('liveProgress');
+  dotsEl.innerHTML = _liveSteps.map((_, i) => {
+    const cls = i < _liveStep ? 'live-dot done' : i === _liveStep ? 'live-dot active' : 'live-dot';
+    return `<button class="${cls}" onclick="liveJump(${i})"></button>`;
+  }).join('');
+
+  // Step info
+  document.getElementById('liveStepInfo').textContent =
+    `Etapa ${_liveStep + 1} de ${total}  •  ${step.tempo || ''}`;
+
+  // Card
+  let cardHtml = `<div class="live-card-title">${esc(step.titulo)}</div>`;
+  (step.falas || []).forEach((f, i) => {
+    if (i > 0) cardHtml += `<div class="live-fala-sep"></div>`;
+    cardHtml += `<div class="live-fala">"${esc(f)}"</div>`;
+  });
+  document.getElementById('liveCard').innerHTML = cardHtml;
+  document.getElementById('liveCard').scrollTop = 0;
+
+  // Dica
+  const dicaEl = document.getElementById('liveDica');
+  if (step.dica) {
+    dicaEl.innerHTML = `<strong>Dica:</strong> ${esc(step.dica)}`;
+    dicaEl.style.display = '';
+  } else {
+    dicaEl.style.display = 'none';
+  }
+
+  // Chips
+  const chipsEl = document.getElementById('liveChips');
+  if (step.chips?.length) {
+    chipsEl.innerHTML = step.chips.map(c => `<span class="live-chip">${esc(c)}</span>`).join('');
+    chipsEl.style.display = 'flex';
+  } else {
+    chipsEl.style.display = 'none';
+  }
+
+  // Nav buttons
+  document.getElementById('livePrev').disabled = _liveStep === 0;
+  const nextBtn = document.getElementById('liveNext');
+  nextBtn.textContent = isLast ? '🏁 Encerrar call' : 'Próxima →';
+  if (isLast) {
+    nextBtn.onclick = closeLiveMode;
+  } else {
+    nextBtn.onclick = () => liveNav(1);
+  }
+}
 </script>
 
 <!-- Toast global -->
 <div class="toast" id="globalToast"></div>
+
+<!-- ── MODO AO VIVO ── -->
+<div id="liveOverlay" style="display:none">
+  <div class="live-bar">
+    <button class="live-close" onclick="closeLiveMode()">✕ Encerrar</button>
+    <div class="live-timer" id="liveTimer">00:00</div>
+    <div class="live-lead" id="liveLead"></div>
+  </div>
+  <div class="live-progress" id="liveProgress"></div>
+  <div class="live-step-info" id="liveStepInfo"></div>
+  <div class="live-card" id="liveCard"></div>
+  <div class="live-dica" id="liveDica"></div>
+  <div class="live-chips" id="liveChips"></div>
+  <div class="live-nav">
+    <button class="live-btn-sec" id="livePrev" onclick="liveNav(-1)">← Anterior</button>
+    <button class="live-btn-pri" id="liveNext" onclick="liveNav(1)">Próxima →</button>
+  </div>
+</div>
 </body>
 </html>
