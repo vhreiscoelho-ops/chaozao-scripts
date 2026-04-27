@@ -269,9 +269,19 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .fu-card { background:#fff; border-radius:12px; border:.5px solid var(--border); overflow:hidden; margin-bottom:.85rem; }
 .fu-card-head { padding:9px 13px; display:flex; align-items:center; gap:9px; border-bottom:1px solid var(--border); background:#FAFAF7; }
 .fu-approach-label { font-family:'Syne',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 10px; border-radius:20px; }
-.fu-label-suave   { background:#E1F5EE; color:#085041; }
-.fu-label-urgencia{ background:#FAEEDA; color:#633806; }
-.fu-label-valor   { background:#EEEDFE; color:#3C3489; }
+.fu-label-suave       { background:#E1F5EE; color:#085041; }
+.fu-label-urgencia    { background:#FAEEDA; color:#633806; }
+.fu-label-valor       { background:#EEEDFE; color:#3C3489; }
+.fu-label-gentil      { background:#E8F4FD; color:#0A4A72; }
+.fu-label-tecnico     { background:#EDF2FF; color:#2C3E8C; }
+.fu-label-reativacao  { background:#E6F9EE; color:#145A32; }
+.fu-label-checkin     { background:#F0F0F0; color:#444; }
+.fu-label-mercado     { background:#FEF9E7; color:#6E4C00; }
+.fu-label-nova_condicao { background:#FDF2FF; color:#5B1F80; }
+.fu-tipo-pills { display:flex; gap:6px; flex-wrap:wrap; }
+.fu-tipo-pill { padding:5px 13px; border-radius:20px; border:1px solid var(--border); background:var(--surface2); font-size:12px; cursor:pointer; color:var(--muted); transition:all .15s; font-family:'DM Sans',sans-serif; }
+.fu-tipo-pill:hover { border-color:var(--accent-l); color:var(--accent); }
+.fu-tipo-pill.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
 .fu-card-meta { margin-left:auto; font-size:11px; color:var(--light); }
 .fu-card-body { padding:13px 14px; }
 .fu-msg { font-size:13.5px; line-height:1.75; color:var(--fg); white-space:pre-wrap; }
@@ -815,6 +825,14 @@ body.queue-open .main-area { padding-right:288px; transition:padding-right .22s 
 
       <!-- Campos de follow-up (modo followup) -->
       <div id="followupFields" style="display:none">
+        <div class="field">
+          <label>Tipo de follow-up</label>
+          <div class="fu-tipo-pills">
+            <button class="fu-tipo-pill on" onclick="pickFuTipo(this,'proposta')">📩 Proposta sem resposta</button>
+            <button class="fu-tipo-pill"    onclick="pickFuTipo(this,'cobranca')">💳 Cobrança de pagamento</button>
+            <button class="fu-tipo-pill"    onclick="pickFuTipo(this,'relacionamento')">🤝 Relacionamento</button>
+          </div>
+        </div>
         <div class="field">
           <label>Nome do lead</label>
           <input id="fu-nome" type="text" placeholder="Ex: Rafael Martins"
@@ -1720,6 +1738,19 @@ function pickCanal(btn, name) {
   _fuCanal = name;
 }
 
+let _fuTipo = 'proposta';
+function pickFuTipo(btn, tipo) {
+  document.querySelectorAll('.fu-tipo-pill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  _fuTipo = tipo;
+  // atualiza placeholder do contexto conforme o tipo
+  const ctx = document.getElementById('fu-contexto');
+  if (!ctx) return;
+  if (tipo === 'cobranca')       ctx.placeholder = 'Ex: Link enviado há 2 dias. Disse que ia pagar hoje. Objeção: não tinha o cartão na hora.';
+  else if (tipo === 'relacionamento') ctx.placeholder = 'Ex: Disse que não é o momento, mas tem interesse. Imóvel em MG, 80 ha. Voltar em 3 meses.';
+  else                           ctx.placeholder = 'Ex: Disse que ia pensar. Dor principal: receber curiosos. Tem 2 imóveis rurais.';
+}
+
 // ── Follow-up Generate ────────────────────────────────────────────────────
 async function genFollowUp() {
   const nome     = document.getElementById('fu-nome').value.trim();
@@ -1763,7 +1794,8 @@ async function genFollowUp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nome, valor, plano, canal: _fuCanal, perfil, contexto,
-        closer: selectedCloser?.name || 'Closer'
+        closer: selectedCloser?.name || 'Closer',
+        tipo: _fuTipo
       })
     });
     const data = await res.json();
@@ -1785,17 +1817,28 @@ async function genFollowUp() {
 
 // ── Follow-up Render ──────────────────────────────────────────────────────
 function renderFollowUp(j) {
-  const labelMap = { suave:'fu-label-suave', urgencia:'fu-label-urgencia', valor:'fu-label-valor' };
+  const labelMap = {
+    suave:'fu-label-suave', urgencia:'fu-label-urgencia', valor:'fu-label-valor',
+    gentil:'fu-label-gentil', tecnico:'fu-label-tecnico', reativacao:'fu-label-reativacao',
+    checkin:'fu-label-checkin', mercado:'fu-label-mercado', nova_condicao:'fu-label-nova_condicao'
+  };
+
+  const tipo = j._tipo || _fuTipo || 'proposta';
+  const tipoMeta = {
+    proposta:       { titulo:'Follow-up de Proposta', sub:'sem resposta · extrair sim ou não', sep:'3 abordagens — escolha a que faz mais sentido', alertaLabel:'🔍 Leitura do lead', proximoLabel:'Se nenhuma mensagem funcionar' },
+    cobranca:       { titulo:'Cobrança de Pagamento', sub:'link enviado · finalizar pagamento', sep:'3 abordagens para retomar o pagamento', alertaLabel:'🔍 Por que ainda não pagou', proximoLabel:'Se não pagar após as mensagens' },
+    relacionamento: { titulo:'Manutenção de Relacionamento', sub:'lead esfriou · reabrir na hora certa', sep:'3 abordagens para retomar contato', alertaLabel:'🔍 Quando e como reabrir', proximoLabel:'Se não engajar' }
+  }[tipo] || {};
 
   let h = `<div class="fu-wrap">`;
-  h += `<h1>Follow-up — ${esc(j.lead_nome)}</h1>`;
-  h += `<p class="sub">${esc(_fuCanal)} · ${esc(selectedCloser?.name||'Closer')} · fechamento por mensagem</p>`;
+  h += `<h1>${tipoMeta.titulo} — ${esc(j.lead_nome)}</h1>`;
+  h += `<p class="sub">${esc(_fuCanal)} · ${esc(selectedCloser?.name||'Closer')} · ${tipoMeta.sub}</p>`;
 
   if (j.alerta) {
-    h += `<div class="s-aviso" style="margin-bottom:.9rem"><strong>🔍 Leitura do lead:</strong> ${esc(j.alerta)}</div>`;
+    h += `<div class="s-aviso" style="margin-bottom:.9rem"><strong>${tipoMeta.alertaLabel}:</strong> ${esc(j.alerta)}</div>`;
   }
 
-  h += `<div class="fu-sep">3 abordagens — escolha a que faz mais sentido</div>`;
+  h += `<div class="fu-sep">${tipoMeta.sep}</div>`;
 
   (j.abordagens || []).forEach((a, idx) => {
     const labelCls = labelMap[a.tipo] || 'fu-label-suave';
@@ -1820,7 +1863,7 @@ function renderFollowUp(j) {
     h += `<div class="s-card" style="margin-top:.5rem">
       <div class="s-hrow">
         <span class="s-badge sb-6">🚨</span>
-        <span class="s-etitle">Se nenhuma mensagem funcionar</span>
+        <span class="s-etitle">${tipoMeta.proximoLabel}</span>
       </div>
       <p style="font-size:13px;line-height:1.6;color:var(--muted)">${esc(j.proximo_passo)}</p>
     </div>`;
