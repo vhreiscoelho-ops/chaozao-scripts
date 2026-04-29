@@ -522,6 +522,83 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .kban-badge { display:inline-block; font-size:9px; font-weight:600; padding:1px 6px; border-radius:12px; }
 .kban-badge-prop { background:#1a3a1a; color:#56d364; border:1px solid #2a5a2a; }
 .kban-badge-ab { background:#1a1a3a; color:#58a6ff; border:1px solid #2a2a5a; }
+/* ── Ficha do Lead Overlay ── */
+#fichaOverlay {
+  position:fixed; inset:0; z-index:402;
+  background:#0d1117;
+  display:flex; flex-direction:column;
+  opacity:0; pointer-events:none;
+  transition:opacity .2s;
+  font-family:'DM Sans',sans-serif;
+  color:#e6edf3;
+}
+#fichaOverlay.open { opacity:1; pointer-events:all; }
+#fichaHeader {
+  display:flex; align-items:center; gap:12px;
+  padding:.75rem 1.2rem;
+  border-bottom:1px solid #21262d;
+  flex-shrink:0; background:#161b22;
+}
+.ficha-header-title { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:#e6edf3; flex:1; }
+#fichaSearch {
+  background:#21262d; border:1px solid #30363d; border-radius:8px;
+  padding:6px 12px; font-family:'DM Sans',sans-serif; font-size:13px;
+  color:#e6edf3; outline:none; width:240px;
+}
+#fichaSearch:focus { border-color:#388bfd; }
+#fichaBackBtn {
+  background:none; border:1px solid #30363d; border-radius:6px;
+  padding:5px 12px; cursor:pointer; font-size:13px; color:#8b949e;
+  font-family:'DM Sans',sans-serif; transition:all .15s; flex-shrink:0;
+}
+#fichaBackBtn:hover { background:#21262d; color:#e6edf3; }
+#fichaBody { flex:1; overflow-y:auto; padding:16px 20px; }
+.ficha-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.ficha-lead-card {
+  background:#161b22; border:1px solid #21262d; border-radius:10px;
+  padding:14px 16px; cursor:pointer; transition:all .15s;
+}
+.ficha-lead-card:hover { border-color:#388bfd; transform:translateY(-2px); }
+.ficha-lead-name { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#e6edf3; margin-bottom:6px; }
+.ficha-lead-meta { font-size:11.5px; color:#8b949e; line-height:1.7; }
+.ficha-lead-badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px; border-radius:12px; margin-top:6px; }
+.ficha-detail-header {
+  background:#161b22; border:1px solid #21262d; border-radius:10px;
+  padding:16px 20px; margin-bottom:16px;
+  display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.ficha-detail-name { font-family:'Syne',sans-serif; font-weight:700; font-size:20px; color:#e6edf3; }
+.ficha-detail-stats { display:flex; gap:20px; flex-wrap:wrap; margin-top:8px; }
+.ficha-stat { text-align:center; }
+.ficha-stat-val { font-family:'Syne',sans-serif; font-weight:700; font-size:18px; color:#58a6ff; }
+.ficha-stat-label { font-size:10px; color:#8b949e; margin-top:1px; }
+.ficha-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.ficha-action-btn {
+  padding:7px 14px; border-radius:8px; border:1px solid #30363d;
+  background:#21262d; color:#e6edf3; font-family:'DM Sans',sans-serif;
+  font-size:12px; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.ficha-action-btn:hover { border-color:#388bfd; color:#58a6ff; }
+.ficha-action-btn.primary { background:#238636; border-color:#238636; color:#fff; }
+.ficha-action-btn.primary:hover { background:#2ea043; }
+.ficha-timeline { display:flex; flex-direction:column; gap:8px; }
+.ficha-tl-item {
+  background:#161b22; border:1px solid #21262d; border-radius:10px;
+  padding:12px 16px; cursor:pointer; transition:border-color .15s;
+  display:flex; align-items:flex-start; gap:12px;
+}
+.ficha-tl-item:hover { border-color:#388bfd; }
+.ficha-tl-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.ficha-tl-dot-script   { background:#388bfd; }
+.ficha-tl-dot-proposal { background:#e3b341; }
+.ficha-tl-dot-followup { background:#8b949e; }
+.ficha-tl-content { flex:1; }
+.ficha-tl-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+.ficha-tl-type { font-family:'Syne',sans-serif; font-weight:600; font-size:12px; color:#e6edf3; }
+.ficha-tl-date { font-size:11px; color:#8b949e; }
+.ficha-tl-meta { font-size:11.5px; color:#8b949e; line-height:1.6; }
+.ficha-tl-obs { margin-top:6px; font-size:11.5px; color:#a0aab4; font-style:italic; border-left:2px solid #30363d; padding-left:8px; }
+.ficha-empty { text-align:center; padding:3rem 1rem; color:#484f58; font-size:13px; line-height:1.8; }
 /* Toast */
 .toast { position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%) translateY(20px); background:#1A1915; color:#fff; font-size:13px; padding:.55rem 1.1rem; border-radius:20px; z-index:9999; opacity:0; transition:all .25s; pointer-events:none; white-space:nowrap; }
 .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
@@ -703,6 +780,9 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
     <span class="sb-icon">📋</span>
     <span>Pendências do Dia</span>
     <span id="pendingBadge" style="display:none;margin-left:auto;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
+  </button>
+  <button class="sb-item" id="sbmode-ficha" onclick="openFicha()">
+    <span class="sb-icon">👤</span> Fichas de Leads
   </button>
   <button class="sb-item" onclick="openDashboard()">
     <span class="sb-icon">📊</span> Dashboard
@@ -1093,6 +1173,17 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
     </div>
   </div>
   <div id="kanbanBoard"></div>
+</div>
+
+<!-- ── FICHA DO LEAD OVERLAY ── -->
+<div id="fichaOverlay">
+  <div id="fichaHeader">
+    <button id="fichaBackBtn" onclick="fichaBack()" style="display:none">← Voltar</button>
+    <div class="ficha-header-title" id="fichaTitleEl">👤 Fichas de Leads</div>
+    <input type="text" id="fichaSearch" placeholder="Buscar lead…" oninput="fichaFilter()">
+    <button class="kban-close-btn" onclick="closeFicha()">✕ Fechar</button>
+  </div>
+  <div id="fichaBody"></div>
 </div>
 
 <!-- ── DASHBOARD ── -->
@@ -2677,13 +2768,19 @@ function renderKbanCard(item) {
     ? `<span class="kban-badge kban-badge-ab">A/B-${esc(item.abGroup)}</span>`
     : '';
 
+  const fichaBtn = item.leadNome
+    ? `<button class="kban-card-del" style="opacity:1;color:#58a6ff;margin-right:2px"
+         onclick="event.stopPropagation();fichaOpenByNome('${encodeURIComponent(item.leadNome)}')"
+         title="Ficha do lead">👤</button>`
+    : '';
+
   return `<div class="kban-card${isActive?' kban-active':''}"
     draggable="true"
     ondragstart="kanbanDragStart(event,${item.id},'${esc(item.resultado||'')}')"
     onclick="kbanCardClick(${item.id},this)">
     <div class="kban-card-top">
       <div class="kban-card-name" title="${esc(item.leadNome)}">${esc(item.leadNome)}</div>
-      ${score != null ? `<span class="kban-card-score" style="color:${sColor}">${score}</span>` : ''}
+      ${fichaBtn}${score != null ? `<span class="kban-card-score" style="color:${sColor}">${score}</span>` : ''}
       <button class="kban-card-del" onclick="kbanCardDelete(${item.id},event)" title="Excluir script">✕</button>
     </div>
     <div class="kban-card-meta">
@@ -2775,6 +2872,224 @@ async function loadQueueItem(id, el) {
 // Close kanban with Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && queueOpen) { e.preventDefault(); closeQueue(); }
+});
+
+// ── Ficha do Lead ──────────────────────────────────────────────────────────
+let _fichaOpen = false;
+let _fichaLeads = [];
+let _fichaSelected = null;
+
+function openFicha(preselect) {
+  if (preselect === undefined) preselect = null;
+  _fichaOpen = true;
+  document.getElementById('fichaOverlay').classList.add('open');
+  document.getElementById('fichaSearch').value = '';
+  loadFichaLeads(preselect);
+}
+
+function closeFicha() {
+  _fichaOpen = false;
+  _fichaSelected = null;
+  document.getElementById('fichaOverlay').classList.remove('open');
+}
+
+async function loadFichaLeads(preselect) {
+  if (preselect === undefined) preselect = null;
+  document.getElementById('fichaBody').innerHTML =
+    '<div class="ficha-empty">Carregando…</div>';
+  try {
+    _fichaLeads = await fetch('/api/history/leads').then(r => r.json());
+    if (preselect) {
+      const match = _fichaLeads.find(l =>
+        l.nome.toLowerCase() === preselect.toLowerCase()
+      );
+      if (match) { fichaShowDetail(match); return; }
+    }
+    fichaShowList(_fichaLeads);
+  } catch(e) {
+    document.getElementById('fichaBody').innerHTML =
+      '<div class="ficha-empty">Erro: ' + esc(e.message) + '</div>';
+  }
+}
+
+function fichaFilter() {
+  const q = document.getElementById('fichaSearch').value.toLowerCase().trim();
+  const filtered = q
+    ? _fichaLeads.filter(l => l.nome.toLowerCase().includes(q))
+    : _fichaLeads;
+  fichaShowList(filtered);
+}
+
+function fichaShowList(leads) {
+  _fichaSelected = null;
+  document.getElementById('fichaBackBtn').style.display = 'none';
+  document.getElementById('fichaTitleEl').textContent = '👤 Fichas de Leads (' + leads.length + ')';
+  document.getElementById('fichaSearch').style.display = '';
+
+  if (!leads.length) {
+    document.getElementById('fichaBody').innerHTML =
+      '<div class="ficha-empty">Nenhum lead encontrado.</div>';
+    return;
+  }
+
+  document.getElementById('fichaBody').innerHTML =
+    '<div class="ficha-grid">' +
+      leads.map(l => fichaLeadCard(l, _fichaLeads.indexOf(l))).join('') +
+    '</div>';
+}
+
+function fichaLeadCard(l, idx) {
+  const resCfg = l.ultimoResultado ? RES_CFG[l.ultimoResultado] : null;
+  const badge = resCfg
+    ? '<span class="ficha-lead-badge hist-badge ' + resCfg.cls + '">' + resCfg.label + '</span>'
+    : '<span class="ficha-lead-badge" style="background:#21262d;color:#8b949e">Sem resultado</span>';
+  const closersStr = l.closers.slice(0,2).join(', ') + (l.closers.length > 2 ? '…' : '');
+  const dataStr = l.ultimoContato ? fmtDate(l.ultimoContato) : '—';
+  // usa índice no array _fichaLeads para evitar problema de aspas/caracteres especiais no onclick
+  return '<div class="ficha-lead-card" onclick="fichaSelectIdx(' + idx + ')">' +
+    '<div class="ficha-lead-name">' + esc(l.nome) + '</div>' +
+    '<div class="ficha-lead-meta">' +
+      l.total + ' interaç' + (l.total === 1 ? 'ão' : 'ões') + '<br>' +
+      'Último contato: ' + dataStr + '<br>' +
+      'Closer: ' + esc(closersStr || '—') +
+    '</div>' +
+    badge +
+  '</div>';
+}
+
+// indireção segura — evita JSON inline no onclick
+function fichaSelectIdx(idx) {
+  const lead = _fichaLeads[idx];
+  if (lead) fichaShowDetail(lead);
+}
+
+// abre a ficha a partir de um nome encodado com encodeURIComponent (seguro para chars especiais)
+function fichaOpenByNome(encodedNome) {
+  openFicha(decodeURIComponent(encodedNome));
+}
+
+async function fichaShowDetail(lead) {
+  _fichaSelected = lead;
+  document.getElementById('fichaBackBtn').style.display = '';
+  document.getElementById('fichaTitleEl').textContent = lead.nome;
+  document.getElementById('fichaSearch').style.display = 'none';
+  document.getElementById('fichaBody').innerHTML = '<div class="ficha-empty">Carregando…</div>';
+
+  try {
+    const all = await fetch('/api/history').then(r => r.json());
+    const items = all
+      .filter(h => (h.leadNome || '').trim().toLowerCase() === lead.nome.trim().toLowerCase())
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    const fechou    = items.filter(h => h.resultado === 'fechou').length;
+    const propostas = items.filter(h => h.resultado === 'proposta').length;
+    const closers   = [...new Set(items.map(h => h.closer).filter(Boolean))];
+    const firstDate = items.length ? fmtDate(items[items.length - 1].createdAt) : '—';
+    const lastDate  = items.length ? fmtDate(items[0].createdAt) : '—';
+
+    const resCfg = lead.ultimoResultado ? RES_CFG[lead.ultimoResultado] : null;
+    const statusBadge = resCfg
+      ? '<span class="hist-badge ' + resCfg.cls + '" style="font-size:12px;padding:3px 10px">' + resCfg.label + '</span>'
+      : '';
+
+    let h = '<div class="ficha-detail-header">' +
+      '<div>' +
+        '<div class="ficha-detail-name">' + esc(lead.nome) + '</div>' +
+        '<div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+          statusBadge +
+          '<span style="font-size:11px;color:#8b949e">Closer' + (closers.length > 1 ? 's' : '') + ': ' + esc(closers.join(', ') || '—') + '</span>' +
+        '</div>' +
+        '<div class="ficha-detail-stats">' +
+          '<div class="ficha-stat"><div class="ficha-stat-val">' + items.length + '</div><div class="ficha-stat-label">Interações</div></div>' +
+          '<div class="ficha-stat"><div class="ficha-stat-val">' + propostas + '</div><div class="ficha-stat-label">Propostas</div></div>' +
+          '<div class="ficha-stat"><div class="ficha-stat-val" style="color:#56d364">' + fechou + '</div><div class="ficha-stat-label">Fechamentos</div></div>' +
+          '<div class="ficha-stat"><div class="ficha-stat-val" style="font-size:13px;color:#8b949e">' + firstDate + '</div><div class="ficha-stat-label">1º contato</div></div>' +
+          '<div class="ficha-stat"><div class="ficha-stat-val" style="font-size:13px;color:#8b949e">' + lastDate + '</div><div class="ficha-stat-label">Último</div></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ficha-actions">' +
+        '<button class="ficha-action-btn primary" onclick="fichaNewFollowup()">💬 Follow-up</button>' +
+        '<button class="ficha-action-btn" onclick="fichaNewScript()">📞 Novo script</button>' +
+      '</div>' +
+    '</div>';
+
+    if (!items.length) {
+      h += '<div class="ficha-empty">Nenhuma interação registrada.</div>';
+    } else {
+      h += '<div class="ficha-timeline">' + items.map(item => fichaTlItem(item)).join('') + '</div>';
+    }
+
+    document.getElementById('fichaBody').innerHTML = h;
+  } catch(e) {
+    document.getElementById('fichaBody').innerHTML =
+      '<div class="ficha-empty">Erro: ' + esc(e.message) + '</div>';
+  }
+}
+
+function fichaTlItem(item) {
+  const isScript   = item.mode === 'script' || !!item.abGroup;
+  const isProposal = item.mode === 'proposal';
+  const dotCls     = isScript ? 'ficha-tl-dot-script' : isProposal ? 'ficha-tl-dot-proposal' : 'ficha-tl-dot-followup';
+  const typeLabel  = isScript ? '📞 Script' : isProposal ? '📄 Proposta' : '💬 Follow-up';
+  const resCfg     = item.resultado ? RES_CFG[item.resultado] : null;
+  const resBadge   = resCfg
+    ? '<span class="hist-badge ' + resCfg.cls + '" style="font-size:9px;padding:1px 6px">' + resCfg.label + '</span>'
+    : '<span style="font-size:10px;color:#484f58">Sem resultado</span>';
+  const score = item.scoreValor != null
+    ? '<span style="font-size:11px;font-weight:700;color:' + (item.scoreValor>=8?'#56d364':item.scoreValor>=5?'#e3b341':'#f85149') + '">Score ' + item.scoreValor + '</span>'
+    : '';
+  const abBadge = item.abGroup
+    ? '<span class="kban-badge kban-badge-ab" style="font-size:9px">A/B-' + esc(item.abGroup) + '</span>' : '';
+  const planTxt = item.planVal ? '<span style="color:#8b949e">' + esc(item.planVal.slice(0,30)) + '</span>' : '';
+  const closerTxt = item.closer ? esc(item.closer) : '';
+  const timeTxt = item.callTime ? '· 🕐 ' + item.callTime : '';
+  const obs = item.observacao
+    ? '<div class="ficha-tl-obs">' + esc(item.observacao) + '</div>' : '';
+
+  return '<div class="ficha-tl-item" onclick="fichaOpenItem(' + item.id + ')">' +
+    '<div class="ficha-tl-dot ' + dotCls + '"></div>' +
+    '<div class="ficha-tl-content">' +
+      '<div class="ficha-tl-top">' +
+        '<span class="ficha-tl-type">' + typeLabel + '</span>' +
+        resBadge + ' ' + score + ' ' + abBadge +
+        '<span class="ficha-tl-date">' + fmtDate(item.createdAt) + ' ' + timeTxt + '</span>' +
+      '</div>' +
+      '<div class="ficha-tl-meta">' + closerTxt + (planTxt ? (closerTxt ? ' · ' : '') + planTxt : '') + '</div>' +
+      obs +
+    '</div>' +
+  '</div>';
+}
+
+function fichaOpenItem(id) {
+  closeFicha();
+  loadHistory(id);
+}
+
+function fichaBack() {
+  fichaShowList(_fichaLeads);
+}
+
+function fichaNewFollowup() {
+  const nome = _fichaSelected?.nome || '';
+  closeFicha();
+  setMode('followup');
+  const el = document.getElementById('fu-nome');
+  if (el) { el.value = nome; el.focus(); }
+}
+
+function fichaNewScript() {
+  const nome = _fichaSelected?.nome || '';
+  closeFicha();
+  setMode('script');
+  const sdr = document.getElementById('sdr');
+  if (sdr && !sdr.value.trim()) {
+    sdr.value = 'Lead: ' + nome + '\n';
+    sdr.focus();
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && _fichaOpen) { e.preventDefault(); closeFicha(); }
 });
 
 // ── Toast ───────────────────────────────────────────────────────────────────

@@ -51,6 +51,40 @@ router.get('/', (_req, res) => {
   res.json(history.map(({ resultJson: _r, briefing: _b, ...rest }) => rest));
 });
 
+// Leads agrupados (Ficha do Lead)
+router.get('/leads', (_req, res) => {
+  const { history } = load();
+  const map = new Map();
+  history.forEach(h => {
+    const key = (h.leadNome || 'Lead').trim();
+    const norm = key.toLowerCase();
+    if (!map.has(norm)) {
+      map.set(norm, {
+        nome: key,
+        total: 0,
+        ultimoContato: null,
+        ultimoResultado: null,
+        closers: new Set(),
+        ids: []
+      });
+    }
+    const entry = map.get(norm);
+    entry.total++;
+    entry.ids.push(h.id);
+    if (!entry.ultimoContato || h.createdAt > entry.ultimoContato) {
+      entry.ultimoContato = h.createdAt;
+      entry.ultimoResultado = h.resultado;
+    }
+    if (h.closer) entry.closers.add(h.closer);
+  });
+
+  const leads = [...map.values()]
+    .map(e => ({ ...e, closers: [...e.closers] }))
+    .sort((a, b) => (b.ultimoContato || '').localeCompare(a.ultimoContato || ''));
+
+  res.json(leads);
+});
+
 // Item completo (para recarregar da tela de histórico)
 router.get('/:id', (req, res) => {
   const id = Number(req.params.id);
