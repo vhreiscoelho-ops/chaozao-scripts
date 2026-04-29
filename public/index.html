@@ -771,18 +771,20 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 
   <hr class="sb-divider">
 
+  <div class="sb-section">Leads</div>
+  <button class="sb-item" id="sbmode-ficha" onclick="openFicha()">
+    <span class="sb-icon">👤</span> Fichas de Leads
+  </button>
+
   <div class="sb-section">Ferramentas</div>
   <button class="sb-item" id="queueBtn" onclick="toggleQueue()">
     <span class="sb-icon">📋</span> Fila do Dia
     <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
   </button>
   <button class="sb-item sb-mode" id="sbmode-pending" onclick="setMode('pending')">
-    <span class="sb-icon">📋</span>
+    <span class="sb-icon">🚨</span>
     <span>Pendências do Dia</span>
     <span id="pendingBadge" style="display:none;margin-left:auto;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
-  </button>
-  <button class="sb-item" id="sbmode-ficha" onclick="openFicha()">
-    <span class="sb-icon">👤</span> Fichas de Leads
   </button>
   <button class="sb-item" onclick="openDashboard()">
     <span class="sb-icon">📊</span> Dashboard
