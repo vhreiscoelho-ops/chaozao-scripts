@@ -747,6 +747,106 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
   cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .2s;
 }
 .live-btn-pri:hover { background:#5E9A30; }
+
+/* Live Objections Panel */
+#liveObjBtn {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  z-index: 10001;
+  background: #1a3a1a;
+  color: #7fff7f;
+  border: 1.5px solid #4CAF50;
+  border-radius: 24px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: none;
+  box-shadow: 0 4px 16px rgba(76,175,80,0.25);
+  transition: background 0.15s;
+  letter-spacing: 0.03em;
+}
+#liveObjBtn:hover { background: #254025; }
+#liveObjBtn.active { background: #4CAF50; color: #0F1A0A; }
+
+#liveObjPanel {
+  position: fixed;
+  top: 0; right: 0;
+  width: min(420px, 100vw);
+  height: 100vh;
+  background: #0d1f0d;
+  border-left: 2px solid #4CAF50;
+  z-index: 10002;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+  box-shadow: -4px 0 32px rgba(0,0,0,0.5);
+}
+#liveObjPanel.open { transform: translateX(0); }
+
+#liveObjPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #2a4a2a;
+  flex-shrink: 0;
+}
+#liveObjPanelHeader h3 {
+  margin: 0;
+  color: #7fff7f;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+#liveObjPanelClose {
+  background: none;
+  border: none;
+  color: #7fff7f;
+  font-size: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+#liveObjPanelClose:hover { background: #1a3a1a; }
+
+#liveObjBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.live-obj-item {
+  background: #132013;
+  border: 1px solid #2a4a2a;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.live-obj-titulo {
+  color: #ffd54f;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.live-obj-resposta {
+  color: #c8e6c9;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+#liveObjEmpty {
+  color: #5a8a5a;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 14px;
+}
 </style>
 </head>
 <body>
@@ -3526,6 +3626,7 @@ let _liveSteps = [];
 let _liveTimerInt = null;
 let _liveSeconds = 0;
 let _liveKeyHandler = null;
+let _liveObjOpen = false;
 
 function openLiveMode() {
   const j = currentOutput?.result;
@@ -3545,9 +3646,12 @@ function openLiveMode() {
 
   _liveStep = 0;
   _liveSeconds = 0;
+  _liveObjOpen = false;
 
   document.getElementById('liveLead').textContent = j.lead_nome || 'Lead';
   document.getElementById('liveOverlay').style.display = 'flex';
+  document.getElementById('liveObjBtn').style.display = 'flex';
+  document.getElementById('liveObjPanel').classList.remove('open');
   document.body.style.overflow = 'hidden';
 
   _liveTimerInt = setInterval(() => {
@@ -3558,6 +3662,7 @@ function openLiveMode() {
   }, 1000);
 
   _liveKeyHandler = e => {
+    if (e.key === 'o' || e.key === 'O') { toggleLiveObj(); return; }
     if (e.key === 'ArrowRight') liveNav(1);
     else if (e.key === 'ArrowLeft') liveNav(-1);
     else if (e.key === 'Escape') closeLiveMode();
@@ -3575,6 +3680,9 @@ function closeLiveMode() {
     _liveKeyHandler = null;
   }
   document.getElementById('liveOverlay').style.display = 'none';
+  document.getElementById('liveObjBtn').style.display = 'none';
+  document.getElementById('liveObjPanel').classList.remove('open');
+  _liveObjOpen = false;
   document.body.style.overflow = '';
   if (currentOutput?.id) showResultadoBar(currentOutput.mode || 'script', null);
 }
@@ -3644,6 +3752,38 @@ function renderLiveStep() {
     nextBtn.onclick = () => liveNav(1);
   }
 }
+
+// ── Live Objections Panel ─────────────────────────────────────
+function toggleLiveObj() {
+  _liveObjOpen = !_liveObjOpen;
+  const panel = document.getElementById('liveObjPanel');
+  const btn   = document.getElementById('liveObjBtn');
+  if (!panel || !btn) return;
+  if (_liveObjOpen) {
+    renderLiveObj();
+    panel.classList.add('open');
+    btn.classList.add('active');
+  } else {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+  }
+}
+
+function renderLiveObj() {
+  const body = document.getElementById('liveObjBody');
+  if (!body) return;
+  const objs = (currentOutput && currentOutput.result && currentOutput.result.objecoes) || [];
+  if (!objs.length) {
+    body.innerHTML = '<div id="liveObjEmpty">Nenhuma objeção registrada neste script.</div>';
+    return;
+  }
+  body.innerHTML = objs.map(o => `
+    <div class="live-obj-item">
+      <div class="live-obj-titulo">${esc(o.titulo || '')}</div>
+      <div class="live-obj-resposta">${esc(o.resposta || '')}</div>
+    </div>
+  `).join('');
+}
 </script>
 
 <!-- Toast global -->
@@ -3664,6 +3804,18 @@ function renderLiveStep() {
   <div class="live-nav">
     <button class="live-btn-sec" id="livePrev" onclick="liveNav(-1)">← Anterior</button>
     <button class="live-btn-pri" id="liveNext" onclick="liveNav(1)">Próxima →</button>
+  </div>
+
+  <!-- Objections floating button -->
+  <button id="liveObjBtn" onclick="toggleLiveObj()">⚡ Objeções</button>
+
+  <!-- Objections slide-in panel -->
+  <div id="liveObjPanel">
+    <div id="liveObjPanelHeader">
+      <h3>⚡ Objeções Frequentes</h3>
+      <button id="liveObjPanelClose" onclick="toggleLiveObj()">✕</button>
+    </div>
+    <div id="liveObjBody"></div>
   </div>
 </div>
 </body>
