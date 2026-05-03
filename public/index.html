@@ -22,10 +22,17 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .sb-brand { font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:#fff; letter-spacing:-.025em; line-height:1; }
 .sb-brand span { color:#A8D97F; }
 .sb-tagline { font-size:11px; color:rgba(255,255,255,.38); margin-top:4px; font-weight:300; letter-spacing:.01em; }
-.sb-section { padding:.9rem 1.25rem .3rem; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:rgba(255,255,255,.28); }
-.sb-item { display:flex; align-items:center; gap:9px; width:100%; padding:.62rem 1.25rem; background:transparent; border:none; border-left:3px solid transparent; color:rgba(255,255,255,.5); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:400; cursor:pointer; text-align:left; transition:all .15s; }
+.sb-nav { display:flex; flex-direction:column; padding:.5rem 0; flex:1; gap:2px; }
+.sb-label { flex:1; }
+.sb-item { display:flex; align-items:center; gap:9px; width:100%; padding:.72rem 1.25rem; background:transparent; border:none; border-left:3px solid transparent; color:rgba(255,255,255,.5); font-family:'DM Sans',sans-serif; font-size:13.5px; font-weight:400; cursor:pointer; text-align:left; transition:all .15s; }
 .sb-item:hover { background:rgba(255,255,255,.07); color:rgba(255,255,255,.9); border-left-color:rgba(255,255,255,.15); }
-.sb-item.on { background:rgba(255,255,255,.13); color:#fff; font-weight:500; border-left-color:#A8D97F; }
+.sb-item.on { background:rgba(255,255,255,.13); color:#fff; font-weight:600; border-left-color:#A8D97F; }
+
+/* Mode pills inside the form */
+.gen-mode-pills { display:flex; gap:0; padding:10px 1.4rem 0; border-bottom:1px solid var(--border); }
+.gmp { flex:1; padding:8px 4px; background:transparent; border:none; border-bottom:2px solid transparent; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:500; color:var(--muted); transition:all .15s; text-align:center; }
+.gmp:hover { color:var(--accent); }
+.gmp.on { color:var(--accent); border-bottom-color:var(--accent); font-weight:700; }
 .sb-icon { font-size:15px; flex-shrink:0; width:20px; text-align:center; }
 .sb-divider { margin:.7rem 1.25rem; border:none; border-top:1px solid rgba(255,255,255,.1); }
 .sb-footer { margin-top:auto; padding:1rem 1.25rem; border-top:1px solid rgba(255,255,255,.1); }
@@ -858,45 +865,35 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
     <div class="sb-tagline">Scripts IA · Powered by Claude</div>
   </div>
 
-  <div class="sb-section">Geração</div>
-  <button id="sbmode-script" class="sb-item sb-mode on" onclick="setMode('script')">
-    <span class="sb-icon">📞</span> Script de Fechamento
-  </button>
-  <button id="sbmode-proposal" class="sb-item sb-mode" onclick="setMode('proposal')">
-    <span class="sb-icon">📄</span> Proposta Comercial
-  </button>
-  <button id="sbmode-followup" class="sb-item sb-mode" onclick="setMode('followup')">
-    <span class="sb-icon">🔁</span> Follow-up de Proposta
-  </button>
+  <div class="sb-nav">
+    <button class="sb-item" id="sb-hoje" onclick="sbHoje()">
+      <span class="sb-icon">🎯</span>
+      <span class="sb-label">Hoje</span>
+      <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
+    </button>
 
-  <hr class="sb-divider">
+    <button class="sb-item on" id="sb-gerar" onclick="sbGerar()">
+      <span class="sb-icon">✍️</span>
+      <span class="sb-label">Gerar</span>
+    </button>
 
-  <div class="sb-section">Leads</div>
-  <button class="sb-item" id="sbmode-ficha" onclick="openFicha()">
-    <span class="sb-icon">👤</span> Fichas de Leads
-  </button>
+    <button class="sb-item" id="sb-leads" onclick="sbLeads()">
+      <span class="sb-icon">👤</span>
+      <span class="sb-label">Leads</span>
+    </button>
 
-  <div class="sb-section">Ferramentas</div>
-  <button class="sb-item" id="queueBtn" onclick="toggleQueue()">
-    <span class="sb-icon">📋</span> Fila do Dia
-    <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
-  </button>
-  <button class="sb-item sb-mode" id="sbmode-pending" onclick="setMode('pending')">
-    <span class="sb-icon">🚨</span>
-    <span>Pendências do Dia</span>
-    <span id="pendingBadge" style="display:none;margin-left:auto;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
-  </button>
-  <button class="sb-item" onclick="openDashboard()">
-    <span class="sb-icon">📊</span> Dashboard
-  </button>
-  <button class="sb-item" onclick="openHistory()">
-    <span class="sb-icon">🕐</span> Histórico
-  </button>
-  <button class="sb-item" onclick="openSettings()">
-    <span class="sb-icon">⚙️</span> Closers
-  </button>
+    <button class="sb-item" id="sb-analise" onclick="sbAnalise()">
+      <span class="sb-icon">📊</span>
+      <span class="sb-label">Análise</span>
+      <span id="pendingBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
+    </button>
+  </div>
 
   <div class="sb-footer">
+    <button class="sb-item" id="sb-config" onclick="sbConfig()">
+      <span class="sb-icon">⚙️</span>
+      <span class="sb-label">Config</span>
+    </button>
     <div class="sb-footer-text">Chãozão © 2025</div>
     <div class="sb-footer-powered">Gerado com IA · Claude Sonnet</div>
   </div>
@@ -942,9 +939,16 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
       </div>
     </div>
 
+    <!-- Pills de modo (Script / Proposta / Follow-up) -->
+    <div class="gen-mode-pills">
+      <button class="gmp on" id="gmp-script"   onclick="setMode('script')">📞 Script</button>
+      <button class="gmp"    id="gmp-proposal" onclick="setMode('proposal')">📄 Proposta</button>
+      <button class="gmp"    id="gmp-followup" onclick="setMode('followup')">🔁 Follow-up</button>
+    </div>
+
     <div class="ph">
-      <div class="picon">📋</div>
-      <div><div class="pt">Briefing do Lead</div><div class="ps">Cole o resumo do SDR e configure</div></div>
+      <div class="picon" id="phIcon">📋</div>
+      <div><div class="pt" id="phTitle">Briefing do Lead</div><div class="ps" id="phSub">Cole o resumo do SDR e configure</div></div>
     </div>
     <div class="pb">
       <div class="field">
@@ -1507,15 +1511,61 @@ function pick(btn, id, name) {
   selectedCloser = {id, name};
 }
 
+// ── Sidebar Navigation ────────────────────────────────────────────────────
+function sbActivate(id) {
+  document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('on'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('on');
+}
+function sbHoje() {
+  sbActivate('sb-hoje');
+  openQueue();
+}
+function sbGerar() {
+  sbActivate('sb-gerar');
+  if (!['script','proposal','followup'].includes(currentMode)) setMode('script');
+}
+function sbLeads() {
+  sbActivate('sb-leads');
+  openFicha();
+}
+function sbAnalise() {
+  sbActivate('sb-analise');
+  openDashboard();
+}
+function sbConfig() {
+  sbActivate('sb-config');
+  openSettings();
+}
+
 // ── Mode & A/B Toggle ──────────────────────────────────────────────────────
 function setMode(mode) {
   currentMode = mode;
-  document.querySelectorAll('.sb-mode').forEach(t=>t.classList.remove('on'));
-  const sbEl = document.getElementById('sbmode-'+mode);
-  if (sbEl) sbEl.classList.add('on');
+  // Ativa sidebar "Gerar" para qualquer modo de geração
+  if (['script','proposal','followup'].includes(mode)) sbActivate('sb-gerar');
+  // Atualiza pills de modo
+  ['script','proposal','followup'].forEach(m => {
+    const p = document.getElementById('gmp-'+m);
+    if (p) p.classList.toggle('on', m === mode);
+  });
+  // Atualiza header do painel
+  const headers = {
+    script:   { icon:'📞', title:'Briefing do Lead',    sub:'Cole o resumo do SDR e configure' },
+    proposal: { icon:'📄', title:'Gerar Proposta',       sub:'Descreva o que foi discutido e o plano' },
+    followup: { icon:'🔁', title:'Follow-up',            sub:'Dados do lead para gerar as abordagens' },
+    pending:  { icon:'🚨', title:'Pendências do Dia',    sub:'Propostas, reagendados e sem resultado' },
+  };
+  const h = headers[mode] || headers.script;
+  const phIcon = document.getElementById('phIcon'); if (phIcon) phIcon.textContent = h.icon;
+  const phTitle = document.getElementById('phTitle'); if (phTitle) phTitle.textContent = h.title;
+  const phSub = document.getElementById('phSub'); if (phSub) phSub.textContent = h.sub;
 
   // No modo pending: esconde painel de input e mostra painel de pendências
   const isPending = mode === 'pending';
+  const isGen = ['script','proposal','followup'].includes(mode);
+  // Esconde/mostra pills de modo
+  const pillsEl = document.querySelector('.gen-mode-pills');
+  if (pillsEl) pillsEl.style.display = isPending ? 'none' : '';
   document.getElementById('callTimeWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abToggleWrap').style.display  = mode==='script' ? '' : 'none';
   document.getElementById('abStratWrap').style.display   = (mode==='script'&&abMode) ? '' : 'none';
@@ -1537,8 +1587,6 @@ function setMode(mode) {
   }
 
   if (isPending) {
-    document.getElementById('otitle').textContent = 'Pendências do Dia';
-    document.getElementById('osub').textContent   = 'Propostas, reagendados e sem resultado';
     document.getElementById('cbtn').style.display = 'none';
     document.getElementById('resultadoBar').style.display = 'none';
     document.getElementById('abTabWrap').style.display    = 'none';
@@ -2312,6 +2360,7 @@ async function saveObservacao() {
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
 async function openDashboard() {
+  sbActivate('sb-analise');
   document.getElementById('dashOverlay').style.display='flex';
   document.getElementById('dashContent').innerHTML='<div class="dash-loading"><div class="spin"></div></div>';
   try {
@@ -2478,6 +2527,7 @@ function renderInsights(d) {
 
 // ── History Modal ──────────────────────────────────────────────────────────
 async function openHistory() {
+  sbActivate('sb-analise');
   document.getElementById('histModal').style.display='flex';
   const el=document.getElementById('histList');
   el.innerHTML='<div class="hist-empty">Carregando…</div>';
@@ -2554,6 +2604,7 @@ async function delHistory(e,id){
 
 // ── Settings Modal ─────────────────────────────────────────────────────────
 async function openSettings() {
+  sbActivate('sb-config');
   document.getElementById('settModal').style.display = 'flex';
   renderSettingsList();
   loadWebhookInfo();
@@ -2659,7 +2710,7 @@ async function openQueue() {
   queueOpen = true;
   const overlay = document.getElementById('kanbanOverlay');
   overlay.classList.add('open');
-  document.getElementById('queueBtn').classList.add('on');
+  sbActivate('sb-hoje');
   clearQueueBadge();
   const picker = document.getElementById('kbanDatePicker');
   if (!picker.value) picker.value = new Date().toISOString().slice(0, 10);
@@ -2690,7 +2741,7 @@ function closeQueue() {
   clearInterval(_queuePollInt); _queuePollInt = null;
   document.getElementById('kanbanOverlay').classList.remove('open');
   document.body.classList.remove('queue-open');
-  document.getElementById('queueBtn').classList.remove('on');
+  sbActivate('sb-gerar');
 }
 
 function setQueueBadge(n) {
@@ -2984,6 +3035,7 @@ let _fichaSelected = null;
 function openFicha(preselect) {
   if (preselect === undefined) preselect = null;
   _fichaOpen = true;
+  sbActivate('sb-leads');
   document.getElementById('fichaOverlay').classList.add('open');
   document.getElementById('fichaSearch').value = '';
   loadFichaLeads(preselect);
@@ -2993,6 +3045,7 @@ function closeFicha() {
   _fichaOpen = false;
   _fichaSelected = null;
   document.getElementById('fichaOverlay').classList.remove('open');
+  sbActivate('sb-gerar');
 }
 
 async function loadFichaLeads(preselect) {
