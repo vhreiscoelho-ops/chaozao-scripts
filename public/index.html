@@ -377,9 +377,13 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 
 /* ── Dashboard ── */
 .dash-overlay { position:fixed; inset:0; background:var(--bg); z-index:300; display:flex; flex-direction:column; overflow:hidden; }
-.dash-topbar { background:var(--accent); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:58px; flex-shrink:0; }
-.dash-topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:#fff; }
-.dash-close { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:7px; padding:5px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.dash-topbar { background:var(--accent); padding:0 1.5rem; display:flex; align-items:center; gap:1.5rem; height:58px; flex-shrink:0; }
+.dash-topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:#fff; flex-shrink:0; }
+.dash-tabs { display:flex; gap:4px; flex:1; }
+.dash-tab { background:rgba(255,255,255,.12); color:rgba(255,255,255,.65); border:1px solid rgba(255,255,255,.15); border-radius:7px; padding:5px 14px; font-size:12px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s; }
+.dash-tab:hover { background:rgba(255,255,255,.2); color:#fff; }
+.dash-tab.on { background:#fff; color:var(--accent); font-weight:700; border-color:#fff; }
+.dash-close { background:rgba(255,255,255,.15); color:#fff; border:1px solid rgba(255,255,255,.25); border-radius:7px; padding:5px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; flex-shrink:0; }
 .dash-close:hover { background:rgba(255,255,255,.25); }
 .dash-body { flex:1; overflow-y:auto; padding:2rem; }
 .dash-inner { max-width:1100px; margin:0 auto; }
@@ -1295,7 +1299,12 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 <!-- ── DASHBOARD ── -->
 <div id="dashOverlay" class="dash-overlay" style="display:none">
   <div class="dash-topbar">
-    <div class="dash-topbar-title">📊 Dashboard de Conversão</div>
+    <div class="dash-topbar-title">📊 Análise</div>
+    <div class="dash-tabs">
+      <button class="dash-tab on" id="datab-dash"    onclick="switchAnaliseTab('dash')">📊 Métricas</button>
+      <button class="dash-tab"    id="datab-pending" onclick="switchAnaliseTab('pending')">🚨 Pendências</button>
+      <button class="dash-tab"    id="datab-history" onclick="switchAnaliseTab('history')">📋 Histórico</button>
+    </div>
     <button class="dash-close" onclick="closeDashboard()">✕ Fechar</button>
   </div>
   <div class="dash-body">
@@ -2359,19 +2368,93 @@ async function saveObservacao() {
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
-async function openDashboard() {
+function openDashboard() {
   sbActivate('sb-analise');
   document.getElementById('dashOverlay').style.display='flex';
-  document.getElementById('dashContent').innerHTML='<div class="dash-loading"><div class="spin"></div></div>';
+  switchAnaliseTab('dash');
+}
+
+function closeDashboard() {
+  document.getElementById('dashOverlay').style.display='none';
+  sbActivate('sb-gerar');
+}
+
+async function switchAnaliseTab(tab) {
+  document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('on'));
+  const btn = document.getElementById('datab-'+tab);
+  if (btn) btn.classList.add('on');
+  const el = document.getElementById('dashContent');
+  el.innerHTML = '<div class="dash-loading"><div class="spin"></div></div>';
   try {
-    const d = await fetch('/api/analytics').then(r=>r.json());
-    renderDashboard(d);
+    if (tab === 'dash') {
+      const d = await fetch('/api/analytics').then(r=>r.json());
+      renderDashboard(d);
+    } else if (tab === 'pending') {
+      const d = await fetch('/api/history/pending').then(r=>r.json());
+      renderPendingInDash(d);
+    } else if (tab === 'history') {
+      const items = await fetch('/api/history').then(r=>r.json());
+      renderHistoryInDash(items);
+    }
   } catch(e) {
-    document.getElementById('dashContent').innerHTML=`<div class="dash-empty"><div class="dash-empty-icon">⚠️</div><h3>Erro</h3><p>${esc(e.message)}</p></div>`;
+    el.innerHTML = `<div class="dash-empty"><div class="dash-empty-icon">⚠️</div><h3>Erro</h3><p>${esc(e.message)}</p></div>`;
   }
 }
 
-function closeDashboard() { document.getElementById('dashOverlay').style.display='none'; }
+function renderPendingInDash(data) {
+  const el = document.getElementById('dashContent');
+  if (data.total === 0) {
+    el.innerHTML = `<div class="dash-empty"><div class="dash-empty-icon">✅</div><h3>Tudo em dia!</h3><p>Nenhuma pendência no momento.</p></div>`;
+    return;
+  }
+  const tipoConfig = {
+    proposta_aguardando: { icon:'📄', label:'Proposta aguardando', bg:'#FFF5DC', color:'#8A5C00', border:'#F5D78A' },
+    reagendado:          { icon:'📅', label:'Reagendado',          bg:'#EBF3FF', color:'#1D4E89', border:'#B3CFEE' },
+    sem_resultado_hoje:  { icon:'⏳', label:'Sem resultado hoje',   bg:'#F5F4EF', color:'#7A7769', border:'#DDD9CE' },
+  };
+  let h = `<div style="padding:.25rem 0 1.5rem"><h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:1.25rem;padding-top:.5rem">🚨 Pendências <span style="font-size:14px;font-weight:400;color:var(--muted)">${data.total} item${data.total>1?'s':''}</span></h2>`;
+  Object.entries(data.byCloser).forEach(([closer, items]) => {
+    h += `<div style="margin-bottom:1.5rem"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)">${esc(closer)} — ${items.length} pendência${items.length>1?'s':''}</div>`;
+    items.forEach(item => {
+      const cfg = tipoConfig[item._tipo] || tipoConfig.sem_resultado_hoje;
+      const diasTxt = item._diasEspera ? `${item._diasEspera}d` : '';
+      h += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:6px;background:${cfg.bg};border:1px solid ${cfg.border};border-radius:8px;cursor:pointer" onclick="histItemClick(${item.id})">
+        <span style="font-size:16px">${cfg.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(item.leadNome||'Lead')}</div>
+          <div style="font-size:11px;color:${cfg.color};margin-top:2px">${cfg.label}${diasTxt?' · '+diasTxt:''}</div>
+        </div>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  h += `</div>`;
+  el.innerHTML = h;
+}
+
+function renderHistoryInDash(items) {
+  const el = document.getElementById('dashContent');
+  if (!items.length) { el.innerHTML = '<div class="dash-empty"><div class="dash-empty-icon">📋</div><h3>Nenhum script ainda</h3></div>'; return; }
+  const RES = { fechou:{cls:'hb-fechou',label:'✅ Fechou'}, proposta:{cls:'hb-proposta',label:'📄 Proposta'}, reagendou:{cls:'hb-reagendou',label:'📅 Reagendou'}, sem_perfil:{cls:'hb-semperfil',label:'❌ Sem perfil'}, perdeu:{cls:'hb-perdeu',label:'💀 Perdeu'} };
+  el.innerHTML = `<div style="padding:.25rem 0 1.5rem"><h2 style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:1rem;padding-top:.5rem">📋 Histórico <span style="font-size:14px;font-weight:400;color:var(--muted)">${items.length} registros</span></h2>`
+  + items.map(item => {
+    const resCfg = item.resultado ? RES[item.resultado] : null;
+    const resBadge = resCfg ? `<span class="hist-badge ${resCfg.cls}">${resCfg.label}</span>` : '<span class="hist-badge">—</span>';
+    const dt = item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="hist-item" onclick="histItemClick(${item.id})" style="cursor:pointer">
+      <div class="hist-item-top">
+        <span class="hist-nome">${esc(item.leadNome||'Lead')}</span>
+        <span style="font-size:11px;color:var(--muted)">${esc(dt)}</span>
+      </div>
+      <div class="hist-item-meta">
+        ${resBadge}
+        ${item.closer?`<span class="hist-badge">${esc(item.closer)}</span>`:''}
+        ${item.planVal?`<span class="hist-badge">${esc(item.planVal.slice(0,28))}</span>`:''}
+      </div>
+    </div>`;
+  }).join('')
+  + '</div>';
+}
 
 function renderDashboard(d) {
   const el = document.getElementById('dashContent');
@@ -2671,8 +2754,17 @@ async function deleteCloser(id){
 }
 
 // ── Utilitários ────────────────────────────────────────────────────────────
-function closeModal(id){document.getElementById(id).style.display='none';}
+function closeModal(id){
+  document.getElementById(id).style.display='none';
+  // reset sidebar when closing secondary modals
+  if (id==='histModal'||id==='settModal') sbActivate('sb-gerar');
+}
 function modalBg(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+function histItemClick(id) {
+  // clicking a history row from tab Análise → carrega o item no painel principal
+  closeDashboard();
+  loadHistory(id);
+}
 function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmtDate(iso){const d=new Date(iso);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 function copyOutput(){
