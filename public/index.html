@@ -858,6 +858,102 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
   padding: 40px 20px;
   font-size: 14px;
 }
+
+/* ── Campanha Overlay ────────────────────────────────────────── */
+#campaignOverlay {
+  position:fixed; inset:0; z-index:450; background:var(--bg);
+  display:none; flex-direction:column; overflow:hidden;
+}
+.camp-topbar {
+  background:var(--accent); padding:0 1.5rem;
+  display:flex; align-items:center; gap:1.5rem; height:58px; flex-shrink:0;
+}
+.camp-topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:#fff; }
+.camp-close {
+  margin-left:auto; background:rgba(255,255,255,.15); color:#fff;
+  border:1px solid rgba(255,255,255,.25); border-radius:7px;
+  padding:5px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif;
+}
+.camp-close:hover { background:rgba(255,255,255,.25); }
+.camp-body {
+  flex:1; overflow-y:auto; padding:1.5rem;
+  display:grid; grid-template-columns:360px 1fr; gap:1.5rem; align-items:start;
+}
+@media(max-width:900px){ .camp-body{ grid-template-columns:1fr; } }
+
+/* Form panel */
+.camp-form {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--rl); overflow:hidden; position:sticky; top:0;
+}
+.camp-form-header {
+  padding:1rem 1.4rem .8rem; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.camp-form-body { padding:1.2rem 1.4rem; }
+.camp-tipo-pills { display:flex; gap:6px; margin-bottom:1rem; flex-wrap:wrap; }
+.camp-tipo-pill {
+  padding:5px 13px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface2); font-size:12px; cursor:pointer; color:var(--muted);
+  font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.camp-tipo-pill:hover { border-color:var(--accent-l); color:var(--accent); }
+.camp-tipo-pill.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+
+/* Output panel */
+.camp-output { display:flex; flex-direction:column; gap:1.25rem; }
+.camp-section {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--rl); overflow:hidden;
+}
+.camp-section-header {
+  padding:.75rem 1.2rem; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface2);
+}
+.camp-section-title { font-family:'Syne',sans-serif; font-weight:700; font-size:13px; }
+.camp-copy-btn {
+  background:var(--accent); color:#fff; border:none; border-radius:7px;
+  padding:5px 13px; font-size:12px; font-weight:600; cursor:pointer;
+  font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:5px;
+  transition:background .15s;
+}
+.camp-copy-btn:hover { background:var(--accent-l); }
+.camp-copy-text {
+  padding:1rem 1.2rem; font-size:13.5px; line-height:1.7;
+  color:var(--text); white-space:pre-wrap; max-height:340px; overflow-y:auto;
+}
+/* Banner container */
+.camp-banner-wrap {
+  padding:1.2rem; display:flex; flex-direction:column; align-items:center; gap:1rem;
+}
+#campBannerCanvas {
+  border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.18);
+  max-width:100%; height:auto; display:block;
+}
+.camp-banner-actions { display:flex; gap:8px; }
+.camp-dl-btn {
+  background:var(--accent); color:#fff; border:none; border-radius:8px;
+  padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer;
+  font-family:'Syne',sans-serif; display:flex; align-items:center; gap:6px;
+  transition:background .15s;
+}
+.camp-dl-btn:hover { background:var(--accent-l); }
+.camp-dl-btn.sec { background:var(--surface2); color:var(--text); border:1px solid var(--border); font-family:'DM Sans',sans-serif; font-weight:500; }
+.camp-dl-btn.sec:hover { background:var(--border); }
+
+/* Empty state */
+.camp-empty {
+  padding:3rem 1.5rem; text-align:center;
+  color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:.75rem;
+}
+.camp-empty-icon { font-size:40px; }
+.camp-empty h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
+.camp-empty p { font-size:13px; max-width:280px; line-height:1.6; }
+.camp-generating {
+  padding:3rem 1.5rem; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:1rem; color:var(--muted);
+}
 </style>
 </head>
 <body>
@@ -890,6 +986,11 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
       <span class="sb-icon">📊</span>
       <span class="sb-label">Análise</span>
       <span id="pendingBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
+    </button>
+
+    <button class="sb-item" id="sb-campanha" onclick="sbCampanha()">
+      <span class="sb-icon">📣</span>
+      <span class="sb-label">Campanha</span>
     </button>
   </div>
 
@@ -3929,6 +4030,295 @@ function renderLiveObj() {
     </div>
   `).join('');
 }
+
+// ── Campanha ──────────────────────────────────────────────────────────────────
+let _campTipo = 'oferta';
+let _campData = null;
+
+function sbCampanha() {
+  sbActivate('sb-campanha');
+  document.getElementById('campaignOverlay').style.display = 'flex';
+}
+function closeCampanha() {
+  document.getElementById('campaignOverlay').style.display = 'none';
+  sbActivate('sb-gerar');
+}
+function setCampTipo(tipo) {
+  _campTipo = tipo;
+  document.querySelectorAll('.camp-tipo-pill').forEach(p => p.classList.remove('on'));
+  const el = document.getElementById('ctipo-' + tipo);
+  if (el) el.classList.add('on');
+}
+
+async function gerarCampanha() {
+  const texto = document.getElementById('campTexto').value.trim();
+  const valor = document.getElementById('campValor').value.trim();
+  if (!texto) { alert('Descreva a campanha antes de gerar.'); return; }
+  if (!valor) { alert('Informe o valor ou oferta da campanha.'); return; }
+
+  const btn = document.getElementById('campBtn');
+  btn.disabled = true;
+  document.getElementById('campBico').textContent = '⏳';
+  document.getElementById('campBtxt').textContent = 'Gerando…';
+
+  document.getElementById('campOutput').innerHTML = `
+    <div class="camp-generating">
+      <div class="spin"></div>
+      <div style="font-size:14px;font-weight:500;color:var(--text)">Criando copy + banner…</div>
+      <div style="font-size:12px">Isso leva cerca de 10 segundos</div>
+    </div>`;
+
+  try {
+    const res = await fetch('/api/campaign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto, valor, tipo: _campTipo }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
+    _campData = data;
+    renderCampanha(data);
+  } catch (e) {
+    document.getElementById('campOutput').innerHTML = `
+      <div class="camp-empty">
+        <div class="camp-empty-icon">⚠️</div>
+        <h3>Erro ao gerar</h3>
+        <p>${esc(e.message)}</p>
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    document.getElementById('campBico').textContent = '⚡';
+    document.getElementById('campBtxt').textContent = 'Gerar Campanha';
+  }
+}
+
+function renderCampanha(d) {
+  const out = document.getElementById('campOutput');
+  out.innerHTML = `
+    <!-- WhatsApp Copy -->
+    <div class="camp-section">
+      <div class="camp-section-header">
+        <span class="camp-section-title">💬 Copy para WhatsApp</span>
+        <button class="camp-copy-btn" onclick="copyCampCopy()">📋 Copiar</button>
+      </div>
+      <div class="camp-copy-text" id="campCopyText">${esc(d.whatsapp_copy || '')}</div>
+    </div>
+
+    <!-- Hashtags -->
+    ${d.hashtags && d.hashtags.length ? `
+    <div class="camp-section">
+      <div class="camp-section-header">
+        <span class="camp-section-title"># Hashtags</span>
+        <button class="camp-copy-btn" onclick="copyCampHash()">📋 Copiar</button>
+      </div>
+      <div style="padding:.75rem 1.2rem;font-size:13px;color:var(--accent);font-weight:600;line-height:1.8" id="campHashText">${esc((d.hashtags||[]).join('  '))}</div>
+    </div>` : ''}
+
+    <!-- Banner -->
+    <div class="camp-section">
+      <div class="camp-section-header">
+        <span class="camp-section-title">🖼️ Banner Vertical (1080×1920)</span>
+      </div>
+      <div class="camp-banner-wrap">
+        <canvas id="campBannerCanvas" width="1080" height="1920" style="width:270px;height:480px"></canvas>
+        <div class="camp-banner-actions">
+          <button class="camp-dl-btn" onclick="downloadBanner()">⬇️ Baixar PNG</button>
+          <button class="camp-dl-btn sec" onclick="copyCampCopy()">📋 Copiar copy</button>
+        </div>
+      </div>
+    </div>`;
+
+  // Draw banner after DOM update
+  setTimeout(() => drawBanner(d), 50);
+}
+
+function copyCampCopy() {
+  const el = document.getElementById('campCopyText');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    showToast('Copy copiada! ✓');
+  });
+}
+function copyCampHash() {
+  const el = document.getElementById('campHashText');
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => showToast('Hashtags copiadas! ✓'));
+}
+function downloadBanner() {
+  const canvas = document.getElementById('campBannerCanvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = 'campanha-chaozao.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function drawBanner(d) {
+  const canvas = document.getElementById('campBannerCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 1080, H = 1920;
+  const accent = d.cor_destaque || '#A8D97F';
+
+  // ── Background gradient ──────────────────────────────────────
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0,   '#0d2a06');
+  bg.addColorStop(0.5, '#0a1f04');
+  bg.addColorStop(1,   '#071503');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Decorative circles ───────────────────────────────────────
+  const drawCircle = (x, y, r, color, alpha) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  };
+  drawCircle(W * 0.85, H * 0.08, 320, accent, 0.07);
+  drawCircle(W * 0.1,  H * 0.55, 260, accent, 0.05);
+  drawCircle(W * 0.9,  H * 0.72, 200, accent, 0.06);
+  drawCircle(W * 0.5,  H * 0.92, 400, accent, 0.04);
+
+  // ── Top accent bar ────────────────────────────────────────────
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, 0, W, 12);
+
+  // ── Logo area ─────────────────────────────────────────────────
+  const logoY = 100;
+  // Logo badge
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  roundRect(ctx, 60, logoY, 320, 80, 16);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 38px Syne, Arial Black, sans-serif';
+  ctx.fillText('Chão', 90, logoY + 52);
+  ctx.fillStyle = accent;
+  ctx.fillText('zão', 90 + ctx.measureText('Chão').width, logoY + 52);
+  // Tagline
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '24px DM Sans, Arial, sans-serif';
+  ctx.fillText('Maior plataforma de imóveis rurais', 60, logoY + 108);
+
+  // ── Divider line ─────────────────────────────────────────────
+  ctx.fillStyle = accent;
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect(60, logoY + 128, 200, 3);
+  ctx.globalAlpha = 1;
+
+  // ── Título principal ─────────────────────────────────────────
+  const titulo = (d.titulo || '').toUpperCase();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 86px Syne, Arial Black, sans-serif';
+  wrapText(ctx, titulo, 60, 400, W - 120, 100);
+
+  // ── Subtítulo ────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
+  ctx.font = '42px DM Sans, Arial, sans-serif';
+  wrapText(ctx, d.subtitulo || '', 60, 650, W - 120, 52);
+
+  // ── Valor badge ───────────────────────────────────────────────
+  const valorY = 820;
+  ctx.fillStyle = accent;
+  roundRect(ctx, 60, valorY, W - 120, 130, 20);
+  ctx.fill();
+  ctx.fillStyle = '#0d2a06';
+  ctx.font = 'bold 60px Syne, Arial Black, sans-serif';
+  const valText = d.destaque_valor || '';
+  const valW = ctx.measureText(valText).width;
+  ctx.fillText(valText, Math.max(60, (W - valW) / 2), valorY + 82);
+
+  // ── Descrição curta ───────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.font = '36px DM Sans, Arial, sans-serif';
+  wrapText(ctx, d.descricao_banner || '', 60, 1020, W - 120, 46);
+
+  // ── Separator ────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.fillRect(60, 1160, W - 120, 2);
+
+  // ── CTA area ─────────────────────────────────────────────────
+  const ctaY = 1220;
+  // CTA background
+  const ctaGrad = ctx.createLinearGradient(60, ctaY, W - 60, ctaY);
+  ctaGrad.addColorStop(0, accent);
+  ctaGrad.addColorStop(1, '#5E9A30');
+  ctx.fillStyle = ctaGrad;
+  roundRect(ctx, 60, ctaY, W - 120, 140, 24);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 54px Syne, Arial Black, sans-serif';
+  const ctaText = (d.cta_banner || 'Fale Conosco').toUpperCase();
+  const ctaW = ctx.measureText(ctaText).width;
+  ctx.fillText(ctaText, (W - ctaW) / 2, ctaY + 90);
+
+  // ── Stats row ─────────────────────────────────────────────────
+  const statsY = 1440;
+  const stats = [
+    { n: '2,5M', l: 'acessos/mês' },
+    { n: '125K', l: 'seguidores' },
+    { n: '800+', l: 'artigos na mídia' },
+  ];
+  const colW = (W - 120) / 3;
+  stats.forEach((s, i) => {
+    const x = 60 + i * colW + colW / 2;
+    ctx.fillStyle = accent;
+    ctx.font = 'bold 52px Syne, Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.n, x, statsY);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '28px DM Sans, Arial, sans-serif';
+    ctx.fillText(s.l, x, statsY + 40);
+  });
+  ctx.textAlign = 'left';
+
+  // ── Bottom bar ────────────────────────────────────────────────
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  ctx.fillRect(0, H - 110, W, 110);
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, H - 10, W, 10);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.font = '28px DM Sans, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('chaozao.com.br  ·  Imóveis Rurais', W / 2, H - 42);
+  ctx.textAlign = 'left';
+}
+
+// Helpers
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  if (!text) return;
+  const words = text.split(' ');
+  let line = '';
+  let currentY = y;
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, currentY);
+      line = word;
+      currentY += lineHeight;
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, x, currentY);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
 </script>
 
 <!-- Toast global -->
@@ -3963,5 +4353,61 @@ function renderLiveObj() {
     <div id="liveObjBody"></div>
   </div>
 </div>
+
+<!-- ── CAMPANHA OVERLAY ── -->
+<div id="campaignOverlay">
+  <div class="camp-topbar">
+    <div class="camp-topbar-title">📣 Criação de Campanha</div>
+    <button class="camp-close" onclick="closeCampanha()">✕ Fechar</button>
+  </div>
+  <div class="camp-body">
+
+    <!-- Formulário -->
+    <div class="camp-form">
+      <div class="camp-form-header">
+        <div style="font-size:22px">📣</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">Nova Campanha</div>
+          <div style="font-size:11px;color:var(--muted)">Copy WhatsApp + banner vertical gerados por IA</div>
+        </div>
+      </div>
+      <div class="camp-form-body">
+        <div class="field">
+          <label>Tipo de campanha</label>
+          <div class="camp-tipo-pills">
+            <button class="camp-tipo-pill on" id="ctipo-oferta"     onclick="setCampTipo('oferta')">💰 Oferta</button>
+            <button class="camp-tipo-pill"    id="ctipo-lancamento" onclick="setCampTipo('lancamento')">🚀 Lançamento</button>
+            <button class="camp-tipo-pill"    id="ctipo-urgencia"   onclick="setCampTipo('urgencia')">⏰ Urgência</button>
+            <button class="camp-tipo-pill"    id="ctipo-conteudo"   onclick="setCampTipo('conteudo')">📚 Conteúdo</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Descrição da campanha</label>
+          <textarea id="campTexto" rows="6" maxlength="800" placeholder="Ex: Semana do imóvel rural — promoção especial nos planos anuais do Chãozão para proprietários que querem vender mais rápido. Público: fazendeiros e sítios no interior de SP e MG." style="font-size:13px"></textarea>
+        </div>
+        <div class="field">
+          <label>Valor / oferta principal</label>
+          <input id="campValor" type="text" placeholder="Ex: 3 meses grátis, R$ 199/mês, 40% de desconto" style="font-size:13px">
+        </div>
+        <button class="gbtn" id="campBtn" onclick="gerarCampanha()" style="margin-top:4px">
+          <span id="campBico">⚡</span>
+          <span id="campBtxt">Gerar Campanha</span>
+        </button>
+        <div style="font-size:10.5px;color:var(--light);text-align:center;margin-top:6px">Gera copy + banner em ~10 segundos</div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="camp-output" id="campOutput">
+      <div class="camp-empty">
+        <div class="camp-empty-icon">📣</div>
+        <h3>Sua campanha aparece aqui</h3>
+        <p>Preencha a descrição e o valor ao lado e clique em Gerar Campanha.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
