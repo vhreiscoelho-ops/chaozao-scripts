@@ -156,6 +156,8 @@ Retorne SOMENTE este JSON:
 }`;
 
   try {
+    console.log('[campaign] iniciando — ANTHROPIC_KEY:', process.env.ANTHROPIC_API_KEY ? '✅' : '❌ AUSENTE');
+
     const msg = await getClaude().messages.create({
       model:      'claude-sonnet-4-6',
       max_tokens: 1800,
@@ -166,15 +168,19 @@ Retorne SOMENTE este JSON:
     const raw  = (msg.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
 
-    // Gera prompt pronto para ChatGPT
     json.chatgpt_prompt = gerarPromptChatGPT(json);
-
+    console.log('[campaign] ✅ campanha gerada');
     res.json(json);
   } catch (err) {
-    console.error('[campaign]', err.status, err.message);
-    const s = err.status || 500;
-    const m = s === 401 ? 'ANTHROPIC_API_KEY inválida.' : s === 429 ? 'Limite atingido. Aguarde.' : err.message;
-    res.status(500).json({ error: m });
+    const status  = err.status || err.statusCode || 500;
+    const message = err.message || err.error?.message || String(err) || 'Erro interno do servidor';
+    console.error('[campaign] ❌ erro:', status, message, err.error || '');
+    const friendly =
+      status === 401 ? 'ANTHROPIC_API_KEY inválida. Verifique no Railway.' :
+      status === 429 ? 'Limite de requisições atingido. Aguarde alguns minutos.' :
+      status === 400 ? `Parâmetro inválido: ${message}` :
+      message;
+    res.status(500).json({ error: friendly });
   }
 });
 

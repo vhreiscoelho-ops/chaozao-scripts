@@ -4075,8 +4075,9 @@ async function gerarCampanha() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texto, valor, tipo: _campTipo }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
+    let data;
+    try { data = await res.json(); } catch { data = {}; }
+    if (!res.ok) throw new Error(data.error || `Erro ${res.status}: ${res.statusText || 'desconhecido'}`);
     _campData = data;
     renderCampanha(data);
   } catch (e) {
