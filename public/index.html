@@ -1251,6 +1251,407 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 .main-area.call-mode .rec-topbar { background:#161616; border-bottom-color:rgba(255,255,255,.07); }
 .main-area.call-mode .rec-tb-label { color:#F0EDE4; }
 .main-area.call-mode .rec-tb-sublabel { color:rgba(240,237,228,.35); }
+
+/* ══════════════════════════════════════════════════════════════
+   CENTRAL DO DIA — v2.0
+══════════════════════════════════════════════════════════════ */
+#cdiaOverlay {
+  position:fixed; inset:0; z-index:500;
+  background:#080808; color:#F0EDE4;
+  display:none; flex-direction:column;
+  font-family:'DM Sans',sans-serif; overflow:hidden;
+}
+#cdiaOverlay.open { display:flex !important; }
+
+/* Header */
+.cdia-header {
+  background:#101010; border-bottom:1px solid rgba(255,255,255,.07);
+  padding:.6rem 1.25rem; display:flex; align-items:center; gap:10px;
+  flex-shrink:0; flex-wrap:wrap;
+}
+.cdia-brand {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:15px; color:#fff;
+  flex-shrink:0; letter-spacing:-.015em;
+}
+.cdia-brand span { color:#22C55E; }
+.cdia-date {
+  font-size:12px; color:rgba(240,237,228,.3); flex-shrink:0;
+}
+.cdia-closer-tabs { display:flex; gap:4px; flex:1; flex-wrap:wrap; }
+.cdia-ctab {
+  padding:4px 12px; border-radius:20px; border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05); font-size:12px; cursor:pointer;
+  color:rgba(240,237,228,.45); font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cdia-ctab:hover { border-color:#22C55E; color:#22C55E; }
+.cdia-ctab.on { background:#22C55E; border-color:#22C55E; color:#0B1F10; font-weight:600; }
+.cdia-header-right { display:flex; gap:7px; align-items:center; flex-shrink:0; }
+.cdia-add-btn {
+  padding:5px 12px; border-radius:8px; background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12); color:rgba(240,237,228,.65);
+  font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cdia-add-btn:hover { background:rgba(34,197,94,.12); border-color:#22C55E; color:#22C55E; }
+.cdia-refresh-btn {
+  padding:5px 10px; border-radius:7px; background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08); color:rgba(240,237,228,.35);
+  font-size:13px; cursor:pointer; transition:all .15s;
+}
+.cdia-refresh-btn:hover { background:rgba(255,255,255,.1); color:#fff; }
+.cdia-close-btn {
+  padding:5px 10px; border-radius:7px; background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08); color:rgba(240,237,228,.35);
+  font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cdia-close-btn:hover { background:rgba(255,255,255,.1); color:#fff; }
+
+/* Body layout */
+.cdia-body { flex:1; display:flex; min-height:0; overflow:hidden; }
+
+/* Main focus area */
+.cdia-main {
+  flex:1; overflow-y:auto; padding:1.1rem 1.25rem 2rem;
+  min-width:0; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.08) transparent;
+}
+.cdia-main::-webkit-scrollbar { width:5px; }
+.cdia-main::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:3px; }
+
+/* Lead list sidebar */
+.cdia-sidebar {
+  width:260px; flex-shrink:0; border-left:1px solid rgba(255,255,255,.07);
+  display:flex; flex-direction:column; overflow:hidden; background:#0C0C0C;
+}
+.cdia-sb-head {
+  padding:.7rem 1rem .5rem; border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0;
+}
+.cdia-sb-title {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+  color:rgba(240,237,228,.22); display:flex; align-items:center; justify-content:space-between;
+}
+.cdia-sb-count {
+  background:rgba(255,255,255,.07); border-radius:10px; padding:1px 7px;
+  font-size:10px; color:rgba(240,237,228,.35);
+}
+.cdia-sb-list {
+  flex:1; overflow-y:auto; padding:.35rem;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.07) transparent;
+}
+.cdia-sb-list::-webkit-scrollbar { width:4px; }
+.cdia-sb-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+
+/* Lead list items */
+.cdia-lead-item {
+  padding:.6rem .75rem; border-radius:9px; cursor:pointer;
+  transition:all .12s; margin-bottom:2px;
+  border:1px solid transparent; display:flex; align-items:center; gap:8px;
+}
+.cdia-lead-item:hover { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.06); }
+.cdia-lead-item.cdia-active { background:rgba(34,197,94,.07); border-color:rgba(34,197,94,.18); }
+.cdia-lead-item.cdia-done { opacity:.38; }
+.cdia-lead-prio { font-size:14px; flex-shrink:0; line-height:1; }
+.cdia-lead-info { flex:1; min-width:0; }
+.cdia-lead-name { font-size:12.5px; font-weight:500; color:#F0EDE4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cdia-lead-item.cdia-done .cdia-lead-name { text-decoration:line-through; }
+.cdia-lead-item.cdia-active .cdia-lead-name { color:#22C55E; }
+.cdia-lead-sub { font-size:11px; color:rgba(240,237,228,.3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cdia-lead-score { font-family:'Syne',sans-serif; font-weight:700; font-size:11.5px; color:rgba(240,237,228,.25); flex-shrink:0; }
+.cdia-lead-item.cdia-active .cdia-lead-score { color:#22C55E; }
+.cdia-lead-del {
+  background:none; border:none; color:rgba(240,237,228,.15);
+  cursor:pointer; font-size:12px; padding:2px 4px; border-radius:4px;
+  flex-shrink:0; transition:all .12s; display:none;
+}
+.cdia-lead-item:hover .cdia-lead-del { display:block; }
+.cdia-lead-del:hover { color:#F87171; background:rgba(239,68,68,.1); }
+.cdia-res-badge {
+  font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:10px; flex-shrink:0;
+}
+.cdia-res-fechou    { background:rgba(8,80,65,.45); color:#4ADE80; }
+.cdia-res-followup  { background:rgba(12,68,124,.45); color:#60A5FA; }
+.cdia-res-perdeu    { background:rgba(120,30,30,.45); color:#F87171; }
+.cdia-res-pulou     { background:rgba(80,80,80,.35); color:rgba(240,237,228,.4); }
+
+/* Empty state */
+.cdia-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:65vh; text-align:center; gap:14px; color:rgba(240,237,228,.3); padding:2rem;
+}
+.cdia-empty-icon { font-size:52px; filter:grayscale(50%); }
+.cdia-empty h3 { font-family:'Syne',sans-serif; font-size:20px; font-weight:700; color:rgba(240,237,228,.5); margin:0; }
+.cdia-empty p { font-size:13.5px; max-width:300px; line-height:1.6; margin:0; }
+.cdia-empty-add {
+  padding:12px 28px; background:#22C55E; color:#0B1F10; border:none;
+  border-radius:10px; font-family:'Syne',sans-serif; font-weight:800;
+  font-size:14px; cursor:pointer; transition:all .2s;
+  box-shadow:0 0 20px rgba(34,197,94,.2);
+}
+.cdia-empty-add:hover { background:#16A34A; transform:translateY(-1px); }
+
+/* ── BLOCK 1: Primary Lead Card ── */
+.cdia-lead-card {
+  background:#141414; border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; padding:1rem 1.2rem; margin-bottom:.8rem;
+  position:relative; overflow:hidden;
+}
+.cdia-lead-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,#22C55E,#16A34A,transparent);
+}
+.cdia-priority-row { display:flex; align-items:center; gap:8px; margin-bottom:.55rem; }
+.cdia-prio-badge {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  padding:3px 10px; border-radius:20px;
+}
+.cdia-prio-alta   { background:rgba(239,68,68,.13); color:#EF4444; border:1px solid rgba(239,68,68,.2); }
+.cdia-prio-media  { background:rgba(245,158,11,.13); color:#F59E0B; border:1px solid rgba(245,158,11,.2); }
+.cdia-prio-baixa  { background:rgba(96,165,250,.13); color:#60A5FA; border:1px solid rgba(96,165,250,.2); }
+.cdia-call-timer {
+  margin-left:auto; font-family:'Syne',sans-serif; font-weight:700; font-size:12px;
+  color:#22C55E; background:rgba(34,197,94,.1); border-radius:20px; padding:3px 10px;
+  display:none;
+}
+.cdia-call-timer.on { display:block; animation:timerPulse 1.4s ease-in-out infinite; }
+@keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.cdia-lead-main-name {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:24px; color:#fff;
+  letter-spacing:-.02em; margin-bottom:.25rem; line-height:1.2;
+}
+.cdia-likelihood-row { display:flex; align-items:center; gap:10px; margin-bottom:.45rem; }
+.cdia-likelihood-pct { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:#22C55E; flex-shrink:0; }
+.cdia-likelihood-bar { flex:1; height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+.cdia-likelihood-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#16A34A,#22C55E); transition:width 1.1s cubic-bezier(.4,0,.2,1); }
+.cdia-urgency-line {
+  font-size:11.5px; color:rgba(240,237,228,.4); margin-bottom:.5rem;
+  display:flex; align-items:center; gap:5px;
+}
+.cdia-urgency-dot { width:5px; height:5px; border-radius:50%; background:#F59E0B; flex-shrink:0; animation:pulseDot 2s ease-in-out infinite; }
+.cdia-sdr-summary {
+  font-size:13px; color:rgba(240,237,228,.62); line-height:1.55;
+  border-left:2px solid rgba(255,255,255,.1); padding-left:10px; margin-bottom:.6rem;
+}
+.cdia-rec-action {
+  background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.14);
+  border-radius:9px; padding:.5rem .8rem; font-size:12.5px; color:#4ADE80; line-height:1.5;
+}
+.cdia-rec-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; opacity:.55; margin-bottom:2px; }
+
+/* ── BLOCK 2: Quick Actions ── */
+.cdia-actions { margin-bottom:.8rem; display:flex; flex-direction:column; gap:6px; }
+.cdia-btn-call {
+  width:100%; padding:14px; border-radius:12px; border:none;
+  background:linear-gradient(135deg,#22C55E,#16A34A);
+  color:#0B1F10; font-family:'Syne',sans-serif; font-weight:800;
+  font-size:15px; cursor:pointer; letter-spacing:.02em;
+  transition:all .2s; display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 2px 20px rgba(34,197,94,.18);
+}
+.cdia-btn-call:hover:not(:disabled) { background:linear-gradient(135deg,#16A34A,#15803D); box-shadow:0 4px 28px rgba(34,197,94,.32); transform:translateY(-1px); }
+.cdia-btn-call:active:not(:disabled) { transform:scale(.99); }
+.cdia-btn-call:disabled { opacity:.4; cursor:not-allowed; }
+.cdia-btn-call.calling { background:linear-gradient(135deg,#EF4444,#DC2626); box-shadow:0 2px 20px rgba(239,68,68,.2); }
+.cdia-btn-call.calling:hover { background:linear-gradient(135deg,#DC2626,#B91C1C); }
+.cdia-actions-row2 { display:flex; gap:6px; }
+.cdia-btn-secondary {
+  flex:1; padding:10px; border-radius:10px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  color:rgba(240,237,228,.65); font-size:13px; font-weight:500;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cdia-btn-secondary:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:#fff; }
+.cdia-btn-secondary.on { background:rgba(34,197,94,.1); border-color:#22C55E; color:#22C55E; }
+.cdia-btn-skip {
+  padding:10px 14px; border-radius:10px;
+  background:transparent; border:1px solid rgba(255,255,255,.07);
+  color:rgba(240,237,228,.3); font-size:12px; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:all .15s; white-space:nowrap;
+}
+.cdia-btn-skip:hover { border-color:rgba(255,255,255,.14); color:rgba(240,237,228,.5); }
+
+/* ── BLOCK 3: Script Panel ── */
+.cdia-script-panel {
+  background:#141414; border:1px solid rgba(255,255,255,.08);
+  border-radius:14px; margin-bottom:.8rem; overflow:hidden; display:none;
+}
+.cdia-script-panel.open { display:block; }
+.cdia-script-ph {
+  padding:1.5rem; text-align:center; color:rgba(240,237,228,.3); font-size:13px;
+}
+.cdia-script-header {
+  padding:.65rem 1rem; border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cdia-script-label {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color:rgba(240,237,228,.28); display:flex; align-items:center; gap:5px;
+}
+.cdia-script-label::before { content:''; width:4px; height:4px; border-radius:50%; background:#22C55E; }
+.cdia-script-close-btn {
+  background:none; border:none; color:rgba(240,237,228,.25); cursor:pointer; font-size:13px; padding:0; line-height:1;
+}
+.cdia-script-close-btn:hover { color:rgba(240,237,228,.6); }
+.cdia-script-loading-inner {
+  padding:1.5rem; text-align:center; color:rgba(240,237,228,.35); font-size:13px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.cdia-script-blocks { padding:.65rem .75rem; display:flex; flex-direction:column; gap:.5rem; }
+.cdia-sblock {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:10px; overflow:hidden;
+}
+.cdia-sblock-head {
+  padding:.5rem .8rem; display:flex; align-items:center; gap:7px; cursor:pointer; transition:background .12s;
+}
+.cdia-sblock-head:hover { background:rgba(255,255,255,.03); }
+.cdia-sblock-icon { font-size:12px; flex-shrink:0; }
+.cdia-sblock-title { font-size:12px; font-weight:600; color:rgba(240,237,228,.65); flex:1; }
+.cdia-sblock-copy {
+  padding:2px 9px; border-radius:6px; background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08); color:rgba(240,237,228,.38);
+  font-size:10px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .12s;
+}
+.cdia-sblock-copy:hover { background:rgba(34,197,94,.1); border-color:#22C55E; color:#22C55E; }
+.cdia-sblock-body { padding:.45rem .8rem .7rem; border-top:1px solid rgba(255,255,255,.05); }
+.cdia-sblock-line {
+  font-size:12.5px; color:rgba(240,237,228,.58); line-height:1.65;
+  padding:.25rem 0; border-bottom:.5px solid rgba(255,255,255,.04); font-style:italic;
+}
+.cdia-sblock-line:last-child { border-bottom:none; }
+.cdia-script-footer { padding:.4rem .75rem .65rem; display:flex; justify-content:flex-end; }
+.cdia-ver-completo {
+  padding:4px 12px; border-radius:7px; background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.09); color:rgba(240,237,228,.4);
+  font-size:11px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cdia-ver-completo:hover { border-color:#22C55E; color:#22C55E; }
+
+/* ── BLOCK 4: O Que Falar Agora ── */
+.cdia-now-panel {
+  background:rgba(34,197,94,.05); border:1px solid rgba(34,197,94,.11);
+  border-radius:12px; padding:.75rem 1rem; margin-bottom:.8rem;
+}
+.cdia-now-label {
+  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+  color:rgba(34,197,94,.55); margin-bottom:.3rem;
+  display:flex; align-items:center; gap:5px;
+}
+.cdia-now-label::before { content:'●'; font-size:6px; animation:pulseDot 2s ease-in-out infinite; }
+.cdia-now-text { font-size:13.5px; color:rgba(240,237,228,.72); line-height:1.55; }
+
+/* ── BLOCK 5: Lead Context ── */
+.cdia-context {
+  background:#141414; border:1px solid rgba(255,255,255,.07);
+  border-radius:12px; overflow:hidden; margin-bottom:.8rem;
+}
+.cdia-context-head {
+  padding:.5rem 1rem; border-bottom:1px solid rgba(255,255,255,.05);
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color:rgba(240,237,228,.22);
+}
+.cdia-context-grid { padding:.6rem .85rem; display:grid; grid-template-columns:1fr 1fr; gap:.55rem; }
+.cdia-ctx-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:rgba(240,237,228,.22); margin-bottom:2px; }
+.cdia-ctx-val { font-size:12.5px; color:rgba(240,237,228,.6); line-height:1.4; }
+
+/* ── POST-CALL OVERLAY ── */
+#cdiaPostCall {
+  position:absolute; inset:0; z-index:30;
+  background:rgba(0,0,0,.82); backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center; flex-direction:column;
+}
+#cdiaPostCall.open { display:flex; animation:fadeIn .2s ease-out; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.cdiapc-card {
+  background:#161616; border:1px solid rgba(255,255,255,.1);
+  border-radius:20px; padding:2rem 2.25rem; text-align:center;
+  max-width:360px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.cdiapc-lead-name { font-family:'Syne',sans-serif; font-weight:800; font-size:20px; color:#fff; margin-bottom:.2rem; }
+.cdiapc-subtitle { font-size:12.5px; color:rgba(240,237,228,.38); margin-bottom:1.75rem; }
+.cdiapc-q { font-size:14.5px; color:rgba(240,237,228,.7); margin-bottom:1.1rem; }
+.cdiapc-options { display:flex; flex-direction:column; gap:8px; }
+.cdiapc-opt {
+  padding:13px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04); font-size:14px; font-weight:600;
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+  display:flex; align-items:center; gap:10px; color:#F0EDE4;
+}
+.cdiapc-opt:hover { background:rgba(255,255,255,.08); }
+.cdiapc-opt-fechou:hover   { background:rgba(8,80,65,.25); border-color:#22C55E; color:#4ADE80; }
+.cdiapc-opt-followup:hover { background:rgba(12,68,124,.25); border-color:#60A5FA; color:#93C5FD; }
+.cdiapc-opt-perdeu:hover   { background:rgba(120,30,30,.25); border-color:#EF4444; color:#FCA5A5; }
+.cdiapc-opt-icon { font-size:18px; }
+
+/* ── ADD LEAD MODAL ── */
+.cdia-modal-overlay {
+  position:absolute; inset:0; z-index:20;
+  background:rgba(0,0,0,.72); backdrop-filter:blur(7px);
+  display:none; align-items:center; justify-content:center;
+}
+.cdia-modal-overlay.open { display:flex !important; }
+.cdia-add-card {
+  background:#161616; border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; width:90%; max-width:460px;
+  max-height:88vh; overflow-y:auto; padding:1.4rem;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+.cdia-add-title {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:16px; color:#fff;
+  margin-bottom:1.1rem; display:flex; align-items:center; justify-content:space-between;
+}
+.cdia-add-x { background:none; border:none; color:rgba(240,237,228,.35); cursor:pointer; font-size:17px; padding:0; }
+.cdia-add-x:hover { color:#fff; }
+.cdia-ff { margin-bottom:.8rem; }
+.cdia-ff label { display:block; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:rgba(240,237,228,.3); margin-bottom:5px; }
+.cdia-ff input, .cdia-ff textarea, .cdia-ff select {
+  width:100%; background:#1C1C1C; border:1px solid rgba(255,255,255,.1);
+  border-radius:8px; padding:9px 11px; font-family:'DM Sans',sans-serif;
+  font-size:13px; color:#F0EDE4; outline:none; resize:none;
+  transition:border-color .15s; box-sizing:border-box;
+}
+.cdia-ff input:focus, .cdia-ff textarea:focus { border-color:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.09); }
+.cdia-ff input::placeholder, .cdia-ff textarea::placeholder { color:rgba(240,237,228,.18); }
+.cdia-ff-row { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+.cdia-add-btn-submit {
+  width:100%; padding:12px; background:#22C55E; color:#0B1F10;
+  border:none; border-radius:10px; font-family:'Syne',sans-serif;
+  font-weight:800; font-size:14px; cursor:pointer; transition:background .2s;
+  margin-top:.4rem;
+}
+.cdia-add-btn-submit:hover { background:#16A34A; }
+.cdia-add-btn-submit:disabled { opacity:.5; cursor:not-allowed; }
+
+/* ── SKIP REASON MODAL ── */
+.cdia-skip-card {
+  background:#161616; border:1px solid rgba(255,255,255,.1);
+  border-radius:14px; width:90%; max-width:340px; padding:1.4rem;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.cdia-skip-title { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:#fff; margin-bottom:.25rem; }
+.cdia-skip-sub { font-size:12px; color:rgba(240,237,228,.38); margin-bottom:.9rem; }
+.cdia-skip-reasons { display:flex; flex-direction:column; gap:5px; margin-bottom:.9rem; }
+.cdia-skip-reason {
+  padding:9px 11px; border-radius:8px; background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08); font-size:12.5px; color:rgba(240,237,228,.55);
+  cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .12s; text-align:left;
+}
+.cdia-skip-reason:hover { background:rgba(255,255,255,.07); color:#fff; border-color:rgba(255,255,255,.15); }
+.cdia-skip-reason.on { background:rgba(34,197,94,.09); border-color:#22C55E; color:#22C55E; }
+.cdia-skip-confirm {
+  width:100%; padding:10px; background:#22C55E; color:#0B1F10; border:none;
+  border-radius:8px; font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer; transition:background .15s; margin-bottom:5px;
+}
+.cdia-skip-confirm:hover { background:#16A34A; }
+.cdia-skip-cancel {
+  width:100%; padding:8px; background:transparent; border:1px solid rgba(255,255,255,.07);
+  border-radius:8px; color:rgba(240,237,228,.35); font-size:12px; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:all .12s;
+}
+.cdia-skip-cancel:hover { border-color:rgba(255,255,255,.14); color:rgba(240,237,228,.55); }
+
+/* ── Responsive ── */
+@media(max-width:768px) {
+  .cdia-sidebar { display:none; }
+  .cdia-ff-row { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
@@ -1263,26 +1664,32 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
   </div>
 
   <div class="sb-nav">
-    <button class="sb-item" id="sb-hoje" onclick="sbHoje()">
+    <button class="sb-item on" id="sb-central" onclick="sbCentralDia()">
       <span class="sb-icon">🎯</span>
-      <span class="sb-label">Hoje</span>
-      <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
+      <span class="sb-label">Central do Dia</span>
+      <span class="sb-badge" id="cdiaQueueBadge" style="display:none">0</span>
     </button>
 
-    <button class="sb-item on" id="sb-gerar" onclick="sbGerar()">
-      <span class="sb-icon">✍️</span>
-      <span class="sb-label">Gerar</span>
+    <button class="sb-item" id="sb-gerar" onclick="sbGerar()">
+      <span class="sb-icon">⚡</span>
+      <span class="sb-label">Modo Call</span>
     </button>
 
     <button class="sb-item" id="sb-leads" onclick="sbLeads()">
-      <span class="sb-icon">👤</span>
-      <span class="sb-label">Leads</span>
+      <span class="sb-icon">📁</span>
+      <span class="sb-label">Arsenal</span>
     </button>
 
     <button class="sb-item" id="sb-analise" onclick="sbAnalise()">
       <span class="sb-icon">📊</span>
-      <span class="sb-label">Análise</span>
+      <span class="sb-label">Radar</span>
       <span id="pendingBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;"></span>
+    </button>
+
+    <button class="sb-item" id="sb-hoje" onclick="sbHoje()" style="display:none">
+      <span class="sb-icon">📋</span>
+      <span class="sb-label">Fila</span>
+      <span class="sb-badge" id="queueNewBadge" style="display:none">0</span>
     </button>
 
     <button class="sb-item" id="sb-campanha" onclick="sbCampanha()">
@@ -1948,6 +2355,8 @@ function sbGerar() {
   sbActivate('sb-gerar');
   _setCallMode(true);
   if (!['script','proposal','followup'].includes(currentMode)) setMode('script');
+  // Ensure skeleton shows when entering Modo Call fresh
+  resetOutput();
 }
 function sbLeads() {
   sbActivate('sb-leads');
@@ -2200,12 +2609,12 @@ function onPlanChange() {
   hidden.value   = `${planName} — ${fmt(discounted)} (${pct}% off)`;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   onPlanChange();
-  // Start in call mode since Gerar is the default active screen
-  _setCallMode(true);
-  // Trigger the intelligence skeleton on initial load
-  resetOutput();
+  await init(); // loads closers + pending badge
+  // v2.0: open Central do Dia as the default screen
+  _setCallMode(false);
+  openCentralDia();
 });
 
 // ── Char Counter ───────────────────────────────────────────────────────────
@@ -4991,6 +5400,605 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
 }
+
+// ══════════════════════════════════════════════════════════════
+//  CENTRAL DO DIA — v2.0
+// ══════════════════════════════════════════════════════════════
+
+// ── State ──────────────────────────────────────────────────────
+const cdia = {
+  leads:       [],
+  activeIdx:   0,
+  closerFilter: null,
+  scriptLoading: false,
+  callTimer:   null,
+  callSeconds: 0,
+  skipReason:  null,
+};
+
+// ── Navigation ────────────────────────────────────────────────
+function sbCentralDia() {
+  sbActivate('sb-central');
+  _setCallMode(false);
+  openCentralDia();
+}
+
+async function openCentralDia() {
+  const overlay = document.getElementById('cdiaOverlay');
+  overlay.classList.add('open');
+
+  // Date label
+  const now = new Date();
+  const opts = { weekday:'long', day:'numeric', month:'long' };
+  const label = now.toLocaleDateString('pt-BR', opts);
+  document.getElementById('cdiaDateLabel').textContent = label;
+
+  // Populate add-lead closer selector
+  cdiaPopulateCloserSelect();
+
+  // Render closer tabs
+  if (!cdia.closerFilter && closerList.length)
+    cdia.closerFilter = closerList[0].name;
+  cdiaRenderCloserTabs();
+
+  await cdiaRefresh();
+}
+
+function closeCentralDia() {
+  document.getElementById('cdiaOverlay').classList.remove('open');
+  _cdiaStopTimer();
+}
+
+// ── Closer tabs ────────────────────────────────────────────────
+function cdiaRenderCloserTabs() {
+  const el = document.getElementById('cdiaCloserTabs');
+  if (!closerList.length) { el.innerHTML = ''; return; }
+  const tabs = [{ name: 'Todos' }, ...closerList];
+  el.innerHTML = tabs.map(c =>
+    `<button class="cdia-ctab${c.name === cdia.closerFilter ? ' on' : ''}"
+             onclick="cdiaSetCloser('${esc(c.name)}')">${esc(c.name)}</button>`
+  ).join('');
+}
+
+function cdiaSetCloser(name) {
+  cdia.closerFilter = name;
+  cdiaRenderCloserTabs();
+  cdiaRefresh();
+}
+
+function cdiaPopulateCloserSelect() {
+  const sel = document.getElementById('cdiaAddCloser');
+  if (!sel) return;
+  sel.innerHTML = closerList.map(c =>
+    `<option value="${esc(c.name)}">${esc(c.name)}</option>`
+  ).join('');
+  // Pre-select active closer
+  if (cdia.closerFilter && cdia.closerFilter !== 'Todos') sel.value = cdia.closerFilter;
+}
+
+// ── Data ───────────────────────────────────────────────────────
+async function cdiaRefresh() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const qs = `date=${today}` + (cdia.closerFilter && cdia.closerFilter !== 'Todos'
+      ? `&closer=${encodeURIComponent(cdia.closerFilter)}` : '');
+    const res  = await fetch(`/api/queue?${qs}`);
+    cdia.leads = await res.json();
+    if (!Array.isArray(cdia.leads)) cdia.leads = [];
+    // Keep active index on the same lead id if possible
+    const activeId = cdia.leads[cdia.activeIdx]?.id;
+    const pendingIdx = cdia.leads.findIndex(l => l.status === 'pending');
+    cdia.activeIdx = pendingIdx >= 0 ? pendingIdx : 0;
+    // Update queue badge
+    const badge = document.getElementById('cdiaQueueBadge');
+    const pending = cdia.leads.filter(l => l.status === 'pending').length;
+    if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? '' : 'none'; }
+    cdiaRender();
+  } catch(e) {
+    console.error('[cdia] refresh error:', e);
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function cdiaRender() {
+  cdiaRenderSidebar();
+  cdiaRenderMain();
+}
+
+// Sidebar lead list
+function cdiaRenderSidebar() {
+  const el    = document.getElementById('cdiaSbList');
+  const count = document.getElementById('cdiaSbCount');
+  if (!el) return;
+  count.textContent = cdia.leads.length;
+
+  if (!cdia.leads.length) {
+    el.innerHTML = `<div style="padding:1.25rem 1rem;text-align:center;font-size:12px;color:rgba(240,237,228,.2)">Nenhum lead</div>`;
+    return;
+  }
+
+  el.innerHTML = cdia.leads.map((l, i) => {
+    const prio   = _cdiaPrioEmoji(l.scoreValor);
+    const isDone = l.status === 'done' || !!l.resultado;
+    const isActive = i === cdia.activeIdx;
+    const resBadge = l.resultado
+      ? `<span class="cdia-res-badge cdia-res-${l.resultado}">${_cdiaResIcon(l.resultado)}</span>` : '';
+    return `
+      <div class="cdia-lead-item${isActive ? ' cdia-active' : ''}${isDone ? ' cdia-done' : ''}"
+           onclick="cdiaSetActive(${i})">
+        <div class="cdia-lead-prio">${prio}</div>
+        <div class="cdia-lead-info">
+          <div class="cdia-lead-name">${esc(l.leadName || 'Lead')}</div>
+          <div class="cdia-lead-sub">${esc(l.planVal || l.callTime || l.closerName || '—')}</div>
+        </div>
+        ${l.scoreValor ? `<div class="cdia-lead-score">${l.scoreValor}</div>` : ''}
+        ${resBadge}
+        <button class="cdia-lead-del" title="Remover" onclick="event.stopPropagation();cdiaDeleteLead(${l.id})">✕</button>
+      </div>`;
+  }).join('');
+}
+
+function _cdiaResIcon(r) {
+  return { fechou:'✅', followup:'📅', perdeu:'❌', pulou:'⏩' }[r] || r;
+}
+function _cdiaPrioEmoji(score) {
+  if (!score) return '⚡';
+  return score >= 8 ? '🔥' : score >= 5 ? '⚡' : '🧊';
+}
+function _cdiaPrioClass(score) {
+  if (!score) return 'cdia-prio-media';
+  return score >= 8 ? 'cdia-prio-alta' : score >= 5 ? 'cdia-prio-media' : 'cdia-prio-baixa';
+}
+function _cdiaPrioLabel(score) {
+  if (!score) return '⚡ MÉDIA PRIORIDADE';
+  return score >= 8 ? '🔥 ALTA PRIORIDADE' : score >= 5 ? '⚡ MÉDIA PRIORIDADE' : '🧊 BAIXA PRIORIDADE';
+}
+
+function cdiaSetActive(idx) {
+  cdia.activeIdx = idx;
+  cdiaRenderSidebar();
+  cdiaRenderMain();
+  const main = document.getElementById('cdiaMain');
+  if (main) main.scrollTop = 0;
+}
+
+async function cdiaDeleteLead(id) {
+  try {
+    await fetch(`/api/queue/${id}`, { method:'DELETE' });
+    await cdiaRefresh();
+  } catch(e) {}
+}
+
+// Main panel
+function cdiaRenderMain() {
+  const main = document.getElementById('cdiaMain');
+  if (!main) return;
+
+  if (!cdia.leads.length) {
+    main.innerHTML = `
+      <div class="cdia-empty">
+        <div class="cdia-empty-icon">🎯</div>
+        <h3>Nenhum lead na fila</h3>
+        <p>Adicione leads manualmente ou aguarde o webhook do KOMO CRM disparar.</p>
+        <button class="cdia-empty-add" onclick="cdiaOpenAdd()">+ Adicionar Lead</button>
+      </div>`;
+    return;
+  }
+
+  if (cdia.activeIdx >= cdia.leads.length) cdia.activeIdx = 0;
+  const lead = cdia.leads[cdia.activeIdx];
+
+  const pct        = lead.scoreValor ? Math.round((lead.scoreValor / 10) * 100) : 50;
+  const prioClass  = _cdiaPrioClass(lead.scoreValor);
+  const prioLabel  = _cdiaPrioLabel(lead.scoreValor);
+  const isDone     = lead.status === 'done' || !!lead.resultado;
+  const isCalling  = lead.status === 'calling';
+  const urgency    = lead.urgencyNote || (lead.callTime ? `Call às ${lead.callTime}` : 'Sem horário definido');
+  const summary    = lead.sdrSummary || lead.briefing?.substring(0, 120) || '—';
+  const recText    = lead.recAction || _cdiaRecAction(lead);
+  const nowText    = _cdiaGetNowText(lead);
+
+  main.innerHTML = `
+    <!-- BLOCK 1: Primary Lead -->
+    <div class="cdia-lead-card">
+      <div class="cdia-priority-row">
+        <span class="cdia-prio-badge ${prioClass}">${prioLabel}</span>
+        <div class="cdia-call-timer${isCalling ? ' on' : ''}" id="cdiaCallTimer">00:00</div>
+      </div>
+      <div class="cdia-lead-main-name">${esc(lead.leadName || 'Lead')}</div>
+      <div class="cdia-likelihood-row">
+        <div class="cdia-likelihood-pct">${pct}%</div>
+        <div class="cdia-likelihood-bar">
+          <div class="cdia-likelihood-fill" id="cdiaLikFill" style="width:0"></div>
+        </div>
+        <span style="font-size:10.5px;color:rgba(240,237,228,.28)">${lead.scoreValor ? 'Score '+lead.scoreValor+'/10' : 'Aguardando análise'}</span>
+      </div>
+      <div class="cdia-urgency-line"><div class="cdia-urgency-dot"></div>${esc(urgency)}</div>
+      <div class="cdia-sdr-summary">${esc(summary)}</div>
+      <div class="cdia-rec-action">
+        <div class="cdia-rec-label">Ação recomendada</div>
+        ${esc(recText)}
+      </div>
+    </div>
+
+    <!-- BLOCK 2: Quick Actions -->
+    <div class="cdia-actions">
+      <button class="cdia-btn-call${isCalling ? ' calling' : ''}" id="cdiaCallBtn"
+              onclick="${isCalling ? 'cdiaEndCall()' : 'cdiaStartCall()'}"
+              ${isDone ? 'disabled' : ''}>
+        ${isCalling ? '⏹ ENCERRAR CALL' : '📞 INICIAR CALL'}
+      </button>
+      <div class="cdia-actions-row2">
+        <button class="cdia-btn-secondary${lead.scriptJson ? ' on' : ''}" id="cdiaScriptBtn" onclick="cdiaToggleScript()">
+          📝 VER SCRIPT
+        </button>
+        ${!isDone ? `<button class="cdia-btn-skip" onclick="cdiaOpenSkip()">⏩ Pular</button>` : ''}
+      </div>
+    </div>
+
+    <!-- BLOCK 3: Script Panel -->
+    <div class="cdia-script-panel${lead.scriptJson ? ' open' : ''}" id="cdiaScriptPanel">
+      <div class="cdia-script-header">
+        <div class="cdia-script-label">Script de Fechamento</div>
+        <button class="cdia-script-close-btn" onclick="cdiaCloseScriptPanel()">✕</button>
+      </div>
+      <div id="cdiaScriptContent">
+        <div class="cdia-script-ph">Clique em "VER SCRIPT" para gerar o script com IA</div>
+      </div>
+    </div>
+
+    <!-- BLOCK 4: O Que Falar Agora -->
+    <div class="cdia-now-panel">
+      <div class="cdia-now-label">O QUE FALAR AGORA</div>
+      <div class="cdia-now-text" id="cdiaNowText">${esc(nowText)}</div>
+    </div>
+
+    <!-- BLOCK 5: Lead Context -->
+    <div class="cdia-context">
+      <div class="cdia-context-head">Contexto do Lead</div>
+      <div class="cdia-context-grid">
+        <div class="cdia-ctx-item">
+          <div class="cdia-ctx-label">Closer</div>
+          <div class="cdia-ctx-val">${esc(lead.closerName || '—')}</div>
+        </div>
+        <div class="cdia-ctx-item">
+          <div class="cdia-ctx-label">Plano</div>
+          <div class="cdia-ctx-val">${esc(lead.planVal || '—')}</div>
+        </div>
+        <div class="cdia-ctx-item">
+          <div class="cdia-ctx-label">Horário</div>
+          <div class="cdia-ctx-val">${esc(lead.callTime || 'Sem horário')}</div>
+        </div>
+        <div class="cdia-ctx-item">
+          <div class="cdia-ctx-label">Fonte</div>
+          <div class="cdia-ctx-val">${lead.source === 'webhook' ? '🔗 KOMO CRM' : '✋ Manual'}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Animate likelihood bar after render
+  requestAnimationFrame(() => {
+    const fill = document.getElementById('cdiaLikFill');
+    if (fill) fill.style.width = pct + '%';
+    // Restore timer if was calling
+    if (isCalling && !cdia.callTimer) {
+      cdia.callSeconds = 0;
+      cdia.callTimer = setInterval(_cdiaTickTimer, 1000);
+    }
+  });
+
+  // Restore script if already generated
+  if (lead.scriptJson) cdiaRenderScript(lead.scriptJson);
+}
+
+function _cdiaRecAction(lead) {
+  const s = lead.scoreValor;
+  if (!s) return 'Abordagem consultiva — ouça antes de falar.';
+  if (s >= 8) return 'Lead quente — abra com confiança e vá direto para a ampliação do problema.';
+  if (s >= 5) return 'Confirme o interesse antes de avançar para a proposta.';
+  return 'Diagnóstico rápido — entenda o que parou antes de apresentar qualquer solução.';
+}
+
+function _cdiaGetNowText(lead) {
+  if (lead.status === 'calling') {
+    if (lead.scriptJson?.etapas?.[0]?.falas?.[0])
+      return lead.scriptJson.etapas[0].falas[0];
+    return 'Confirme o interesse e o que travou na última conversa.';
+  }
+  if (lead.resultado === 'fechou')    return '✅ Fechado! Registrado. Próximo lead.';
+  if (lead.resultado === 'followup')  return '📅 Follow-up agendado. Próximo lead.';
+  if (lead.resultado === 'perdeu')    return '❌ Perdido. Registrado. Próximo lead.';
+  if (lead.resultado === 'pulou')     return '⏩ Pulado. Próximo lead.';
+  const s = lead.scoreValor;
+  if (!s) return 'Abordagem consultiva: ouça mais do que fale.';
+  if (s >= 8) return 'Lead quente — confirme disponibilidade e entre direto no problema principal.';
+  if (s >= 5) return 'Confirme se ainda faz sentido e ouça antes de apresentar solução.';
+  return 'Diagnóstico rápido: entenda o que parou antes de qualquer apresentação.';
+}
+
+// ── Call flow ─────────────────────────────────────────────────
+function cdiaStartCall() {
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead) return;
+  lead.status = 'calling';
+  cdia.callSeconds = 0;
+  cdia.callTimer = setInterval(_cdiaTickTimer, 1000);
+  fetch(`/api/queue/${lead.id}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ status:'calling' })
+  }).catch(() => {});
+  const btn   = document.getElementById('cdiaCallBtn');
+  const timer = document.getElementById('cdiaCallTimer');
+  if (btn)   { btn.textContent = '⏹ ENCERRAR CALL'; btn.classList.add('calling'); }
+  if (timer) timer.classList.add('on');
+  const nowEl = document.getElementById('cdiaNowText');
+  if (nowEl) nowEl.textContent = _cdiaGetNowText({ ...lead, status:'calling' });
+}
+
+function cdiaEndCall() {
+  _cdiaStopTimer();
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead) return;
+  document.getElementById('cdiapcLeadName').textContent = lead.leadName || 'Lead';
+  document.getElementById('cdiaPostCall').classList.add('open');
+}
+
+function _cdiaStopTimer() {
+  if (cdia.callTimer) { clearInterval(cdia.callTimer); cdia.callTimer = null; }
+}
+
+function _cdiaTickTimer() {
+  cdia.callSeconds++;
+  const m   = Math.floor(cdia.callSeconds / 60);
+  const s   = cdia.callSeconds % 60;
+  const el  = document.getElementById('cdiaCallTimer');
+  if (el) el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+async function cdiaRegistrarResultado(resultado) {
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead) return;
+  lead.status    = 'done';
+  lead.resultado = resultado;
+  document.getElementById('cdiaPostCall').classList.remove('open');
+  try {
+    await fetch(`/api/queue/${lead.id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ status:'done', resultado })
+    });
+  } catch(e) {}
+  // Move to next pending
+  const next = cdia.leads.findIndex((l, i) => i > cdia.activeIdx && l.status === 'pending');
+  if (next >= 0) cdia.activeIdx = next;
+  cdiaRender();
+}
+
+// ── Script management ─────────────────────────────────────────
+async function cdiaToggleScript() {
+  const panel = document.getElementById('cdiaScriptPanel');
+  const btn   = document.getElementById('cdiaScriptBtn');
+  if (!panel) return;
+
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    if (btn) btn.classList.remove('on');
+    return;
+  }
+
+  panel.classList.add('open');
+  if (btn) btn.classList.add('on');
+
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead) return;
+
+  // Already generated
+  if (lead.scriptJson) { cdiaRenderScript(lead.scriptJson); return; }
+  if (cdia.scriptLoading) return;
+  cdia.scriptLoading = true;
+
+  document.getElementById('cdiaScriptContent').innerHTML = `
+    <div class="cdia-script-loading-inner"><div class="qa-spin"></div> Gerando script com IA…</div>`;
+
+  try {
+    const closer = lead.closerName || closerList[0]?.name || 'Closer';
+    const res  = await fetch('/api/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mode:'script', closer,
+        callTime: lead.callTime || '',
+        planVal:  lead.planVal  || '3x R$ 399,33',
+        briefing: lead.briefing || ''
+      })
+    });
+    const data = await res.json();
+    if (!data.result) throw new Error(data.error || 'Sem resultado');
+
+    lead.scriptJson = data.result;
+    if (data.id) lead.historyId = data.id;
+    lead.scoreValor = data.result.score?.valor ?? lead.scoreValor;
+
+    // Persist back to queue
+    fetch(`/api/queue/${lead.id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ scriptJson: data.result, scoreValor: lead.scoreValor, historyId: data.id })
+    }).catch(() => {});
+
+    cdiaRenderScript(data.result);
+    // Refresh likelihood bar + sidebar score
+    const fill = document.getElementById('cdiaLikFill');
+    if (fill && lead.scoreValor) fill.style.width = Math.round((lead.scoreValor/10)*100)+'%';
+    cdiaRenderSidebar();
+    // Re-open panel (renderMain would close it)
+    setTimeout(() => {
+      document.getElementById('cdiaScriptPanel')?.classList.add('open');
+      document.getElementById('cdiaScriptBtn')?.classList.add('on');
+    }, 0);
+
+  } catch(e) {
+    document.getElementById('cdiaScriptContent').innerHTML =
+      `<div class="cdia-script-loading-inner" style="color:rgba(239,68,68,.7)">Erro ao gerar script. Verifique o briefing.</div>`;
+  } finally {
+    cdia.scriptLoading = false;
+  }
+}
+
+function cdiaCloseScriptPanel() {
+  document.getElementById('cdiaScriptPanel')?.classList.remove('open');
+  document.getElementById('cdiaScriptBtn')?.classList.remove('on');
+}
+
+function cdiaRenderScript(json) {
+  const content = document.getElementById('cdiaScriptContent');
+  if (!content) return;
+
+  const blocks = [];
+  if (json.etapas?.length > 0)
+    blocks.push({ icon:'🎯', title:'Abertura',     falas:(json.etapas[0]?.falas||[]).slice(0,3) });
+  if (json.etapas?.length > 2)
+    blocks.push({ icon:'🔍', title:'Diagnóstico',  falas:(json.etapas[2]?.falas||[]).slice(0,3) });
+  if (json.objecoes?.length > 0)
+    blocks.push({ icon:'⚡', title:'Objeção',       falas:[json.objecoes[0]?.resposta||''] });
+  if (json.fechamento)
+    blocks.push({ icon:'🏆', title:'Fechamento',   falas:(json.fechamento?.falas||[]).slice(0,3) });
+
+  content.innerHTML = `
+    <div class="cdia-script-blocks">
+      ${blocks.map((b, bi) => `
+        <div class="cdia-sblock" id="cdiaSblock${bi}">
+          <div class="cdia-sblock-head" onclick="cdiaToggleSblock(${bi})">
+            <span class="cdia-sblock-icon">${b.icon}</span>
+            <span class="cdia-sblock-title">${esc(b.title)}</span>
+            <button class="cdia-sblock-copy" onclick="event.stopPropagation();_cdiaCopyBlock(${bi})" type="button">Copiar</button>
+          </div>
+          <div class="cdia-sblock-body" id="cdiaSblockBody${bi}">
+            ${b.falas.map(f => `<div class="cdia-sblock-line">${esc(f)}</div>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div class="cdia-script-footer">
+        <button class="cdia-ver-completo" onclick="cdiaVerCompleto()">Ver script completo →</button>
+      </div>
+    </div>`;
+
+  // Store falas for copy
+  content._blocks = blocks;
+}
+
+function cdiaToggleSblock(idx) {
+  const body = document.getElementById(`cdiaSblockBody${idx}`);
+  if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+function _cdiaCopyBlock(idx) {
+  const content = document.getElementById('cdiaScriptContent');
+  const blocks = content?._blocks;
+  if (!blocks?.[idx]) return;
+  navigator.clipboard.writeText(blocks[idx].falas.join('\n')).then(() => showToast('Copiado ✓'));
+}
+
+function cdiaVerCompleto() {
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead?.scriptJson) return;
+  closeCentralDia();
+  sbGerar();
+  setMode('script');
+  setTimeout(() => {
+    currentOutput = { id: lead.historyId || null, result: lead.scriptJson, mode:'script' };
+    renderScript(lead.scriptJson);
+  }, 120);
+}
+
+// ── Skip ──────────────────────────────────────────────────────
+function cdiaOpenSkip() {
+  cdia.skipReason = null;
+  document.querySelectorAll('.cdia-skip-reason').forEach(b => b.classList.remove('on'));
+  document.getElementById('cdiaSkipOverlay').classList.add('open');
+}
+function cdiaCloseSkip() {
+  document.getElementById('cdiaSkipOverlay').classList.remove('open');
+}
+function cdiaSelectSkipReason(btn) {
+  document.querySelectorAll('.cdia-skip-reason').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  cdia.skipReason = btn.dataset.reason;
+}
+async function cdiaConfirmSkip() {
+  if (!cdia.skipReason) { showToast('Selecione um motivo'); return; }
+  const lead = cdia.leads[cdia.activeIdx];
+  if (!lead) return;
+  lead.status    = 'done';
+  lead.resultado = 'pulou';
+  document.getElementById('cdiaSkipOverlay').classList.remove('open');
+  try {
+    await fetch(`/api/queue/${lead.id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ status:'done', resultado:'pulou', skipReason: cdia.skipReason })
+    });
+  } catch(e) {}
+  const next = cdia.leads.findIndex((l, i) => i > cdia.activeIdx && l.status === 'pending');
+  if (next >= 0) cdia.activeIdx = next;
+  cdiaRender();
+}
+
+// ── Add Lead ──────────────────────────────────────────────────
+function cdiaOpenAdd() {
+  cdiaPopulateCloserSelect();
+  document.getElementById('cdiaAddOverlay').classList.add('open');
+  document.getElementById('cdiaAddName').focus();
+}
+function cdiaCloseAdd() {
+  document.getElementById('cdiaAddOverlay').classList.remove('open');
+}
+async function cdiaSubmitAdd() {
+  const name     = document.getElementById('cdiaAddName').value.trim();
+  const plan     = document.getElementById('cdiaAddPlan').value.trim();
+  const time     = document.getElementById('cdiaAddTime').value.trim();
+  const briefing = document.getElementById('cdiaAddBriefing').value.trim();
+  const closer   = document.getElementById('cdiaAddCloser')?.value || closerList[0]?.name || 'Closer';
+
+  if (!name)     { showToast('Informe o nome do lead'); return; }
+  if (!briefing) { showToast('Briefing é obrigatório'); return; }
+
+  const btn = document.getElementById('cdiaAddSubmit');
+  btn.disabled = true; btn.textContent = 'Adicionando…';
+  try {
+    await fetch('/api/queue', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        leadName:   name,
+        planVal:    plan,
+        callTime:   time,
+        briefing,
+        closerName: closer,
+        source:     'manual',
+        date: new Date().toISOString().split('T')[0]
+      })
+    });
+    // Clear form
+    ['cdiaAddName','cdiaAddPlan','cdiaAddTime','cdiaAddBriefing'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    cdiaCloseAdd();
+    await cdiaRefresh();
+    showToast('Lead adicionado ✓');
+  } catch(e) {
+    showToast('Erro ao adicionar lead');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Adicionar à Fila';
+  }
+}
+
+// Close modals with Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('cdiaSkipOverlay')?.classList.contains('open'))
+      { cdiaCloseSkip(); e.preventDefault(); }
+    else if (document.getElementById('cdiaAddOverlay')?.classList.contains('open'))
+      { cdiaCloseAdd(); e.preventDefault(); }
+    else if (document.getElementById('cdiaOverlay')?.classList.contains('open'))
+      { closeCentralDia(); e.preventDefault(); }
+  }
+});
 </script>
 
 <!-- Toast global -->
@@ -5024,6 +6032,118 @@ function roundRect(ctx, x, y, w, h, r) {
     </div>
     <div id="liveObjBody"></div>
   </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CENTRAL DO DIA OVERLAY — v2.0
+══════════════════════════════════════════════════════════════ -->
+<div id="cdiaOverlay">
+
+  <!-- Header -->
+  <div class="cdia-header">
+    <div class="cdia-brand">Central<span> do Dia</span></div>
+    <div class="cdia-date" id="cdiaDateLabel"></div>
+    <div class="cdia-closer-tabs" id="cdiaCloserTabs"></div>
+    <div class="cdia-header-right">
+      <button class="cdia-add-btn" onclick="cdiaOpenAdd()">+ Lead</button>
+      <button class="cdia-refresh-btn" onclick="cdiaRefresh()" title="Atualizar">↺</button>
+      <button class="cdia-close-btn" onclick="closeCentralDia()">✕ Fechar</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="cdia-body">
+    <!-- Main focus area -->
+    <div class="cdia-main" id="cdiaMain">
+      <div class="cdia-empty">
+        <div class="cdia-empty-icon">🎯</div>
+        <h3>Carregando…</h3>
+      </div>
+    </div>
+
+    <!-- Lead list sidebar -->
+    <div class="cdia-sidebar">
+      <div class="cdia-sb-head">
+        <div class="cdia-sb-title">
+          Fila do Dia
+          <span class="cdia-sb-count" id="cdiaSbCount">0</span>
+        </div>
+      </div>
+      <div class="cdia-sb-list" id="cdiaSbList"></div>
+    </div>
+  </div>
+
+  <!-- Post-call overlay -->
+  <div id="cdiaPostCall">
+    <div class="cdiapc-card">
+      <div class="cdiapc-lead-name" id="cdiapcLeadName">Lead</div>
+      <div class="cdiapc-subtitle">Call encerrada — registre o resultado</div>
+      <div class="cdiapc-q">Como foi a call?</div>
+      <div class="cdiapc-options">
+        <button class="cdiapc-opt cdiapc-opt-fechou" onclick="cdiaRegistrarResultado('fechou')">
+          <span class="cdiapc-opt-icon">✅</span> Fechou!
+        </button>
+        <button class="cdiapc-opt cdiapc-opt-followup" onclick="cdiaRegistrarResultado('followup')">
+          <span class="cdiapc-opt-icon">📅</span> Follow-up agendado
+        </button>
+        <button class="cdiapc-opt cdiapc-opt-perdeu" onclick="cdiaRegistrarResultado('perdeu')">
+          <span class="cdiapc-opt-icon">❌</span> Perdeu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Lead modal -->
+  <div class="cdia-modal-overlay" id="cdiaAddOverlay">
+    <div class="cdia-add-card">
+      <div class="cdia-add-title">
+        Adicionar Lead
+        <button class="cdia-add-x" onclick="cdiaCloseAdd()">✕</button>
+      </div>
+      <div class="cdia-ff">
+        <label>Nome do Lead *</label>
+        <input id="cdiaAddName" type="text" placeholder="Ex: João Silva">
+      </div>
+      <div class="cdia-ff-row">
+        <div class="cdia-ff">
+          <label>Plano</label>
+          <input id="cdiaAddPlan" type="text" placeholder="Ex: 3x R$ 399,33">
+        </div>
+        <div class="cdia-ff">
+          <label>Horário</label>
+          <input id="cdiaAddTime" type="text" placeholder="Ex: 14:30">
+        </div>
+      </div>
+      <div class="cdia-ff">
+        <label>Closer</label>
+        <select id="cdiaAddCloser"></select>
+      </div>
+      <div class="cdia-ff">
+        <label>Briefing do SDR *</label>
+        <textarea id="cdiaAddBriefing" rows="5" placeholder="Cole o briefing completo do SDR aqui…"></textarea>
+      </div>
+      <button class="cdia-add-btn-submit" id="cdiaAddSubmit" onclick="cdiaSubmitAdd()">
+        Adicionar à Fila
+      </button>
+    </div>
+  </div>
+
+  <!-- Skip reason modal -->
+  <div class="cdia-modal-overlay" id="cdiaSkipOverlay">
+    <div class="cdia-skip-card">
+      <div class="cdia-skip-title">⏩ Pular este lead</div>
+      <div class="cdia-skip-sub">Por que está pulando?</div>
+      <div class="cdia-skip-reasons">
+        <button class="cdia-skip-reason" data-reason="sem-contato"  onclick="cdiaSelectSkipReason(this)">📵 Não atendeu</button>
+        <button class="cdia-skip-reason" data-reason="ocupado"      onclick="cdiaSelectSkipReason(this)">⏰ Pediu ligar mais tarde</button>
+        <button class="cdia-skip-reason" data-reason="reagendado"   onclick="cdiaSelectSkipReason(this)">📅 Reagendado para outro dia</button>
+        <button class="cdia-skip-reason" data-reason="sem-perfil"   onclick="cdiaSelectSkipReason(this)">❌ Sem perfil</button>
+      </div>
+      <button class="cdia-skip-confirm" id="cdiaSkipConfirmBtn" onclick="cdiaConfirmSkip()">Confirmar e ir ao próximo</button>
+      <button class="cdia-skip-cancel"  onclick="cdiaCloseSkip()">Cancelar</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- ── CAMPANHA OVERLAY ── -->

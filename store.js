@@ -11,7 +11,8 @@ const DEFAULT = {
     { id: 4, name: 'Julia',  active: true }
   ],
   history: [],
-  _seq: { closer: 5, history: 1 }
+  queue:   [],
+  _seq: { closer: 5, history: 1, queue: 1 }
 };
 
 // In-memory cache — JS is single-threaded, so no race conditions here.
@@ -25,7 +26,9 @@ function load() {
     // Ensure structure integrity after loading from disk
     if (!Array.isArray(_db.closers)) _db.closers = JSON.parse(JSON.stringify(DEFAULT.closers));
     if (!Array.isArray(_db.history)) _db.history = [];
-    if (!_db._seq) _db._seq = { closer: 5, history: 1 };
+    if (!Array.isArray(_db.queue))   _db.queue   = [];
+    if (!_db._seq) _db._seq = { closer: 5, history: 1, queue: 1 };
+    if (!_db._seq.queue) _db._seq.queue = 1;
   } catch {
     _db = JSON.parse(JSON.stringify(DEFAULT));
     _persist();
