@@ -4236,21 +4236,23 @@ function drawBannerText(ctx, d, W, H) {
   ctx.textAlign='left'; ctx.restore();
 
   // Título 3 linhas (auto-fit)
-  let curY=285;
+  // curY começa abaixo do badge circular (bdY+bdR+8 = 180+110+8 = 298) + margem
+  let curY = bdY + bdR + 42;
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.92)'; ctx.shadowBlur=26; ctx.shadowOffsetY=5;
-  const maxTW=W-110;
+  // largura segura: evita sobrepor o badge direito (bdX - bdR - margem)
+  const maxTW = bdX - bdR - 75;
 
   const s1=fitTextSize(ctx,d.titulo_l1||'',maxTW,148);
-  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l1||'',55,curY); curY+=s1*1.1;
+  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l1||'',55,curY); curY+=s1*1.15;
 
   const s2=fitTextSize(ctx,d.titulo_l2||'',maxTW,148);
   const g2=ctx.createLinearGradient(55,curY-s2,55,curY);
   g2.addColorStop(0,'#FFE066'); g2.addColorStop(0.5,GOLD); g2.addColorStop(1,GOLD2);
-  ctx.fillStyle=g2; ctx.fillText(d.titulo_l2||'',55,curY); curY+=s2*1.1;
+  ctx.fillStyle=g2; ctx.fillText(d.titulo_l2||'',55,curY); curY+=s2*1.15;
 
   const s3=fitTextSize(ctx,d.titulo_l3||'',maxTW,148);
-  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l3||'',55,curY); curY+=s3*1.1;
+  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l3||'',55,curY); curY+=s3*1.15;
   ctx.restore();
 
   // Subtítulo
@@ -4308,7 +4310,9 @@ function drawBannerText(ctx, d, W, H) {
   ctx.fillStyle='#000'; ctx.font='bold 26px DM Sans,Arial,sans-serif'; ctx.fillText('POR:',pX+10,boxY+164);
   const gP=ctx.createLinearGradient(pX,boxY+175,pX,boxY+262);
   gP.addColorStop(0,'#FFE066'); gP.addColorStop(1,GOLD2);
-  ctx.fillStyle=gP; ctx.font='900 80px Syne,Arial Black,sans-serif';
+  ctx.fillStyle=gP;
+  const precoPorMaxW = W - 55 - pX - 10;
+  const precoPorSz = fitTextSize(ctx, d.preco_por||'', precoPorMaxW, 80);
   ctx.fillText(d.preco_por||'',pX,boxY+258);
 
   // Features
