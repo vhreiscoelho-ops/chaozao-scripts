@@ -4128,8 +4128,8 @@ function renderCampanha(d) {
       </div>
     </div>`;
 
-  // Draw banner after DOM update
-  setTimeout(() => drawBanner(d), 50);
+  // Draw banner after DOM update (double rAF garante que o canvas já existe no DOM)
+  requestAnimationFrame(() => requestAnimationFrame(() => drawBanner(d)));
 }
 
 function copyCampCopy() {
@@ -4147,10 +4147,14 @@ function copyCampHash() {
 function downloadBanner() {
   const canvas = document.getElementById('campBannerCanvas');
   if (!canvas) return;
-  const link = document.createElement('a');
-  link.download = 'campanha-chaozao.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  try {
+    const link = document.createElement('a');
+    link.download = 'campanha-chaozao.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e) {
+    showToast('⚠️ Não foi possível baixar a imagem.');
+  }
 }
 
 function drawBanner(d) {
@@ -4180,7 +4184,7 @@ function drawBanner(d) {
         drawBannerText(ctx, d, W, H);
       }
     };
-    img.onerror = () => { drawBannerFallbackBg(ctx,W,H); drawBannerText(ctx,d,W,H); };
+    img.onerror = () => { ctx.clearRect(0,0,W,H); drawBannerFallbackBg(ctx,W,H); drawBannerText(ctx,d,W,H); };
     img.src = d.banner_bg_url;
   } else {
     drawBannerFallbackBg(ctx, W, H);
@@ -4294,7 +4298,7 @@ function drawBannerText(ctx, d, W, H) {
   ctx.fillStyle=gN; ctx.font='900 '+numBig+'px Syne,Arial Black,sans-serif';
   ctx.fillText(numStr,95,boxY+220);
   if(pLines[1]){
-    const rest=pLines[1].replace(/^d+s*/,'');
+    const rest=pLines[1].replace(/^\d+\s*/,'');
     ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='bold 26px DM Sans,Arial,sans-serif';
     ctx.fillText(rest,95+(numBig<100?ctx.measureText(numStr).width+8:0),numBig<100?boxY+220:boxY+256);
   }
@@ -4316,7 +4320,7 @@ function drawBannerText(ctx, d, W, H) {
   gP.addColorStop(0,'#FFE066'); gP.addColorStop(1,GOLD2);
   ctx.fillStyle=gP;
   const precoPorMaxW = W - 55 - pX - 10;
-  const precoPorSz = fitTextSize(ctx, d.preco_por||'', precoPorMaxW, 80);
+  fitTextSize(ctx, d.preco_por||'', precoPorMaxW, 80); // define ctx.font via side-effect
   ctx.fillText(d.preco_por||'',pX,boxY+258);
 
   // Features
@@ -4350,13 +4354,18 @@ function drawBannerText(ctx, d, W, H) {
   ctx.fillStyle=ctaG; ctx.fill();
   roundRect(ctx,58,ctaY+3,W-116,62,69); ctx.fillStyle='rgba(255,255,255,0.10)'; ctx.fill();
   ctx.restore();
-  ctx.font='52px serif'; ctx.textAlign='center'; ctx.fillText('📱',55+58,ctaY+90); ctx.textAlign='left';
   ctx.save();
   ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=8;
   ctx.font='bold italic 50px Syne,Arial Black,sans-serif';
   const ctaTxt=d.cta_texto||'FALE CONOSCO AGORA';
   const ctaTW=ctx.measureText(ctaTxt).width;
-  ctx.fillText(ctaTxt,55+(W-110-ctaTW)/2+30,ctaY+90);
+  const iconSz=52, iconGap=16;
+  const blockW=iconSz+iconGap+ctaTW;
+  const blockX=55+(W-110-blockW)/2;
+  ctx.font='52px serif'; ctx.textAlign='left';
+  ctx.fillText('📱', blockX, ctaY+92);
+  ctx.font='bold italic 50px Syne,Arial Black,sans-serif';
+  ctx.fillText(ctaTxt, blockX+iconSz+iconGap, ctaY+90);
   ctx.restore();
 
   // Rodapé

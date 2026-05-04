@@ -33,16 +33,18 @@ async function gerarBannerCompleto(d) {
   const l1 = d.titulo_l1 || '';
   const l2 = d.titulo_l2 || '';
   const l3 = d.titulo_l3 || '';
-  const badgeEsq = (d.badge_esq || '').replace(/\\n/g, ' ');
-  const badgeDir = (d.badge_dir || '').replace(/\\n/g, '\n');
+  // normaliza \n literal e \\n escaped para espaço no prompt de imagem
+  const nl = s => (s||'').replace(/\\n|\n/g, ' ').trim();
+  const badgeEsq = nl(d.badge_esq);
+  const badgeDir = nl(d.badge_dir);
   const subB = d.subtitulo_branco || '';
   const subO = d.subtitulo_ouro || '';
-  const planoNome = (d.plano_nome || '').replace(/\\n/g, ' ');
+  const planoNome = nl(d.plano_nome);
   const planoNum = d.plano_numero || '';
   const precoDe = d.preco_de || '';
   const precoPor = d.preco_por || '';
-  const feat1 = ((d.features || [])[0] || '').replace(/\\n/g, ' ');
-  const feat2 = ((d.features || [])[1] || '').replace(/\\n/g, ' ');
+  const feat1 = nl((d.features || [])[0]);
+  const feat2 = nl((d.features || [])[1]);
   const cta = d.cta_texto || 'FALE CONOSCO AGORA';
 
   const imagePrompt = `Design a vertical social media marketing banner (9:16 ratio, like an Instagram Story) for a Brazilian rural real estate company called Chãozão.
@@ -86,13 +88,11 @@ IMPORTANT: All text must be perfectly legible, crisp, and exactly as specified. 
     quality: 'high',
   });
 
+  // gpt-image-1 sempre retorna b64_json (nunca URL)
   const imgData = response.data[0];
-  if (imgData.b64_json) {
-    console.log('[DALLE] banner gerado (base64)');
-    return 'data:image/png;base64,' + imgData.b64_json;
-  }
-  console.log('[DALLE] banner gerado (url):', imgData.url?.slice(0,60) + '...');
-  return imgData.url;
+  if (!imgData.b64_json) throw new Error('gpt-image-1 não retornou b64_json');
+  console.log('[DALLE] banner gerado ✅ (base64, ' + Math.round(imgData.b64_json.length/1024) + 'KB)');
+  return 'data:image/png;base64,' + imgData.b64_json;
 }
 
 router.post('/', async (req, res) => {
