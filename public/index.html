@@ -4158,357 +4158,208 @@ function drawBanner(d) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = 1080, H = 1920;
-  const GOLD = '#F5C518';
-  const GOLD2 = '#C8960C';
-  const GREEN_DARK = '#0d2a06';
-  const GREEN_MID  = '#1a4a0a';
 
-  // ══════════════════════════════════════════
-  // 1. BACKGROUND — campo ao entardecer
-  // ══════════════════════════════════════════
-  // Céu: azul-escuro no topo → laranja queimado → dourado no horizonte
-  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.62);
-  sky.addColorStop(0,    '#08090f');
-  sky.addColorStop(0.25, '#1a0e00');
-  sky.addColorStop(0.55, '#6b2e00');
-  sky.addColorStop(0.78, '#b85e00');
-  sky.addColorStop(1,    '#d4890a');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, W, H * 0.62);
-
-  // Solo/campo: verde escuro
-  const ground = ctx.createLinearGradient(0, H * 0.58, 0, H);
-  ground.addColorStop(0,   '#1e4d0a');
-  ground.addColorStop(0.3, '#122e06');
-  ground.addColorStop(1,   '#050f03');
-  ctx.fillStyle = ground;
-  ctx.fillRect(0, H * 0.58, W, H * 0.42);
-
-  // Brilho do sol — radial centro-direita
-  const sun = ctx.createRadialGradient(W * 0.72, H * 0.6, 0, W * 0.72, H * 0.6, W * 0.55);
-  sun.addColorStop(0,    'rgba(255,210,80,0.95)');
-  sun.addColorStop(0.12, 'rgba(255,160,20,0.70)');
-  sun.addColorStop(0.35, 'rgba(210,100,0,0.30)');
-  sun.addColorStop(0.7,  'rgba(100,40,0,0.10)');
-  sun.addColorStop(1,    'rgba(0,0,0,0)');
-  ctx.fillStyle = sun;
-  ctx.fillRect(0, 0, W, H);
-
-  // Reflexo no chão
-  const groundGlow = ctx.createRadialGradient(W * 0.65, H * 0.62, 0, W * 0.65, H * 0.62, W * 0.4);
-  groundGlow.addColorStop(0,   'rgba(200,150,20,0.25)');
-  groundGlow.addColorStop(0.5, 'rgba(100,80,0,0.08)');
-  groundGlow.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = groundGlow;
-  ctx.fillRect(0, H * 0.58, W, H * 0.42);
-
-  // Silhueta de cerca (porteira rural)
-  drawFence(ctx, W, H);
-
-  // Folhagem nas bordas
-  drawFoliage(ctx, W, H);
-
-  // Overlay escuro para legibilidade do texto
-  const overlay = ctx.createLinearGradient(0, 0, 0, H);
-  overlay.addColorStop(0,    'rgba(0,0,0,0.72)');
-  overlay.addColorStop(0.35, 'rgba(0,0,0,0.45)');
-  overlay.addColorStop(0.58, 'rgba(0,0,0,0.55)');
-  overlay.addColorStop(0.72, 'rgba(0,0,0,0.80)');
-  overlay.addColorStop(1,    'rgba(0,0,0,0.92)');
-  ctx.fillStyle = overlay;
-  ctx.fillRect(0, 0, W, H);
-
-  // ══════════════════════════════════════════
-  // 2. BADGES SUPERIORES
-  // ══════════════════════════════════════════
-  // Badge esquerdo: ícone de cadeado + texto de contexto
-  const badgeEsqY = 80;
-  ctx.save();
-  // Linha dourada à esquerda
-  ctx.fillStyle = GOLD;
-  ctx.fillRect(60, badgeEsqY, 5, 90);
-  // Ícone cadeado
-  ctx.font = '42px serif';
-  ctx.fillText('🔒', 80, badgeEsqY + 42);
-  // Texto badge esq
-  const badgeLines = (d.badge_esq || 'CONDIÇÃO EXCLUSIVA\nDE REATIVAÇÃO').split('\n');
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 30px DM Sans, Arial, sans-serif';
-  badgeLines.forEach((line, i) => ctx.fillText(line, 136, badgeEsqY + 28 + i * 36));
-  ctx.restore();
-
-  // Badge direito: círculo com texto e ícone
-  const bdirX = W - 60, bdirY = 60;
-  const bdirR = 115;
-  ctx.save();
-  // Círculo externo dourado
-  ctx.beginPath();
-  ctx.arc(bdirX - bdirR, bdirY + bdirR, bdirR + 8, 0, Math.PI * 2);
-  const bdirBg = ctx.createRadialGradient(bdirX - bdirR, bdirY + bdirR, 0, bdirX - bdirR, bdirY + bdirR, bdirR + 8);
-  bdirBg.addColorStop(0, '#2d6010');
-  bdirBg.addColorStop(0.7, '#1a4a0a');
-  bdirBg.addColorStop(1, '#0d2a06');
-  ctx.fillStyle = bdirBg;
-  ctx.fill();
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 6;
-  ctx.stroke();
-  // Texto circular
-  ctx.fillStyle = GOLD;
-  ctx.font = 'bold 24px DM Sans, Arial, sans-serif';
-  ctx.textAlign = 'center';
-  const bdirLines = (d.badge_dir || 'MAIS VISIBILIDADE\nMAIS RESULTADOS').split('\n');
-  bdirLines.forEach((line, i) => {
-    ctx.fillText(line, bdirX - bdirR, bdirY + bdirR - 14 + i * 30);
-  });
-  // Ícone folha no centro
-  ctx.font = '36px serif';
-  ctx.fillText('🌿', bdirX - bdirR, bdirY + bdirR + 60);
-  ctx.textAlign = 'left';
-  ctx.restore();
-
-  // ══════════════════════════════════════════
-  // 3. TÍTULO PRINCIPAL — 3 linhas
-  // ══════════════════════════════════════════
-  const titleStartY = 280;
-  const titleSize   = 148;
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.85)';
-  ctx.shadowBlur  = 24;
-  ctx.shadowOffsetX = 4;
-  ctx.shadowOffsetY = 6;
-  ctx.font = `900 ${titleSize}px Syne, Arial Black, sans-serif`;
-
-  // Linha 1 — branca
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(d.titulo_l1 || 'LIBERAMOS', 55, titleStartY);
-
-  // Linha 2 — dourada (destaque)
-  const grad2 = ctx.createLinearGradient(55, titleStartY + titleSize, 55, titleStartY + titleSize * 2);
-  grad2.addColorStop(0, '#FFE066');
-  grad2.addColorStop(0.5, GOLD);
-  grad2.addColorStop(1, GOLD2);
-  ctx.fillStyle = grad2;
-  ctx.fillText(d.titulo_l2 || 'UMA CONDIÇÃO', 55, titleStartY + titleSize * 1.05);
-
-  // Linha 3 — branca
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillText(d.titulo_l3 || 'PRA SUA CONTA!', 55, titleStartY + titleSize * 2.1);
-  ctx.restore();
-
-  // ══════════════════════════════════════════
-  // 4. SUBTÍTULO com borda esquerda dourada
-  // ══════════════════════════════════════════
-  const subY = titleStartY + titleSize * 3.0;
-  ctx.fillStyle = GOLD;
-  ctx.fillRect(55, subY - 38, 7, 80);
-  ctx.font = '38px DM Sans, Arial, sans-serif';
-  ctx.fillStyle = '#fff';
-  ctx.fillText(d.subtitulo_branco || 'Porque você já chegou', 78, subY);
-  const goldSubW = ctx.measureText(d.subtitulo_branco || 'Porque você já chegou').width;
-  ctx.fillStyle = GOLD;
-  ctx.font = 'bold 38px DM Sans, Arial, sans-serif';
-  ctx.fillText(d.subtitulo_ouro || 'muito perto de fechar.', 78, subY + 48);
-
-  // ══════════════════════════════════════════
-  // 5. CAIXA DE PREÇO
-  // ══════════════════════════════════════════
-  const boxY = subY + 130;
-  const boxH = 280;
-  const boxX = 55;
-  const boxW = W - 110;
-
-  // Fundo da caixa
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 30;
-  roundRect(ctx, boxX, boxY, boxW, boxH, 22);
-  const boxBg = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxH);
-  boxBg.addColorStop(0, '#0e2a08');
-  boxBg.addColorStop(1, '#071503');
-  ctx.fillStyle = boxBg;
-  ctx.fill();
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 3;
-  roundRect(ctx, boxX, boxY, boxW, boxH, 22);
-  ctx.stroke();
-  ctx.restore();
-
-  // Divisor vertical
-  ctx.fillStyle = GOLD;
-  ctx.globalAlpha = 0.4;
-  ctx.fillRect(boxX + boxW * 0.42, boxY + 24, 2, boxH - 48);
-  ctx.globalAlpha = 1;
-
-  // Lado esquerdo: plano
-  const planoLines = (d.plano_nome || 'PLANO DE\n5 ANÚNCIOS').split('\n');
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = 'bold 32px DM Sans, Arial, sans-serif';
-  ctx.fillText(planoLines[0] || 'PLANO DE', boxX + 40, boxY + 80);
-  // Número grande dourado
-  const numSize = planoLines[1] && planoLines[1].length <= 3 ? 140 : 80;
-  const gradNum = ctx.createLinearGradient(boxX, boxY + 80, boxX, boxY + 220);
-  gradNum.addColorStop(0, '#FFE066');
-  gradNum.addColorStop(1, GOLD2);
-  ctx.fillStyle = gradNum;
-  ctx.font = `900 ${numSize}px Syne, Arial Black, sans-serif`;
-  ctx.fillText(d.plano_numero || '5', boxX + 40, boxY + 210);
-  // Texto abaixo do número
-  if (planoLines[1]) {
-    const parteNum = planoLines[1].replace(/^\d+\s*/, '');
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = 'bold 28px DM Sans, Arial, sans-serif';
-    const numW = ctx.measureText(d.plano_numero || '5').width;
-    ctx.fillText(parteNum, boxX + 40 + (numSize < 100 ? numW + 10 : 0), planoLines[1] && numSize < 100 ? boxY + 210 : boxY + 258);
+  if (d.banner_bg_url) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(img, 0, 0, W, H);
+      // Overlay escuro para legibilidade do texto
+      const ov = ctx.createLinearGradient(0, 0, 0, H);
+      ov.addColorStop(0,   'rgba(0,0,0,0.70)');
+      ov.addColorStop(0.3, 'rgba(0,0,0,0.42)');
+      ov.addColorStop(0.55,'rgba(0,0,0,0.55)');
+      ov.addColorStop(0.75,'rgba(0,0,0,0.82)');
+      ov.addColorStop(1,   'rgba(0,0,0,0.93)');
+      ctx.fillStyle = ov;
+      ctx.fillRect(0, 0, W, H);
+      drawBannerText(ctx, d, W, H);
+    };
+    img.onerror = () => { drawBannerFallbackBg(ctx,W,H); drawBannerText(ctx,d,W,H); };
+    img.src = d.banner_bg_url;
+  } else {
+    drawBannerFallbackBg(ctx, W, H);
+    drawBannerText(ctx, d, W, H);
   }
-
-  // Lado direito: preços
-  const priceX = boxX + boxW * 0.46;
-  if (d.preco_de) {
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.font = '28px DM Sans, Arial, sans-serif';
-    ctx.fillText('DE:', priceX, boxY + 72);
-    // Preço original com tachado
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = 'bold 40px DM Sans, Arial, sans-serif';
-    const deText = d.preco_de;
-    ctx.fillText(deText, priceX, boxY + 120);
-    const deW = ctx.measureText(deText).width;
-    // Linha de tachado vermelha
-    ctx.strokeStyle = '#E53935';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(priceX, boxY + 102);
-    ctx.lineTo(priceX + deW, boxY + 102);
-    ctx.stroke();
-  }
-  // Badge "POR:"
-  ctx.fillStyle = GOLD;
-  roundRect(ctx, priceX, boxY + 140, 100, 42, 8);
-  ctx.fill();
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 28px DM Sans, Arial, sans-serif';
-  ctx.fillText('POR:', priceX + 12, boxY + 168);
-  // Preço final — grande dourado
-  const gradPreco = ctx.createLinearGradient(priceX, boxY + 170, priceX, boxY + 260);
-  gradPreco.addColorStop(0, '#FFE066');
-  gradPreco.addColorStop(1, GOLD2);
-  ctx.fillStyle = gradPreco;
-  ctx.font = `900 86px Syne, Arial Black, sans-serif`;
-  ctx.fillText(d.preco_por || 'R$ 199/mês', priceX, boxY + 258);
-
-  // ══════════════════════════════════════════
-  // 6. FEATURES — 2 ícones
-  // ══════════════════════════════════════════
-  const featY = boxY + boxH + 50;
-  const features = d.features || ['PAGAMENTO NO BOLETO\n(SEM CARTÃO)', 'ATIVAÇÃO RÁPIDA\nAPÓS PAGAMENTO'];
-  const featIcons = ['📄', '⚡'];
-  const featW = (W - 110 - 30) / 2;
-
-  features.slice(0, 2).forEach((feat, i) => {
-    const fx = 55 + i * (featW + 30);
-    // Fundo da feature
-    ctx.save();
-    roundRect(ctx, fx, featY, featW, 150, 16);
-    ctx.fillStyle = 'rgba(255,255,255,0.06)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, fx, featY, featW, 150, 16);
-    ctx.stroke();
-    ctx.restore();
-
-    // Círculo ícone
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(fx + 55, featY + 75, 40, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(200,150,20,0.18)';
-    ctx.fill();
-    ctx.strokeStyle = GOLD;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-    ctx.font = '38px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(featIcons[i], fx + 55, featY + 88);
-    ctx.textAlign = 'left';
-
-    // Texto feature
-    const featLines = feat.split('\n');
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 26px DM Sans, Arial, sans-serif';
-    featLines.forEach((line, li) => ctx.fillText(line, fx + 108, featY + 60 + li * 34));
-  });
-
-  // Divisor entre features
-  ctx.fillStyle = 'rgba(255,255,255,0.15)';
-  ctx.fillRect(W / 2 - 1, featY + 24, 2, 102);
-
-  // ══════════════════════════════════════════
-  // 7. BOTÃO CTA — estilo WhatsApp
-  // ══════════════════════════════════════════
-  const ctaY = featY + 180;
-  const ctaH = 140;
-  const ctaX = 55;
-  const ctaW = W - 110;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,200,0,0.35)';
-  ctx.shadowBlur = 40;
-  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 70);
-  const ctaGrad = ctx.createLinearGradient(ctaX, ctaY, ctaX + ctaW, ctaY + ctaH);
-  ctaGrad.addColorStop(0, '#1a7c2a');
-  ctaGrad.addColorStop(0.4, '#25a535');
-  ctaGrad.addColorStop(0.6, '#25a535');
-  ctaGrad.addColorStop(1, '#1a7c2a');
-  ctx.fillStyle = ctaGrad;
-  ctx.fill();
-  // Brilho interno
-  roundRect(ctx, ctaX + 3, ctaY + 3, ctaW - 6, ctaH / 2.2, 70);
-  ctx.fillStyle = 'rgba(255,255,255,0.10)';
-  ctx.fill();
-  ctx.restore();
-
-  // Ícone WhatsApp (círculo branco + logo)
-  const wapX = ctaX + 60;
-  const wapY = ctaY + ctaH / 2;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(wapX, wapY, 44, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(255,255,255,0.20)';
-  ctx.fill();
-  ctx.font = '58px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('📱', wapX, wapY + 20);
-  ctx.textAlign = 'left';
-  ctx.restore();
-
-  // Texto CTA
-  ctx.save();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold italic 54px Syne, Arial Black, sans-serif';
-  ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowBlur = 8;
-  const ctaText = d.cta_texto || 'RETOMAR MINHA CONDIÇÃO';
-  const ctaTW = ctx.measureText(ctaText).width;
-  ctx.fillText(ctaText, ctaX + (ctaW - ctaTW) / 2 + 30, ctaY + ctaH / 2 + 20);
-  ctx.restore();
-
-  // ══════════════════════════════════════════
-  // 8. RODAPÉ
-  // ══════════════════════════════════════════
-  const footY = ctaY + ctaH + 40;
-  ctx.fillStyle = GOLD;
-  ctx.globalAlpha = 0.6;
-  ctx.fillRect(55, footY, W - 110, 1.5);
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = '28px DM Sans, Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil', W / 2, footY + 48);
-  ctx.textAlign = 'left';
 }
 
+function drawBannerFallbackBg(ctx, W, H) {
+  const sky = ctx.createLinearGradient(0,0,0,H*0.62);
+  sky.addColorStop(0,'#08090f'); sky.addColorStop(0.25,'#1a0e00');
+  sky.addColorStop(0.55,'#6b2e00'); sky.addColorStop(0.78,'#b85e00'); sky.addColorStop(1,'#d4890a');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,H*0.62);
+  const gr = ctx.createLinearGradient(0,H*0.58,0,H);
+  gr.addColorStop(0,'#1e4d0a'); gr.addColorStop(0.3,'#122e06'); gr.addColorStop(1,'#050f03');
+  ctx.fillStyle=gr; ctx.fillRect(0,H*0.58,W,H*0.42);
+  const sun = ctx.createRadialGradient(W*0.72,H*0.6,0,W*0.72,H*0.6,W*0.55);
+  sun.addColorStop(0,'rgba(255,210,80,0.9)'); sun.addColorStop(0.3,'rgba(255,130,0,0.4)'); sun.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sun; ctx.fillRect(0,0,W,H);
+  drawFoliage(ctx,W,H);
+  const ov = ctx.createLinearGradient(0,0,0,H);
+  ov.addColorStop(0,'rgba(0,0,0,0.70)'); ov.addColorStop(0.4,'rgba(0,0,0,0.45)');
+  ov.addColorStop(0.7,'rgba(0,0,0,0.82)'); ov.addColorStop(1,'rgba(0,0,0,0.93)');
+  ctx.fillStyle=ov; ctx.fillRect(0,0,W,H);
+}
+
+function fitTextSize(ctx, text, maxW, maxPx) {
+  let sz = maxPx;
+  ctx.font = '900 '+sz+'px Syne, Arial Black, sans-serif';
+  while (ctx.measureText(text).width > maxW && sz > 36) { sz-=4; ctx.font='900 '+sz+'px Syne, Arial Black, sans-serif'; }
+  return sz;
+}
+
+function drawBannerText(ctx, d, W, H) {
+  const GOLD='#F5C518', GOLD2='#C8960C';
+
+  // Barra superior dourada
+  ctx.fillStyle=GOLD; ctx.fillRect(0,0,W,10);
+
+  // Badge esquerdo
+  const bY=80;
+  ctx.fillStyle=GOLD; ctx.fillRect(60,bY,5,88);
+  ctx.font='40px serif'; ctx.fillStyle='#fff'; ctx.fillText('🔒',82,bY+46);
+  ctx.fillStyle='#fff'; ctx.font='bold 30px DM Sans,Arial,sans-serif';
+  (d.badge_esq||'').split('\n').forEach((l,i)=>ctx.fillText(l,136,bY+26+i*38));
+
+  // Badge circular direito
+  const bdR=110, bdX=W-72-bdR, bdY=70+bdR;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(bdX,bdY,bdR+8,0,Math.PI*2);
+  const bdBg=ctx.createRadialGradient(bdX,bdY,0,bdX,bdY,bdR+8);
+  bdBg.addColorStop(0,'#2d6010'); bdBg.addColorStop(1,'#0d2a06');
+  ctx.fillStyle=bdBg; ctx.fill();
+  ctx.strokeStyle=GOLD; ctx.lineWidth=5; ctx.stroke();
+  ctx.fillStyle=GOLD; ctx.font='bold 23px DM Sans,Arial,sans-serif'; ctx.textAlign='center';
+  (d.badge_dir||'').split('\n').forEach((l,i)=>ctx.fillText(l,bdX,bdY-12+i*30));
+  ctx.font='34px serif'; ctx.fillText('🌿',bdX,bdY+60);
+  ctx.textAlign='left'; ctx.restore();
+
+  // Título 3 linhas (auto-fit)
+  let curY=285;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.92)'; ctx.shadowBlur=26; ctx.shadowOffsetY=5;
+  const maxTW=W-110;
+
+  const s1=fitTextSize(ctx,d.titulo_l1||'',maxTW,148);
+  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l1||'',55,curY); curY+=s1*1.1;
+
+  const s2=fitTextSize(ctx,d.titulo_l2||'',maxTW,148);
+  const g2=ctx.createLinearGradient(55,curY-s2,55,curY);
+  g2.addColorStop(0,'#FFE066'); g2.addColorStop(0.5,GOLD); g2.addColorStop(1,GOLD2);
+  ctx.fillStyle=g2; ctx.fillText(d.titulo_l2||'',55,curY); curY+=s2*1.1;
+
+  const s3=fitTextSize(ctx,d.titulo_l3||'',maxTW,148);
+  ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l3||'',55,curY); curY+=s3*1.1;
+  ctx.restore();
+
+  // Subtítulo
+  const subY=curY+18;
+  ctx.fillStyle=GOLD; ctx.fillRect(55,subY-36,6,80);
+  ctx.fillStyle='#fff'; ctx.font='36px DM Sans,Arial,sans-serif';
+  ctx.fillText(d.subtitulo_branco||'',76,subY);
+  ctx.fillStyle=GOLD; ctx.font='bold 36px DM Sans,Arial,sans-serif';
+  ctx.fillText(d.subtitulo_ouro||'',76,subY+46);
+
+  // Caixa de preço
+  const boxY=subY+130, boxH=280;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=24;
+  roundRect(ctx,55,boxY,W-110,boxH,22);
+  const boxBg=ctx.createLinearGradient(55,boxY,55,boxY+boxH);
+  boxBg.addColorStop(0,'#0e2a08'); boxBg.addColorStop(1,'#071503');
+  ctx.fillStyle=boxBg; ctx.fill();
+  ctx.strokeStyle=GOLD; ctx.lineWidth=3;
+  roundRect(ctx,55,boxY,W-110,boxH,22); ctx.stroke();
+  ctx.restore();
+
+  ctx.fillStyle=GOLD; ctx.globalAlpha=0.35;
+  ctx.fillRect(55+(W-110)*0.42,boxY+24,2,boxH-48);
+  ctx.globalAlpha=1;
+
+  // Plano (esq)
+  const pLines=(d.plano_nome||'').split('\n');
+  ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='bold 30px DM Sans,Arial,sans-serif';
+  ctx.fillText(pLines[0]||'',95,boxY+76);
+  const numStr=d.plano_numero||'';
+  const numBig=numStr.length<=3?130:80;
+  const gN=ctx.createLinearGradient(95,boxY+90,95,boxY+222);
+  gN.addColorStop(0,'#FFE066'); gN.addColorStop(1,GOLD2);
+  ctx.fillStyle=gN; ctx.font='900 '+numBig+'px Syne,Arial Black,sans-serif';
+  ctx.fillText(numStr,95,boxY+220);
+  if(pLines[1]){
+    const rest=pLines[1].replace(/^d+s*/,'');
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='bold 26px DM Sans,Arial,sans-serif';
+    ctx.fillText(rest,95+(numBig<100?ctx.measureText(numStr).width+8:0),numBig<100?boxY+220:boxY+256);
+  }
+
+  // Preço (dir)
+  const pX=55+(W-110)*0.46;
+  if(d.preco_de){
+    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='26px DM Sans,Arial,sans-serif';
+    ctx.fillText('DE:',pX,boxY+66);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='bold 38px DM Sans,Arial,sans-serif';
+    ctx.fillText(d.preco_de,pX,boxY+114);
+    const dW=ctx.measureText(d.preco_de).width;
+    ctx.strokeStyle='#E53935'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(pX,boxY+96); ctx.lineTo(pX+dW,boxY+96); ctx.stroke();
+  }
+  roundRect(ctx,pX,boxY+138,108,40,8); ctx.fillStyle=GOLD; ctx.fill();
+  ctx.fillStyle='#000'; ctx.font='bold 26px DM Sans,Arial,sans-serif'; ctx.fillText('POR:',pX+10,boxY+164);
+  const gP=ctx.createLinearGradient(pX,boxY+175,pX,boxY+262);
+  gP.addColorStop(0,'#FFE066'); gP.addColorStop(1,GOLD2);
+  ctx.fillStyle=gP; ctx.font='900 80px Syne,Arial Black,sans-serif';
+  ctx.fillText(d.preco_por||'',pX,boxY+258);
+
+  // Features
+  const fY=boxY+boxH+48;
+  const feats=d.features||['PAGAMENTO NO BOLETO\n(SEM CARTÃO)','ATIVAÇÃO RÁPIDA\nAPÓS PAGAMENTO'];
+  const fIcons=['📄','⚡'];
+  const fW=(W-110-28)/2;
+  feats.slice(0,2).forEach((feat,i)=>{
+    const fx=55+i*(fW+28);
+    ctx.save();
+    roundRect(ctx,fx,fY,fW,148,16); ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=1.5; roundRect(ctx,fx,fY,fW,148,16); ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath(); ctx.arc(fx+52,fY+74,38,0,Math.PI*2);
+    ctx.fillStyle='rgba(200,150,20,0.18)'; ctx.fill();
+    ctx.strokeStyle=GOLD; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+    ctx.font='36px serif'; ctx.textAlign='center'; ctx.fillText(fIcons[i],fx+52,fY+88); ctx.textAlign='left';
+    ctx.fillStyle='#fff'; ctx.font='bold 24px DM Sans,Arial,sans-serif';
+    feat.split('\n').forEach((l,li)=>ctx.fillText(l,fx+104,fY+56+li*32));
+  });
+
+  // CTA
+  const ctaY=fY+178;
+  ctx.save();
+  ctx.shadowColor='rgba(0,200,0,0.3)'; ctx.shadowBlur=36;
+  roundRect(ctx,55,ctaY,W-110,138,69);
+  const ctaG=ctx.createLinearGradient(55,ctaY,W-55,ctaY);
+  ctaG.addColorStop(0,'#196624'); ctaG.addColorStop(0.5,'#24a033'); ctaG.addColorStop(1,'#196624');
+  ctx.fillStyle=ctaG; ctx.fill();
+  roundRect(ctx,58,ctaY+3,W-116,62,69); ctx.fillStyle='rgba(255,255,255,0.10)'; ctx.fill();
+  ctx.restore();
+  ctx.font='52px serif'; ctx.textAlign='center'; ctx.fillText('📱',55+58,ctaY+90); ctx.textAlign='left';
+  ctx.save();
+  ctx.fillStyle='#fff'; ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=8;
+  ctx.font='bold italic 50px Syne,Arial Black,sans-serif';
+  const ctaTxt=d.cta_texto||'FALE CONOSCO AGORA';
+  const ctaTW=ctx.measureText(ctaTxt).width;
+  ctx.fillText(ctaTxt,55+(W-110-ctaTW)/2+30,ctaY+90);
+  ctx.restore();
+
+  // Rodapé
+  const footY=ctaY+166;
+  ctx.fillStyle=GOLD; ctx.globalAlpha=0.5;
+  ctx.fillRect(55,footY,W-110,1.5); ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(255,255,255,0.28)'; ctx.font='26px DM Sans,Arial,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil',W/2,footY+46);
+  ctx.textAlign='left';
+}
 // ── Canvas helpers ────────────────────────────────────────────
 function drawFence(ctx, W, H) {
   // Silhueta de porteira rural ao entardecer
