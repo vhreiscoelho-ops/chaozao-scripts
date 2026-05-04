@@ -11,8 +11,8 @@ function getClaude() {
   return _claude;
 }
 function getOpenAI() {
-  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90_000 });
-  return _openai;
+  // Reinicia o cliente a cada chamada para pegar a key mais recente do env
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90_000 });
 }
 
 const SYSTEM = `Você é um especialista em design de campanhas e copywriting para o mercado rural brasileiro.
@@ -30,7 +30,10 @@ function extractJson(text) {
 }
 
 // ── Gera o banner background com DALL-E 3 ────────────────────
-async function gerarImagemFundo(campData) {
+async function gerarImagemFundo() {
+  const key = process.env.OPENAI_API_KEY;
+  console.log('[DALL-E] OPENAI_API_KEY presente:', key ? '✅ (' + key.slice(0,12) + '...)' : '❌ AUSENTE');
+
   const prompt = [
     'Professional Brazilian rural real estate marketing banner background, photorealistic.',
     'Scene: vast green farmland with wooden fence gate at golden hour sunset.',
@@ -52,6 +55,7 @@ async function gerarImagemFundo(campData) {
     style:   'vivid',
   });
 
+  console.log('[DALL-E] imagem gerada:', response.data[0].url?.slice(0, 60) + '...');
   return response.data[0].url;
 }
 
@@ -90,40 +94,47 @@ REGRAS: titulo_l2 é o destaque central. preco_de e preco_por refletem o valor i
 ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto fora do JSON.`;
 
   try {
-    // Claude (copy) e DALL-E (imagem) em paralelo — se DALL-E falhar, usa fallback sem imagem
-    let msg, imageUrl = null;
-    try {
-      [msg, imageUrl] = await Promise.all([
-        getClaude().messages.create({
-          model:      'claude-sonnet-4-6',
-          max_tokens: 1800,
-          system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-          messages:   [{ role: 'user', content: prompt }],
-        }),
-        gerarImagemFundo(),
-      ]);
-    } catch (parallelErr) {
-      // Se falhou em paralelo, tenta só Claude (DALL-E pode ter falhado)
-      console.warn('[campaign] parallel failed, retrying Claude only:', parallelErr.message);
-      msg = await getClaude().messages.create({
+    // Roda Claude e DALL-E em paralelo com tratamento individual de erros
+    const [claudeResult, dalleResult] = await Promise.allSettled([
+      getClaude().messages.create({
         model:      'claude-sonnet-4-6',
         max_tokens: 1800,
         system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
         messages:   [{ role: 'user', content: prompt }],
-      });
-      imageUrl = null; // fallback sem imagem
+      }),
+      gerarImagemFundo(),
+    ]);
+
+    // Claude é obrigatório
+    if (claudeResult.status === 'rejected') {
+      const err = claudeResult.reason;
+      console.error('[campaign] Claude falhou:', err.status, err.message);
+      const status = err.status || 500;
+      const msg = status === 401 ? 'ANTHROPIC_API_KEY inválida. Verifique no Railway.' :
+                  status === 429 ? 'Limite Claude atingido. Aguarde.' : err.message;
+      return res.status(500).json({ error: msg });
     }
 
-    const raw  = (msg.content || []).map(c => c.text || '').join('');
+    // DALL-E é opcional — se falhar, banner usa fallback
+    if (dalleResult.status === 'rejected') {
+      const dErr = dalleResult.reason;
+      console.error('[campaign] DALL-E falhou:', dErr.status, dErr.message, dErr.error);
+    }
+
+    const raw  = (claudeResult.value.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
-    if (imageUrl) json.banner_bg_url = imageUrl;
+
+    if (dalleResult.status === 'fulfilled') {
+      json.banner_bg_url = dalleResult.value;
+    } else {
+      const dErr = dalleResult.reason;
+      json.dall_e_error = `${dErr.status || ''} ${dErr.message || 'erro desconhecido'}`.trim();
+    }
+
     res.json(json);
   } catch (err) {
-    console.error('[campaign]', err.status, err.message);
-    const status = err.status || err.statusCode || 500;
-    const msg = status === 401 ? 'API Key inválida (Anthropic). Verifique ANTHROPIC_API_KEY no Railway.' :
-                status === 429 ? 'Limite de requisições atingido. Aguarde.' : err.message;
-    res.status(500).json({ error: msg });
+    console.error('[campaign] erro geral:', err.status, err.message);
+    res.status(500).json({ error: err.message });
   }
 });
 
