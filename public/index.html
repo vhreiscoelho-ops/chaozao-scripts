@@ -5879,8 +5879,8 @@ function cdiaRenderScript(json) {
       </div>
     </div>`;
 
-  // Store falas for copy
-  content._blocks = blocks;
+  // Store falas for copy operations
+  cdia._scriptBlocks = blocks;
 }
 
 function cdiaToggleSblock(idx) {
@@ -5889,8 +5889,7 @@ function cdiaToggleSblock(idx) {
 }
 
 function _cdiaCopyBlock(idx) {
-  const content = document.getElementById('cdiaScriptContent');
-  const blocks = content?._blocks;
+  const blocks = cdia._scriptBlocks;
   if (!blocks?.[idx]) return;
   navigator.clipboard.writeText(blocks[idx].falas.join('\n')).then(() => showToast('Copiado ✓'));
 }
