@@ -1,14 +1,10 @@
 const express  = require('express');
 const Anthropic = require('@anthropic-ai/sdk');
-const OpenAI    = require('openai');
 
 const router = express.Router();
 
 function getClaude() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60_000 });
-}
-function getOpenAI() {
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 120_000 });
 }
 
 const SYSTEM = `Você é um especialista em design de campanhas e copywriting para o mercado rural brasileiro.
@@ -25,74 +21,53 @@ function extractJson(text) {
   throw new Error('JSON inválido na resposta da IA');
 }
 
-// ── Gera banner completo com gpt-image-1 ─────────────────────────────────────
-async function gerarBannerCompleto(d) {
-  const key = process.env.OPENAI_API_KEY;
-  console.log('[DALLE] key:', key ? '✅ ' + key.slice(0,14) + '...' : '❌ AUSENTE');
+// ── Monta prompt pronto para usar no ChatGPT ──────────────────────────────────
+function gerarPromptChatGPT(d) {
+  const nl = s => (s || '').replace(/\\n|\n/g, ' ').trim();
 
-  const l1 = d.titulo_l1 || '';
-  const l2 = d.titulo_l2 || '';
-  const l3 = d.titulo_l3 || '';
-  // normaliza \n literal e \\n escaped para espaço no prompt de imagem
-  const nl = s => (s||'').replace(/\\n|\n/g, ' ').trim();
-  const badgeEsq = nl(d.badge_esq);
-  const badgeDir = nl(d.badge_dir);
-  const subB = d.subtitulo_branco || '';
-  const subO = d.subtitulo_ouro || '';
-  const planoNome = nl(d.plano_nome);
-  const planoNum = d.plano_numero || '';
-  const precoDe = d.preco_de || '';
-  const precoPor = d.preco_por || '';
-  const feat1 = nl((d.features || [])[0]);
-  const feat2 = nl((d.features || [])[1]);
-  const cta = d.cta_texto || 'FALE CONOSCO AGORA';
+  const precoDePart = d.preco_de
+    ? `"DE: ${nl(d.preco_de)}" com linha vermelha de tachado sobre o valor,\n   depois `
+    : '';
 
-  const imagePrompt = `Design a vertical social media marketing banner (9:16 ratio, like an Instagram Story) for a Brazilian rural real estate company called Chãozão.
+  return `Crie um banner vertical de marketing digital (formato 9:16, estilo Instagram Stories/Reels) para a empresa Chãozão — maior plataforma de imóveis rurais do Brasil.
 
-VISUAL STYLE: Professional Brazilian digital marketing banner. Dark green and black background (#0a1a06). Golden hour rural landscape (farmland, wooden fence, sunset sky with orange clouds) softly blended into the background. Gold (#F5C518) and white as main text colors. Clean bold typography, heavy black-weight sans-serif. High contrast. Similar to premium Canva marketing templates.
+ESTILO VISUAL:
+- Fundo: paisagem rural fotorrealista ao entardecer (campo verde, porteira de madeira, céu dramático laranja/dourado com nuvens)
+- Paleta: verde escuro (#0a1a06) e preto como base, dourado (#F5C518) e branco como cores de texto
+- Tipografia: sans-serif pesada (estilo Impact ou Bebas Neue), negrito, todas maiúsculas nos títulos
+- Visual profissional de marketing digital brasileiro — alta qualidade, similar a templates premium do Canva
 
-EXACT LAYOUT from top to bottom:
+LAYOUT (de cima para baixo):
 
-① Thin horizontal gold line across the full top edge.
+① Linha horizontal dourada fina na borda superior
 
-② Header row: On the left, a small horizontal pill-shaped badge with a lock icon, dark green background, gold border, white bold text reading "${badgeEsq}". On the far right, a circular badge with dark green background, gold circular border, gold bold text reading "${badgeDir}".
+② Linha de badges:
+   - Esquerda: badge/pílula horizontal com ícone de cadeado 🔒, fundo verde escuro, borda dourada, texto branco: "${nl(d.badge_esq || 'OFERTA EXCLUSIVA')}"
+   - Direita: badge circular, fundo verde escuro, borda dourada, texto dourado em 2 linhas: "${nl(d.badge_dir || 'DESTAQUE EXCLUSIVO')}"
 
-③ Three-line hero title, large bold heavy text, left-aligned:
-   First line in white: "${l1}"
-   Second line in bright gold (#F5C518), slightly larger and bolder: "${l2}"
-   Third line in white: "${l3}"
+③ Título em 3 linhas, texto grande e impactante, alinhado à esquerda:
+   - Linha 1 (branco): "${nl(d.titulo_l1 || '')}"
+   - Linha 2 (dourado #F5C518, a maior e mais impactante): "${nl(d.titulo_l2 || '')}"
+   - Linha 3 (branco): "${nl(d.titulo_l3 || '')}"
 
-④ Subtitle block with a vertical gold bar on the left: white text "${subB}" on one line, gold text "${subO}" on the next line.
+④ Subtítulo com barra vertical dourada à esquerda:
+   - Texto branco: "${nl(d.subtitulo_branco || '')}"
+   - Texto dourado: "${nl(d.subtitulo_ouro || '')}"
 
-⑤ Dark green rounded rectangle price box with gold border:
-   Left side: small white label "${planoNome}", below it a huge gold number/text "${planoNum}".
-   Vertical gold divider line in the middle.
-   Right side: ${precoDe ? `small text "DE:" followed by "${precoDe}" with a red diagonal strikethrough line,` : ''} a small gold pill badge labeled "POR:", then large bold gold text "${precoPor}".
+⑤ Caixa de preço: retângulo arredondado, fundo verde escuro (#0e2a08), borda dourada:
+   - Lado esquerdo: label branco "${nl(d.plano_nome || 'PLANO')}", abaixo número/destaque dourado grande "${nl(d.plano_numero || '')}"
+   - Linha divisória dourada vertical no centro
+   - Lado direito: ${precoDePart}badge dourado "POR:" e valor em dourado grande "${nl(d.preco_por || '')}"
 
-⑥ Two side-by-side feature cards with semi-transparent dark green background and gold borders:
-   Left card: circular gold icon with 📄, bold white text "${feat1}".
-   Right card: circular gold icon with ⚡, bold white text "${feat2}".
+⑥ Duas cards lado a lado (fundo semi-transparente escuro, borda sutil):
+   - Card 1 com ícone de documento 📄: "${nl((d.features || [])[0] || 'BENEFÍCIO 1')}"
+   - Card 2 com ícone de raio ⚡: "${nl((d.features || [])[1] || 'BENEFÍCIO 2')}"
 
-⑦ Full-width green gradient pill button (dark green to bright green, #196624 to #24a033) with a WhatsApp logo icon on the left and bold white uppercase italic text: "${cta}".
+⑦ Botão CTA: pílula larga, gradiente verde (#196624 → #24a033), ícone WhatsApp à esquerda, texto branco negrito itálico: "${nl(d.cta_texto || 'FALE CONOSCO AGORA')}"
 
-⑧ Thin gold separator line, then small centered white text: "chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil".
+⑧ Rodapé: linha dourada fina + texto branco pequeno centralizado: "chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil"
 
-IMPORTANT: All text must be perfectly legible, crisp, and exactly as specified. No extra decorations. No watermarks. High resolution.`;
-
-  console.log('[DALLE] gerando banner...');
-  const response = await getOpenAI().images.generate({
-    model:   'gpt-image-1',
-    prompt:  imagePrompt,
-    n:       1,
-    size:    '1024x1536',
-    quality: 'high',
-  });
-
-  // gpt-image-1 sempre retorna b64_json (nunca URL)
-  const imgData = response.data[0];
-  if (!imgData.b64_json) throw new Error('gpt-image-1 não retornou b64_json');
-  console.log('[DALLE] banner gerado ✅ (base64, ' + Math.round(imgData.b64_json.length/1024) + 'KB)');
-  return 'data:image/png;base64,' + imgData.b64_json;
+IMPORTANTE: Todo texto deve estar perfeitamente legível e exatamente como especificado. Sem marcas d'água. Alta resolução. Fundo rural visível mas sem competir com o texto.`;
 }
 
 router.post('/', async (req, res) => {
@@ -148,21 +123,20 @@ EXEMPLO 2 — Campanha para proprietário (plano único, pagamento boleto):
 }
 ══════════════════════════════════════════
 
-REGRAS DE COPY (siga à risca):
-- titulo_l1: gancho de ação (1-3 palavras), MAIÚSCULAS, branco
+REGRAS DE COPY:
+- titulo_l1: gancho de ação (1-3 palavras), MAIÚSCULAS
 - titulo_l2: destaque principal (2-4 palavras), MAIÚSCULAS, DOURADO — o mais impactante
-- titulo_l3: fechamento com urgência ou benefício + "!" (2-4 palavras), MAIÚSCULAS, branco
-- badge_esq: identifica o público ou condição (ex: PARA CORRETORES, OFERTA EXCLUSIVA)
-- badge_dir: 2 linhas com o diferencial do pagamento ou benefício-chave
-- plano_nome: nome do plano em 2 linhas (ex: PLANO DE\\nANÚNCIOS ou CORRETOR\\nPRO)
-- plano_numero: o número mais impactante (ex: 5, 3x, 15%, PRO)
-- features: 2 benefícios práticos em MAIÚSCULAS com 2 linhas cada (\\n entre elas)
-- cta_texto: imperativo direto, máx 4 palavras (ex: CONTRATAR AGORA, GARANTIR DESCONTO)
-- whatsapp_copy: 150-280 palavras, linguagem direta e rural, emojis, \\n\\n entre parágrafos
-- PROIBIDO: travessão (—), frases genéricas, palavras fora do contexto rural/imobiliário
+- titulo_l3: fechamento com urgência ou benefício + "!" (2-4 palavras), MAIÚSCULAS
+- badge_esq: identifica o público ou condição, MAIÚSCULAS
+- badge_dir: 2 linhas com diferencial do pagamento ou benefício-chave, separadas por \\n
+- plano_nome: nome do plano em 2 linhas separadas por \\n
+- plano_numero: número mais impactante (ex: 5, 3x, 15%, PRO)
+- features: 2 benefícios em MAIÚSCULAS com 2 linhas cada (\\n entre elas)
+- cta_texto: imperativo direto, máx 4 palavras
+- whatsapp_copy: 150-280 palavras, linguagem rural, emojis, \\n\\n entre parágrafos
+- PROIBIDO: travessão (—), frases genéricas
 
-Retorne SOMENTE este JSON, começando com { e terminando com }:
-
+Retorne SOMENTE este JSON:
 {
   "titulo_l1": "...",
   "titulo_l2": "...",
@@ -179,42 +153,28 @@ Retorne SOMENTE este JSON, começando com { e terminando com }:
   "cta_texto": "...",
   "whatsapp_copy": "...",
   "hashtags": ["#chaozao", "#imovelrural", "..."]
-}
-
-REGRAS: titulo_l2 é o destaque central. preco_de e preco_por refletem o valor informado. PROIBIDO travessão (—).
-ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto fora do JSON.`;
+}`;
 
   try {
-    // 1. Claude gera o copy
-    let claudeMsg;
-    try {
-      claudeMsg = await getClaude().messages.create({
-        model:      'claude-sonnet-4-6',
-        max_tokens: 1800,
-        system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-        messages:   [{ role: 'user', content: prompt }],
-      });
-    } catch (err) {
-      console.error('[campaign] Claude falhou:', err.status, err.message);
-      const s = err.status || 500;
-      return res.status(500).json({ error: s === 401 ? 'ANTHROPIC_API_KEY inválida.' : s === 429 ? 'Limite Claude atingido.' : err.message });
-    }
+    const msg = await getClaude().messages.create({
+      model:      'claude-sonnet-4-6',
+      max_tokens: 1800,
+      system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      messages:   [{ role: 'user', content: prompt }],
+    });
 
-    const raw  = (claudeMsg.content || []).map(c => c.text || '').join('');
+    const raw  = (msg.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
 
-    // 2. gpt-image-1 gera o banner completo
-    try {
-      json.banner_bg_url = await gerarBannerCompleto(json);
-    } catch (dErr) {
-      console.error('[campaign] DALLE falhou:', dErr.status, dErr.message);
-      json.dall_e_error = `${dErr.status || ''} ${dErr.message || ''}`.trim();
-    }
+    // Gera prompt pronto para ChatGPT
+    json.chatgpt_prompt = gerarPromptChatGPT(json);
 
     res.json(json);
   } catch (err) {
-    console.error('[campaign] erro geral:', err.message);
-    res.status(500).json({ error: err.message });
+    console.error('[campaign]', err.status, err.message);
+    const s = err.status || 500;
+    const m = s === 401 ? 'ANTHROPIC_API_KEY inválida.' : s === 429 ? 'Limite atingido. Aguarde.' : err.message;
+    res.status(500).json({ error: m });
   }
 });
 
