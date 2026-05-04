@@ -4,10 +4,8 @@ const Anthropic = require('@anthropic-ai/sdk');
 const router = express.Router();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60_000 });
 
-const SYSTEM = `Você é um especialista em copywriting de vendas para o mercado rural brasileiro.
+const SYSTEM = `Você é um especialista em design de campanhas e copywriting para o mercado rural brasileiro.
 Trabalha para o Chãozão — maior plataforma de imóveis rurais do Brasil (2,5 M acessos/mês, 125 K seguidores).
-Seu objetivo: criar campanhas de WhatsApp que geram ação imediata em proprietários rurais, investidores e compradores de terra.
-Tom: direto, confiante, sem corporativismo. Proibido abertura genérica.
 REGRA ABSOLUTA: Responda SEMPRE com JSON puro e válido. Nunca use markdown. Sua resposta DEVE começar com { e terminar com }.`;
 
 function extractJson(text) {
@@ -31,30 +29,46 @@ INFORMAÇÕES DA CAMPANHA:
 - Valor / oferta: ${valor}
 - Tipo de campanha: ${tipo}
 
-Retorne SOMENTE o JSON abaixo, começando com { e terminando com }.
+O banner segue um layout específico com:
+- Título dividido em 3 linhas: linha1 (branca) + linha2 (dourada/ouro, palavra de impacto) + linha3 (branca)
+- Badge superior esquerdo: rótulo de contexto/urgência
+- Badge superior direito: proposta de valor circular
+- Caixa de preço estruturada: plano à esquerda + comparativo de preço à direita
+- 2 diferenciais/features com ícone
+- Botão CTA estilo WhatsApp
+
+Retorne SOMENTE este JSON, começando com { e terminando com }:
 
 {
-  "titulo": "string — headline do banner, impactante, máx 7 palavras, SEM ponto final",
-  "subtitulo": "string — complemento do título, benefício concreto, máx 10 palavras",
-  "destaque_valor": "string — como exibir o preço/oferta no banner (ex: 'A partir de R$ 299/mês', 'Desconto de 30%', 'Vagas limitadas')",
-  "descricao_banner": "string — texto curto do banner, 2 linhas máx, reforça urgência ou prova social",
-  "cta_banner": "string — chamada para ação do banner, máx 4 palavras, imperativo (ex: 'Fale com um especialista', 'Garanta sua vaga')",
-  "whatsapp_copy": "string — mensagem completa para disparar no WhatsApp. Começa com gancho forte (sem 'Olá tudo bem'). 3 a 5 parágrafos curtos. Usa quebras com \\n\\n. Inclui emojis estratégicos. Termina com CTA claro e número/link de contato fictício como placeholder.",
-  "hashtags": ["string", "string", "string"],
-  "cor_destaque": "string — cor hex que combina com o tema (ex: '#F5A623' para ouro, '#4CAF50' para verde, '#E53935' para urgência)"
+  "titulo_l1": "string — primeira linha do título (branca), 1 a 3 palavras, maiúsculas",
+  "titulo_l2": "string — segunda linha do título (DOURADA, destaque principal), 2 a 4 palavras, maiúsculas",
+  "titulo_l3": "string — terceira linha do título (branca), 2 a 4 palavras, com ! no final, maiúsculas",
+  "subtitulo_branco": "string — parte inicial do subtítulo (branca), máx 6 palavras",
+  "subtitulo_ouro": "string — parte final do subtítulo (dourada), máx 6 palavras",
+  "badge_esq": "string — rótulo badge superior esquerdo, máx 5 palavras, MAIÚSCULAS (ex: CONDIÇÃO EXCLUSIVA DE REATIVAÇÃO)",
+  "badge_dir": "string — texto badge circular direito, máx 4 palavras em 2 linhas, MAIÚSCULAS (ex: MAIS VISIBILIDADE\\nMAIS RESULTADOS)",
+  "plano_nome": "string — nome do plano em 2 linhas (ex: PLANO DE\\n5 ANÚNCIOS), MAIÚSCULAS",
+  "plano_numero": "string — número ou destaque grande do plano (ex: '5', '30%', 'PRO')",
+  "preco_de": "string — preço original com tachado (ex: R$ 184,00/mês), deixe vazio se não houver",
+  "preco_por": "string — preço final destacado (ex: R$ 129,50/mês)",
+  "features": ["string — feature 1 em MAIÚSCULAS, máx 4 palavras + complemento", "string — feature 2 em MAIÚSCULAS, máx 4 palavras + complemento"],
+  "cta_texto": "string — texto do botão CTA, MAIÚSCULAS, imperativo, máx 5 palavras (ex: RETOMAR MINHA CONDIÇÃO)",
+  "whatsapp_copy": "string — mensagem completa para WhatsApp. Começa com gancho forte. 3 a 5 parágrafos. Quebras com \\n\\n. Emojis estratégicos. CTA no final.",
+  "hashtags": ["#chaozao", "#imovelrural", "#vendamais"]
 }
 
 REGRAS:
-- whatsapp_copy DEVE ter entre 150 e 280 palavras
-- titulo e subtitulo devem ser específicos para o tema informado — PROIBIDO ser genérico
-- destaque_valor deve transformar o valor informado em algo visualmente atraente para o banner
-- PROIBIDO usar travessão (—), use hífen (-) se necessário
-- ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto antes ou depois.`;
+- titulo_l2 é a linha de MAIOR impacto — deve capturar a essência da oferta em poucas palavras
+- preco_de e preco_por devem refletir o valor informado de forma atraente
+- features devem ser diferenciais reais e concretos (forma de pagamento, prazo, benefício)
+- whatsapp_copy: 150 a 280 palavras, proibido "Olá tudo bem"
+- PROIBIDO usar travessão (—)
+- ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto fora do JSON.`;
 
   try {
     const msg = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
+      max_tokens: 1800,
       system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: prompt }],
     });

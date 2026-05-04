@@ -4158,136 +4158,419 @@ function drawBanner(d) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = 1080, H = 1920;
-  const accent = d.cor_destaque || '#A8D97F';
+  const GOLD = '#F5C518';
+  const GOLD2 = '#C8960C';
+  const GREEN_DARK = '#0d2a06';
+  const GREEN_MID  = '#1a4a0a';
 
-  // ── Background gradient ──────────────────────────────────────
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0,   '#0d2a06');
-  bg.addColorStop(0.5, '#0a1f04');
-  bg.addColorStop(1,   '#071503');
-  ctx.fillStyle = bg;
+  // ══════════════════════════════════════════
+  // 1. BACKGROUND — campo ao entardecer
+  // ══════════════════════════════════════════
+  // Céu: azul-escuro no topo → laranja queimado → dourado no horizonte
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.62);
+  sky.addColorStop(0,    '#08090f');
+  sky.addColorStop(0.25, '#1a0e00');
+  sky.addColorStop(0.55, '#6b2e00');
+  sky.addColorStop(0.78, '#b85e00');
+  sky.addColorStop(1,    '#d4890a');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H * 0.62);
+
+  // Solo/campo: verde escuro
+  const ground = ctx.createLinearGradient(0, H * 0.58, 0, H);
+  ground.addColorStop(0,   '#1e4d0a');
+  ground.addColorStop(0.3, '#122e06');
+  ground.addColorStop(1,   '#050f03');
+  ctx.fillStyle = ground;
+  ctx.fillRect(0, H * 0.58, W, H * 0.42);
+
+  // Brilho do sol — radial centro-direita
+  const sun = ctx.createRadialGradient(W * 0.72, H * 0.6, 0, W * 0.72, H * 0.6, W * 0.55);
+  sun.addColorStop(0,    'rgba(255,210,80,0.95)');
+  sun.addColorStop(0.12, 'rgba(255,160,20,0.70)');
+  sun.addColorStop(0.35, 'rgba(210,100,0,0.30)');
+  sun.addColorStop(0.7,  'rgba(100,40,0,0.10)');
+  sun.addColorStop(1,    'rgba(0,0,0,0)');
+  ctx.fillStyle = sun;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Decorative circles ───────────────────────────────────────
-  const drawCircle = (x, y, r, color, alpha) => {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.restore();
-  };
-  drawCircle(W * 0.85, H * 0.08, 320, accent, 0.07);
-  drawCircle(W * 0.1,  H * 0.55, 260, accent, 0.05);
-  drawCircle(W * 0.9,  H * 0.72, 200, accent, 0.06);
-  drawCircle(W * 0.5,  H * 0.92, 400, accent, 0.04);
+  // Reflexo no chão
+  const groundGlow = ctx.createRadialGradient(W * 0.65, H * 0.62, 0, W * 0.65, H * 0.62, W * 0.4);
+  groundGlow.addColorStop(0,   'rgba(200,150,20,0.25)');
+  groundGlow.addColorStop(0.5, 'rgba(100,80,0,0.08)');
+  groundGlow.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = groundGlow;
+  ctx.fillRect(0, H * 0.58, W, H * 0.42);
 
-  // ── Top accent bar ────────────────────────────────────────────
-  ctx.fillStyle = accent;
-  ctx.fillRect(0, 0, W, 12);
+  // Silhueta de cerca (porteira rural)
+  drawFence(ctx, W, H);
 
-  // ── Logo area ─────────────────────────────────────────────────
-  const logoY = 100;
-  // Logo badge
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  roundRect(ctx, 60, logoY, 320, 80, 16);
-  ctx.fill();
+  // Folhagem nas bordas
+  drawFoliage(ctx, W, H);
+
+  // Overlay escuro para legibilidade do texto
+  const overlay = ctx.createLinearGradient(0, 0, 0, H);
+  overlay.addColorStop(0,    'rgba(0,0,0,0.72)');
+  overlay.addColorStop(0.35, 'rgba(0,0,0,0.45)');
+  overlay.addColorStop(0.58, 'rgba(0,0,0,0.55)');
+  overlay.addColorStop(0.72, 'rgba(0,0,0,0.80)');
+  overlay.addColorStop(1,    'rgba(0,0,0,0.92)');
+  ctx.fillStyle = overlay;
+  ctx.fillRect(0, 0, W, H);
+
+  // ══════════════════════════════════════════
+  // 2. BADGES SUPERIORES
+  // ══════════════════════════════════════════
+  // Badge esquerdo: ícone de cadeado + texto de contexto
+  const badgeEsqY = 80;
+  ctx.save();
+  // Linha dourada à esquerda
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(60, badgeEsqY, 5, 90);
+  // Ícone cadeado
+  ctx.font = '42px serif';
+  ctx.fillText('🔒', 80, badgeEsqY + 42);
+  // Texto badge esq
+  const badgeLines = (d.badge_esq || 'CONDIÇÃO EXCLUSIVA\nDE REATIVAÇÃO').split('\n');
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 38px Syne, Arial Black, sans-serif';
-  ctx.fillText('Chão', 90, logoY + 52);
-  ctx.fillStyle = accent;
-  ctx.fillText('zão', 90 + ctx.measureText('Chão').width, logoY + 52);
-  // Tagline
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.font = '24px DM Sans, Arial, sans-serif';
-  ctx.fillText('Maior plataforma de imóveis rurais', 60, logoY + 108);
+  ctx.font = 'bold 30px DM Sans, Arial, sans-serif';
+  badgeLines.forEach((line, i) => ctx.fillText(line, 136, badgeEsqY + 28 + i * 36));
+  ctx.restore();
 
-  // ── Divider line ─────────────────────────────────────────────
-  ctx.fillStyle = accent;
-  ctx.globalAlpha = 0.5;
-  ctx.fillRect(60, logoY + 128, 200, 3);
+  // Badge direito: círculo com texto e ícone
+  const bdirX = W - 60, bdirY = 60;
+  const bdirR = 115;
+  ctx.save();
+  // Círculo externo dourado
+  ctx.beginPath();
+  ctx.arc(bdirX - bdirR, bdirY + bdirR, bdirR + 8, 0, Math.PI * 2);
+  const bdirBg = ctx.createRadialGradient(bdirX - bdirR, bdirY + bdirR, 0, bdirX - bdirR, bdirY + bdirR, bdirR + 8);
+  bdirBg.addColorStop(0, '#2d6010');
+  bdirBg.addColorStop(0.7, '#1a4a0a');
+  bdirBg.addColorStop(1, '#0d2a06');
+  ctx.fillStyle = bdirBg;
+  ctx.fill();
+  ctx.strokeStyle = GOLD;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  // Texto circular
+  ctx.fillStyle = GOLD;
+  ctx.font = 'bold 24px DM Sans, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  const bdirLines = (d.badge_dir || 'MAIS VISIBILIDADE\nMAIS RESULTADOS').split('\n');
+  bdirLines.forEach((line, i) => {
+    ctx.fillText(line, bdirX - bdirR, bdirY + bdirR - 14 + i * 30);
+  });
+  // Ícone folha no centro
+  ctx.font = '36px serif';
+  ctx.fillText('🌿', bdirX - bdirR, bdirY + bdirR + 60);
+  ctx.textAlign = 'left';
+  ctx.restore();
+
+  // ══════════════════════════════════════════
+  // 3. TÍTULO PRINCIPAL — 3 linhas
+  // ══════════════════════════════════════════
+  const titleStartY = 280;
+  const titleSize   = 148;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.85)';
+  ctx.shadowBlur  = 24;
+  ctx.shadowOffsetX = 4;
+  ctx.shadowOffsetY = 6;
+  ctx.font = `900 ${titleSize}px Syne, Arial Black, sans-serif`;
+
+  // Linha 1 — branca
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(d.titulo_l1 || 'LIBERAMOS', 55, titleStartY);
+
+  // Linha 2 — dourada (destaque)
+  const grad2 = ctx.createLinearGradient(55, titleStartY + titleSize, 55, titleStartY + titleSize * 2);
+  grad2.addColorStop(0, '#FFE066');
+  grad2.addColorStop(0.5, GOLD);
+  grad2.addColorStop(1, GOLD2);
+  ctx.fillStyle = grad2;
+  ctx.fillText(d.titulo_l2 || 'UMA CONDIÇÃO', 55, titleStartY + titleSize * 1.05);
+
+  // Linha 3 — branca
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(d.titulo_l3 || 'PRA SUA CONTA!', 55, titleStartY + titleSize * 2.1);
+  ctx.restore();
+
+  // ══════════════════════════════════════════
+  // 4. SUBTÍTULO com borda esquerda dourada
+  // ══════════════════════════════════════════
+  const subY = titleStartY + titleSize * 3.0;
+  ctx.fillStyle = GOLD;
+  ctx.fillRect(55, subY - 38, 7, 80);
+  ctx.font = '38px DM Sans, Arial, sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(d.subtitulo_branco || 'Porque você já chegou', 78, subY);
+  const goldSubW = ctx.measureText(d.subtitulo_branco || 'Porque você já chegou').width;
+  ctx.fillStyle = GOLD;
+  ctx.font = 'bold 38px DM Sans, Arial, sans-serif';
+  ctx.fillText(d.subtitulo_ouro || 'muito perto de fechar.', 78, subY + 48);
+
+  // ══════════════════════════════════════════
+  // 5. CAIXA DE PREÇO
+  // ══════════════════════════════════════════
+  const boxY = subY + 130;
+  const boxH = 280;
+  const boxX = 55;
+  const boxW = W - 110;
+
+  // Fundo da caixa
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 30;
+  roundRect(ctx, boxX, boxY, boxW, boxH, 22);
+  const boxBg = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxH);
+  boxBg.addColorStop(0, '#0e2a08');
+  boxBg.addColorStop(1, '#071503');
+  ctx.fillStyle = boxBg;
+  ctx.fill();
+  ctx.strokeStyle = GOLD;
+  ctx.lineWidth = 3;
+  roundRect(ctx, boxX, boxY, boxW, boxH, 22);
+  ctx.stroke();
+  ctx.restore();
+
+  // Divisor vertical
+  ctx.fillStyle = GOLD;
+  ctx.globalAlpha = 0.4;
+  ctx.fillRect(boxX + boxW * 0.42, boxY + 24, 2, boxH - 48);
   ctx.globalAlpha = 1;
 
-  // ── Título principal ─────────────────────────────────────────
-  const titulo = (d.titulo || '').toUpperCase();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 86px Syne, Arial Black, sans-serif';
-  wrapText(ctx, titulo, 60, 400, W - 120, 100);
+  // Lado esquerdo: plano
+  const planoLines = (d.plano_nome || 'PLANO DE\n5 ANÚNCIOS').split('\n');
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = 'bold 32px DM Sans, Arial, sans-serif';
+  ctx.fillText(planoLines[0] || 'PLANO DE', boxX + 40, boxY + 80);
+  // Número grande dourado
+  const numSize = planoLines[1] && planoLines[1].length <= 3 ? 140 : 80;
+  const gradNum = ctx.createLinearGradient(boxX, boxY + 80, boxX, boxY + 220);
+  gradNum.addColorStop(0, '#FFE066');
+  gradNum.addColorStop(1, GOLD2);
+  ctx.fillStyle = gradNum;
+  ctx.font = `900 ${numSize}px Syne, Arial Black, sans-serif`;
+  ctx.fillText(d.plano_numero || '5', boxX + 40, boxY + 210);
+  // Texto abaixo do número
+  if (planoLines[1]) {
+    const parteNum = planoLines[1].replace(/^\d+\s*/, '');
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.font = 'bold 28px DM Sans, Arial, sans-serif';
+    const numW = ctx.measureText(d.plano_numero || '5').width;
+    ctx.fillText(parteNum, boxX + 40 + (numSize < 100 ? numW + 10 : 0), planoLines[1] && numSize < 100 ? boxY + 210 : boxY + 258);
+  }
 
-  // ── Subtítulo ────────────────────────────────────────────────
-  ctx.fillStyle = 'rgba(255,255,255,0.72)';
-  ctx.font = '42px DM Sans, Arial, sans-serif';
-  wrapText(ctx, d.subtitulo || '', 60, 650, W - 120, 52);
-
-  // ── Valor badge ───────────────────────────────────────────────
-  const valorY = 820;
-  ctx.fillStyle = accent;
-  roundRect(ctx, 60, valorY, W - 120, 130, 20);
-  ctx.fill();
-  ctx.fillStyle = '#0d2a06';
-  ctx.font = 'bold 60px Syne, Arial Black, sans-serif';
-  const valText = d.destaque_valor || '';
-  const valW = ctx.measureText(valText).width;
-  ctx.fillText(valText, Math.max(60, (W - valW) / 2), valorY + 82);
-
-  // ── Descrição curta ───────────────────────────────────────────
-  ctx.fillStyle = 'rgba(255,255,255,0.65)';
-  ctx.font = '36px DM Sans, Arial, sans-serif';
-  wrapText(ctx, d.descricao_banner || '', 60, 1020, W - 120, 46);
-
-  // ── Separator ────────────────────────────────────────────────
-  ctx.fillStyle = 'rgba(255,255,255,0.12)';
-  ctx.fillRect(60, 1160, W - 120, 2);
-
-  // ── CTA area ─────────────────────────────────────────────────
-  const ctaY = 1220;
-  // CTA background
-  const ctaGrad = ctx.createLinearGradient(60, ctaY, W - 60, ctaY);
-  ctaGrad.addColorStop(0, accent);
-  ctaGrad.addColorStop(1, '#5E9A30');
-  ctx.fillStyle = ctaGrad;
-  roundRect(ctx, 60, ctaY, W - 120, 140, 24);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 54px Syne, Arial Black, sans-serif';
-  const ctaText = (d.cta_banner || 'Fale Conosco').toUpperCase();
-  const ctaW = ctx.measureText(ctaText).width;
-  ctx.fillText(ctaText, (W - ctaW) / 2, ctaY + 90);
-
-  // ── Stats row ─────────────────────────────────────────────────
-  const statsY = 1440;
-  const stats = [
-    { n: '2,5M', l: 'acessos/mês' },
-    { n: '125K', l: 'seguidores' },
-    { n: '800+', l: 'artigos na mídia' },
-  ];
-  const colW = (W - 120) / 3;
-  stats.forEach((s, i) => {
-    const x = 60 + i * colW + colW / 2;
-    ctx.fillStyle = accent;
-    ctx.font = 'bold 52px Syne, Arial Black, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(s.n, x, statsY);
+  // Lado direito: preços
+  const priceX = boxX + boxW * 0.46;
+  if (d.preco_de) {
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '28px DM Sans, Arial, sans-serif';
-    ctx.fillText(s.l, x, statsY + 40);
-  });
-  ctx.textAlign = 'left';
+    ctx.fillText('DE:', priceX, boxY + 72);
+    // Preço original com tachado
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.font = 'bold 40px DM Sans, Arial, sans-serif';
+    const deText = d.preco_de;
+    ctx.fillText(deText, priceX, boxY + 120);
+    const deW = ctx.measureText(deText).width;
+    // Linha de tachado vermelha
+    ctx.strokeStyle = '#E53935';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(priceX, boxY + 102);
+    ctx.lineTo(priceX + deW, boxY + 102);
+    ctx.stroke();
+  }
+  // Badge "POR:"
+  ctx.fillStyle = GOLD;
+  roundRect(ctx, priceX, boxY + 140, 100, 42, 8);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 28px DM Sans, Arial, sans-serif';
+  ctx.fillText('POR:', priceX + 12, boxY + 168);
+  // Preço final — grande dourado
+  const gradPreco = ctx.createLinearGradient(priceX, boxY + 170, priceX, boxY + 260);
+  gradPreco.addColorStop(0, '#FFE066');
+  gradPreco.addColorStop(1, GOLD2);
+  ctx.fillStyle = gradPreco;
+  ctx.font = `900 86px Syne, Arial Black, sans-serif`;
+  ctx.fillText(d.preco_por || 'R$ 199/mês', priceX, boxY + 258);
 
-  // ── Bottom bar ────────────────────────────────────────────────
-  ctx.fillStyle = 'rgba(255,255,255,0.06)';
-  ctx.fillRect(0, H - 110, W, 110);
-  ctx.fillStyle = accent;
-  ctx.fillRect(0, H - 10, W, 10);
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  // ══════════════════════════════════════════
+  // 6. FEATURES — 2 ícones
+  // ══════════════════════════════════════════
+  const featY = boxY + boxH + 50;
+  const features = d.features || ['PAGAMENTO NO BOLETO\n(SEM CARTÃO)', 'ATIVAÇÃO RÁPIDA\nAPÓS PAGAMENTO'];
+  const featIcons = ['📄', '⚡'];
+  const featW = (W - 110 - 30) / 2;
+
+  features.slice(0, 2).forEach((feat, i) => {
+    const fx = 55 + i * (featW + 30);
+    // Fundo da feature
+    ctx.save();
+    roundRect(ctx, fx, featY, featW, 150, 16);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, fx, featY, featW, 150, 16);
+    ctx.stroke();
+    ctx.restore();
+
+    // Círculo ícone
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(fx + 55, featY + 75, 40, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200,150,20,0.18)';
+    ctx.fill();
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    ctx.font = '38px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(featIcons[i], fx + 55, featY + 88);
+    ctx.textAlign = 'left';
+
+    // Texto feature
+    const featLines = feat.split('\n');
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 26px DM Sans, Arial, sans-serif';
+    featLines.forEach((line, li) => ctx.fillText(line, fx + 108, featY + 60 + li * 34));
+  });
+
+  // Divisor entre features
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  ctx.fillRect(W / 2 - 1, featY + 24, 2, 102);
+
+  // ══════════════════════════════════════════
+  // 7. BOTÃO CTA — estilo WhatsApp
+  // ══════════════════════════════════════════
+  const ctaY = featY + 180;
+  const ctaH = 140;
+  const ctaX = 55;
+  const ctaW = W - 110;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,200,0,0.35)';
+  ctx.shadowBlur = 40;
+  roundRect(ctx, ctaX, ctaY, ctaW, ctaH, 70);
+  const ctaGrad = ctx.createLinearGradient(ctaX, ctaY, ctaX + ctaW, ctaY + ctaH);
+  ctaGrad.addColorStop(0, '#1a7c2a');
+  ctaGrad.addColorStop(0.4, '#25a535');
+  ctaGrad.addColorStop(0.6, '#25a535');
+  ctaGrad.addColorStop(1, '#1a7c2a');
+  ctx.fillStyle = ctaGrad;
+  ctx.fill();
+  // Brilho interno
+  roundRect(ctx, ctaX + 3, ctaY + 3, ctaW - 6, ctaH / 2.2, 70);
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fill();
+  ctx.restore();
+
+  // Ícone WhatsApp (círculo branco + logo)
+  const wapX = ctaX + 60;
+  const wapY = ctaY + ctaH / 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(wapX, wapY, 44, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.20)';
+  ctx.fill();
+  ctx.font = '58px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('📱', wapX, wapY + 20);
+  ctx.textAlign = 'left';
+  ctx.restore();
+
+  // Texto CTA
+  ctx.save();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold italic 54px Syne, Arial Black, sans-serif';
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 8;
+  const ctaText = d.cta_texto || 'RETOMAR MINHA CONDIÇÃO';
+  const ctaTW = ctx.measureText(ctaText).width;
+  ctx.fillText(ctaText, ctaX + (ctaW - ctaTW) / 2 + 30, ctaY + ctaH / 2 + 20);
+  ctx.restore();
+
+  // ══════════════════════════════════════════
+  // 8. RODAPÉ
+  // ══════════════════════════════════════════
+  const footY = ctaY + ctaH + 40;
+  ctx.fillStyle = GOLD;
+  ctx.globalAlpha = 0.6;
+  ctx.fillRect(55, footY, W - 110, 1.5);
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
   ctx.font = '28px DM Sans, Arial, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('chaozao.com.br  ·  Imóveis Rurais', W / 2, H - 42);
+  ctx.fillText('chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil', W / 2, footY + 48);
   ctx.textAlign = 'left';
 }
 
-// Helpers
+// ── Canvas helpers ────────────────────────────────────────────
+function drawFence(ctx, W, H) {
+  // Silhueta de porteira rural ao entardecer
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+  const fenceColor = '#1a0800';
+  const fenceY = H * 0.52;
+
+  // Poste esquerdo
+  ctx.fillStyle = fenceColor;
+  ctx.fillRect(W * 0.58, fenceY - 80, 28, 340);
+  // Poste direito
+  ctx.fillRect(W * 0.85, fenceY - 80, 28, 340);
+
+  // Trilhos horizontais
+  [0, 90, 180].forEach(offset => {
+    ctx.fillRect(W * 0.58, fenceY + offset, W * 0.27 + 28, 18);
+  });
+
+  // X central (porteira cruzada)
+  ctx.strokeStyle = fenceColor;
+  ctx.lineWidth = 20;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(W * 0.585, fenceY + 5);
+  ctx.lineTo(W * 0.87, fenceY + 190);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(W * 0.87, fenceY + 5);
+  ctx.lineTo(W * 0.585, fenceY + 190);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawFoliage(ctx, W, H) {
+  // Folhagem nas bordas (silhueta de árvore/mato)
+  ctx.save();
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = '#0a1e03';
+
+  // Canto superior esquerdo
+  for (let i = 0; i < 8; i++) {
+    ctx.beginPath();
+    ctx.arc(-30 + i * 28, 80 + Math.sin(i) * 30, 55 + i * 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Lado esquerdo meio
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.arc(-20 + i * 20, H * 0.42 + Math.cos(i) * 25, 50 + i * 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Canto inferior esquerdo
+  for (let i = 0; i < 10; i++) {
+    ctx.beginPath();
+    ctx.arc(-40 + i * 24, H * 0.62 + Math.sin(i) * 20, 60 + i * 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   if (!text) return;
   const words = text.split(' ');
