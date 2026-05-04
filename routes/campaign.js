@@ -25,79 +25,35 @@ function extractJson(text) {
   throw new Error('JSON inválido na resposta da IA');
 }
 
-// ── Gera o banner COMPLETO com gpt-image-1 ───────────────────────────────────
-async function gerarBannerCompleto(d) {
+// ── Gera fundo fotográfico rural com gpt-image-1 ─────────────────────────────
+async function gerarImagemFundo() {
   const key = process.env.OPENAI_API_KEY;
   console.log('[DALLE] key:', key ? '✅ ' + key.slice(0,14) + '...' : '❌ AUSENTE');
 
-  const precoDeStr  = d.preco_de  ? `Preço DE (com tachado vermelho): "${d.preco_de}"` : '';
-  const precoPorStr = d.preco_por ? `Preço POR (dourado, grande): "${d.preco_por}"` : '';
-  const feat1 = (d.features||[])[0] || '';
-  const feat2 = (d.features||[])[1] || '';
-
-  const imagePrompt = `
-Create a professional vertical marketing banner (1080x1920 pixels, 9:16 ratio) for "Chãozão" — Brazil's largest rural real estate platform.
-
-VISUAL STYLE:
-- Dark green/black gradient background (#081a05 to #0e2a08) with a subtle rural landscape photo (golden-hour farmland with fence, tractor or cattle) blended into the background at low opacity
-- Gold (#F5C518) and white text on dark background
-- Clean, bold typography — heavy sans-serif (similar to Impact or Black weight)
-- Professional Brazilian digital marketing aesthetic — similar to high-end Canva templates
-
-LAYOUT (strict top-to-bottom, single column, full bleed):
-
-[1] TOP BAR: thin gold horizontal line across full width
-
-[2] HEADER ROW (horizontal):
-  LEFT: small pill-shaped badge with lock icon 🔒, dark green bg, gold border, white text: "${d.badge_esq || 'OFERTA EXCLUSIVA'}"
-  RIGHT: circular badge, dark green bg, gold border, white text 2 lines: "${(d.badge_dir || 'DESTAQUE\nEXCLUSIVO').replace(/\\n/g,' / ')}"
-
-[3] HERO TITLE (3 lines, left-aligned, x=55px, massive bold text):
-  LINE 1 (white, ~140px): "${d.titulo_l1 || ''}"
-  LINE 2 (gold #F5C518, ~140px, MOST PROMINENT): "${d.titulo_l2 || ''}"
-  LINE 3 (white, ~140px): "${d.titulo_l3 || ''}"
-
-[4] SUBTITLE (left-aligned, gold left border bar):
-  WHITE: "${d.subtitulo_branco || ''}"
-  GOLD: "${d.subtitulo_ouro || ''}"
-
-[5] PRICE BOX (rounded rectangle, dark green bg #0e2a08, gold border):
-  LEFT HALF — Plan label (white, small): "${(d.plano_nome||'PLANO').replace(/\\n/g,' ')}"
-              Plan number (huge gold): "${d.plano_numero || ''}"
-  VERTICAL gold divider line
-  RIGHT HALF — ${precoDeStr}
-               Gold "POR:" pill badge
-               ${precoPorStr}
-
-[6] FEATURES ROW (2 cards side by side, semi-transparent dark bg, gold icon circles):
-  CARD 1 icon 📄: "${feat1.replace(/\\n/g,' ')}"
-  CARD 2 icon ⚡: "${feat2.replace(/\\n/g,' ')}"
-
-[7] CTA BUTTON (full width, rounded pill, green gradient #196624→#24a033):
-  WhatsApp icon + bold white italic text: "${d.cta_texto || 'FALE CONOSCO AGORA'}"
-
-[8] FOOTER: thin gold line + small white text: "chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil"
-
-IMPORTANT: All text must be crisp and fully readable. No watermarks. No blurry text. Keep exact text content as specified. Photorealistic background blended subtly behind the layout elements.
-`.trim();
-
-  console.log('[DALLE] gerando banner completo...');
+  const prompt = [
+    'Photorealistic Brazilian rural landscape background for a marketing banner.',
+    'Vast green farmland with a wooden fence gate and dirt road leading into the distance.',
+    'Golden hour sunset: warm orange and gold light on the horizon, dramatic dark sky with purple-orange clouds.',
+    'Lush tropical vegetation silhouettes on the left edge.',
+    'Strong dark vignette on all edges — especially heavy at top and bottom — for text overlay readability.',
+    'No text, no logos, no people, no watermarks.',
+    'Vertical 9:16 portrait. Cinematic DSLR photography. Hyper-realistic.',
+  ].join(' ');
 
   const response = await getOpenAI().images.generate({
     model:   'gpt-image-1',
-    prompt:  imagePrompt,
+    prompt,
     n:       1,
     size:    '1024x1536',
     quality: 'high',
   });
 
-  // gpt-image-1 retorna base64, não URL
   const imgData = response.data[0];
   if (imgData.b64_json) {
-    console.log('[DALLE] banner gerado (base64)');
+    console.log('[DALLE] fundo gerado (base64)');
     return 'data:image/png;base64,' + imgData.b64_json;
   }
-  console.log('[DALLE] banner gerado (url):', imgData.url?.slice(0,60) + '...');
+  console.log('[DALLE] fundo gerado (url):', imgData.url?.slice(0,60) + '...');
   return imgData.url;
 }
 
@@ -209,9 +165,9 @@ ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto
     const raw  = (claudeMsg.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
 
-    // 2. gpt-image-1 gera o banner completo com os dados do copy
+    // 2. gpt-image-1 gera fundo fotográfico; canvas renderiza o texto por cima
     try {
-      json.banner_bg_url = await gerarBannerCompleto(json);
+      json.banner_bg_url = await gerarImagemFundo();
     } catch (dErr) {
       console.error('[campaign] DALLE falhou:', dErr.status, dErr.message);
       json.dall_e_error = `${dErr.status || ''} ${dErr.message || ''}`.trim();

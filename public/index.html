@@ -4166,19 +4166,16 @@ function drawBanner(d) {
     img.onload = () => {
       ctx.clearRect(0, 0, W, H);
       ctx.drawImage(img, 0, 0, W, H);
-      // gpt-image-1 retorna banner completo (base64) — sem overlay de texto
-      // dall-e-3 retorna só fundo (URL) — aplica overlay + texto
-      if (!d.banner_bg_url.startsWith('data:')) {
-        const ov = ctx.createLinearGradient(0, 0, 0, H);
-        ov.addColorStop(0,   'rgba(0,0,0,0.70)');
-        ov.addColorStop(0.3, 'rgba(0,0,0,0.42)');
-        ov.addColorStop(0.55,'rgba(0,0,0,0.55)');
-        ov.addColorStop(0.75,'rgba(0,0,0,0.82)');
-        ov.addColorStop(1,   'rgba(0,0,0,0.93)');
-        ctx.fillStyle = ov;
-        ctx.fillRect(0, 0, W, H);
-        drawBannerText(ctx, d, W, H);
-      }
+      // Overlay escuro para legibilidade + texto via canvas
+      const ov = ctx.createLinearGradient(0, 0, 0, H);
+      ov.addColorStop(0,   'rgba(0,0,0,0.70)');
+      ov.addColorStop(0.3, 'rgba(0,0,0,0.42)');
+      ov.addColorStop(0.55,'rgba(0,0,0,0.55)');
+      ov.addColorStop(0.75,'rgba(0,0,0,0.82)');
+      ov.addColorStop(1,   'rgba(0,0,0,0.93)');
+      ctx.fillStyle = ov;
+      ctx.fillRect(0, 0, W, H);
+      drawBannerText(ctx, d, W, H);
     };
     img.onerror = () => { drawBannerFallbackBg(ctx,W,H); drawBannerText(ctx,d,W,H); };
     img.src = d.banner_bg_url;
