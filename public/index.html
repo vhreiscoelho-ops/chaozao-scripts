@@ -2448,13 +2448,13 @@ function showLoad() {
     _loadTimer = setInterval(()=>{
       i=(i+1)%msgs.length;
       // advance step indicator
-      const newStep = Math.floor(i * steps.length / msgs.length);
-      if (newStep !== step) {
+      const newStep = Math.min(steps.length - 1, Math.floor(i * steps.length / msgs.length));
+      if (newStep > step) {
         const old = document.getElementById(`lstep${step}`);
         if (old) { const ico=old.querySelector(`#lstep${step}ico`); if(ico)ico.textContent='✓'; old.style.color='rgba(34,197,94,.6)'; }
         step = newStep;
         const cur = document.getElementById(`lstep${step}`);
-        if (cur) { cur.style.color='rgba(240,237,228,.85)'; cur.querySelector(`#lstep${step}ico`).textContent='⏳'; }
+        if (cur) { const ico2=cur.querySelector(`#lstep${step}ico`); if(ico2)ico2.textContent='⏳'; cur.style.color='rgba(240,237,228,.85)'; }
       }
       const el=document.getElementById('loadMsg');
       if(!el)return;
@@ -2531,7 +2531,7 @@ function renderScript(j) {
         <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:${color};line-height:1">${pct}%</div>
         <div style="font-size:11px;color:rgba(240,237,228,.4)">${label}</div>
       </div>
-      <div class="prob-track"><div class="prob-fill" style="width:${pct}%;background:linear-gradient(90deg,${v>=8?'#16A34A,#22C55E,#4ADE80':v>=5?'#B45309,#D97706,#F5C518':'#991B1B,#DC2626,#F87171'})"></div></div>
+      <div class="prob-track"><div class="prob-fill" id="probBarFill" data-pct="${pct}" style="width:0;background:linear-gradient(90deg,${v>=8?'#16A34A,#22C55E,#4ADE80':v>=5?'#B45309,#D97706,#F5C518':'#991B1B,#DC2626,#F87171'})"></div></div>
     </div>`;
   } else {
     h+=scoreCard(j.score);
@@ -2565,6 +2565,11 @@ function renderScript(j) {
   }
   h+=`</div>`;
   document.getElementById('out').innerHTML=h;
+  // Anima a barra de probabilidade após render
+  requestAnimationFrame(()=>{
+    const fill = document.getElementById('probBarFill');
+    if (fill) fill.style.width = (fill.dataset.pct||'0')+'%';
+  });
 }
 
 // ── Render Proposal ────────────────────────────────────────────────────────
@@ -2617,6 +2622,7 @@ const QA_INSTRUCTIONS = {
 
 async function quickRefine(type, btn) {
   if (!currentOutput?.result) return;
+  const originalId = currentOutput.id; // preserva o ID do histórico original
   const btns = document.querySelectorAll('.qa-btn');
   btns.forEach(b => { b.disabled = true; });
   const originalHTML = btn ? btn.innerHTML : '';
@@ -2641,7 +2647,8 @@ async function quickRefine(type, btn) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erro ao refinar');
-    currentOutput = { id: data.id, result: data.result, mode: 'script',
+    // mantém o id original para não quebrar registro de resultado
+    currentOutput = { id: originalId, result: data.result, mode: 'script',
                       proposalMsg: null, proposalLeadNome: null };
     renderScript(data.result);
     document.getElementById('osub').textContent = `Refinado: ${QA_LABELS[type]?.split('…')[0] || type}`;
