@@ -4,8 +4,16 @@ const OpenAI     = require('openai');
 
 const router = express.Router();
 
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60_000 });
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90_000 });
+// Lazy init — evita crash no require() se as chaves ainda não estiverem no env
+let _claude = null, _openai = null;
+function getClaude() {
+  if (!_claude) _claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60_000 });
+  return _claude;
+}
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 90_000 });
+  return _openai;
+}
 
 const SYSTEM = `Você é um especialista em design de campanhas e copywriting para o mercado rural brasileiro.
 Trabalha para o Chãozão — maior plataforma de imóveis rurais do Brasil (2,5 M acessos/mês, 125 K seguidores).
@@ -35,7 +43,7 @@ async function gerarImagemFundo(campData) {
     'Aspect ratio 9:16 vertical portrait. Hyper-realistic DSLR photography style.',
   ].join(' ');
 
-  const response = await openai.images.generate({
+  const response = await getOpenAI().images.generate({
     model:   'dall-e-3',
     prompt,
     n:       1,
@@ -84,7 +92,7 @@ ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto
   try {
     // Roda Claude e DALL-E em paralelo
     const [msg, imageUrl] = await Promise.all([
-      claude.messages.create({
+      getClaude().messages.create({
         model:      'claude-sonnet-4-6',
         max_tokens: 1800,
         system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
