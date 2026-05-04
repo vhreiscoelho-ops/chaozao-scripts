@@ -926,10 +926,11 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 /* Banner container */
 .camp-banner-wrap {
   padding:1.2rem; display:flex; flex-direction:column; align-items:center; gap:1rem;
+  overflow:visible;
 }
 #campBannerCanvas {
   border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,.18);
-  max-width:100%; height:auto; display:block;
+  width:100%; max-width:340px; height:auto; display:block;
 }
 .camp-banner-actions { display:flex; gap:8px; }
 .camp-dl-btn {
@@ -4120,7 +4121,7 @@ function renderCampanha(d) {
         <span class="camp-section-title">🖼️ Banner Vertical (1080×1920)</span>
       </div>
       <div class="camp-banner-wrap">
-        <canvas id="campBannerCanvas" width="1080" height="1920" style="width:270px;height:480px"></canvas>
+        <canvas id="campBannerCanvas" width="1080" height="1920"></canvas>
         <div class="camp-banner-actions">
           <button class="camp-dl-btn" onclick="downloadBanner()">⬇️ Baixar PNG</button>
           <button class="camp-dl-btn sec" onclick="copyCampCopy()">📋 Copiar copy</button>
@@ -4263,16 +4264,17 @@ function drawBannerText(ctx, d, W, H) {
   ctx.fillStyle='#fff'; ctx.fillText(d.titulo_l3||'',55,curY); curY+=s3*1.15;
   ctx.restore();
 
-  // Subtítulo
+  // Subtítulo — auto-fit para não transbordar horizontalmente
   const subY=curY+18;
-  ctx.fillStyle=GOLD; ctx.fillRect(55,subY-36,6,80);
-  ctx.fillStyle='#fff'; ctx.font='36px DM Sans,Arial,sans-serif';
-  ctx.fillText(d.subtitulo_branco||'',76,subY);
-  ctx.fillStyle=GOLD; ctx.font='bold 36px DM Sans,Arial,sans-serif';
-  ctx.fillText(d.subtitulo_ouro||'',76,subY+46);
+  const subMaxW=W-140;
+  ctx.fillStyle=GOLD; ctx.fillRect(55,subY-28,6,72);
+  fitTextSize(ctx,d.subtitulo_branco||'',subMaxW,34);
+  ctx.fillStyle='#fff'; ctx.fillText(d.subtitulo_branco||'',76,subY);
+  fitTextSize(ctx,d.subtitulo_ouro||'',subMaxW,34);
+  ctx.fillStyle=GOLD; ctx.fillText(d.subtitulo_ouro||'',76,subY+42);
 
   // Caixa de preço
-  const boxY=subY+130, boxH=280;
+  const boxY=subY+108, boxH=265;
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=24;
   roundRect(ctx,55,boxY,W-110,boxH,22);
@@ -4324,7 +4326,7 @@ function drawBannerText(ctx, d, W, H) {
   ctx.fillText(d.preco_por||'',pX,boxY+258);
 
   // Features
-  const fY=boxY+boxH+48;
+  const fY=boxY+boxH+36;
   const feats=d.features||['PAGAMENTO NO BOLETO\n(SEM CARTÃO)','ATIVAÇÃO RÁPIDA\nAPÓS PAGAMENTO'];
   const fIcons=['📄','⚡'];
   const fW=(W-110-28)/2;
@@ -4345,7 +4347,7 @@ function drawBannerText(ctx, d, W, H) {
   });
 
   // CTA
-  const ctaY=fY+178;
+  const ctaY=fY+148;
   ctx.save();
   ctx.shadowColor='rgba(0,200,0,0.3)'; ctx.shadowBlur=36;
   roundRect(ctx,55,ctaY,W-110,138,69);
@@ -4369,7 +4371,7 @@ function drawBannerText(ctx, d, W, H) {
   ctx.restore();
 
   // Rodapé
-  const footY=ctaY+166;
+  const footY=ctaY+152;
   ctx.fillStyle=GOLD; ctx.globalAlpha=0.5;
   ctx.fillRect(55,footY,W-110,1.5); ctx.globalAlpha=1;
   ctx.fillStyle='rgba(255,255,255,0.28)'; ctx.font='26px DM Sans,Arial,sans-serif';
