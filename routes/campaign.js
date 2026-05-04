@@ -90,25 +90,39 @@ REGRAS: titulo_l2 é o destaque central. preco_de e preco_por refletem o valor i
 ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto fora do JSON.`;
 
   try {
-    // Roda Claude e DALL-E em paralelo
-    const [msg, imageUrl] = await Promise.all([
-      getClaude().messages.create({
+    // Claude (copy) e DALL-E (imagem) em paralelo — se DALL-E falhar, usa fallback sem imagem
+    let msg, imageUrl = null;
+    try {
+      [msg, imageUrl] = await Promise.all([
+        getClaude().messages.create({
+          model:      'claude-sonnet-4-6',
+          max_tokens: 1800,
+          system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+          messages:   [{ role: 'user', content: prompt }],
+        }),
+        gerarImagemFundo(),
+      ]);
+    } catch (parallelErr) {
+      // Se falhou em paralelo, tenta só Claude (DALL-E pode ter falhado)
+      console.warn('[campaign] parallel failed, retrying Claude only:', parallelErr.message);
+      msg = await getClaude().messages.create({
         model:      'claude-sonnet-4-6',
         max_tokens: 1800,
         system:     [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
         messages:   [{ role: 'user', content: prompt }],
-      }),
-      gerarImagemFundo(),
-    ]);
+      });
+      imageUrl = null; // fallback sem imagem
+    }
 
     const raw  = (msg.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
-    json.banner_bg_url = imageUrl; // URL temporária do DALL-E (válida por ~1 hora)
+    if (imageUrl) json.banner_bg_url = imageUrl;
     res.json(json);
   } catch (err) {
     console.error('[campaign]', err.status, err.message);
-    const msg = err.status === 401 ? 'API Key inválida.' :
-                err.status === 429 ? 'Limite de requisições. Aguarde.' : err.message;
+    const status = err.status || err.statusCode || 500;
+    const msg = status === 401 ? 'API Key inválida (Anthropic). Verifique ANTHROPIC_API_KEY no Railway.' :
+                status === 429 ? 'Limite de requisições atingido. Aguarde.' : err.message;
     res.status(500).json({ error: msg });
   }
 });
