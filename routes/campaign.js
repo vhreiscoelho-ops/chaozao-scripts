@@ -25,24 +25,62 @@ function extractJson(text) {
   throw new Error('JSON inválido na resposta da IA');
 }
 
-// ── Gera fundo fotográfico rural com gpt-image-1 ─────────────────────────────
-async function gerarImagemFundo() {
+// ── Gera banner completo com gpt-image-1 ─────────────────────────────────────
+async function gerarBannerCompleto(d) {
   const key = process.env.OPENAI_API_KEY;
   console.log('[DALLE] key:', key ? '✅ ' + key.slice(0,14) + '...' : '❌ AUSENTE');
 
-  const prompt = [
-    'Photorealistic Brazilian rural landscape background for a marketing banner.',
-    'Vast green farmland with a wooden fence gate and dirt road leading into the distance.',
-    'Golden hour sunset: warm orange and gold light on the horizon, dramatic dark sky with purple-orange clouds.',
-    'Lush tropical vegetation silhouettes on the left edge.',
-    'Strong dark vignette on all edges — especially heavy at top and bottom — for text overlay readability.',
-    'No text, no logos, no people, no watermarks.',
-    'Vertical 9:16 portrait. Cinematic DSLR photography. Hyper-realistic.',
-  ].join(' ');
+  const l1 = d.titulo_l1 || '';
+  const l2 = d.titulo_l2 || '';
+  const l3 = d.titulo_l3 || '';
+  const badgeEsq = (d.badge_esq || '').replace(/\\n/g, ' ');
+  const badgeDir = (d.badge_dir || '').replace(/\\n/g, '\n');
+  const subB = d.subtitulo_branco || '';
+  const subO = d.subtitulo_ouro || '';
+  const planoNome = (d.plano_nome || '').replace(/\\n/g, ' ');
+  const planoNum = d.plano_numero || '';
+  const precoDe = d.preco_de || '';
+  const precoPor = d.preco_por || '';
+  const feat1 = ((d.features || [])[0] || '').replace(/\\n/g, ' ');
+  const feat2 = ((d.features || [])[1] || '').replace(/\\n/g, ' ');
+  const cta = d.cta_texto || 'FALE CONOSCO AGORA';
 
+  const imagePrompt = `Design a vertical social media marketing banner (9:16 ratio, like an Instagram Story) for a Brazilian rural real estate company called Chãozão.
+
+VISUAL STYLE: Professional Brazilian digital marketing banner. Dark green and black background (#0a1a06). Golden hour rural landscape (farmland, wooden fence, sunset sky with orange clouds) softly blended into the background. Gold (#F5C518) and white as main text colors. Clean bold typography, heavy black-weight sans-serif. High contrast. Similar to premium Canva marketing templates.
+
+EXACT LAYOUT from top to bottom:
+
+① Thin horizontal gold line across the full top edge.
+
+② Header row: On the left, a small horizontal pill-shaped badge with a lock icon, dark green background, gold border, white bold text reading "${badgeEsq}". On the far right, a circular badge with dark green background, gold circular border, gold bold text reading "${badgeDir}".
+
+③ Three-line hero title, large bold heavy text, left-aligned:
+   First line in white: "${l1}"
+   Second line in bright gold (#F5C518), slightly larger and bolder: "${l2}"
+   Third line in white: "${l3}"
+
+④ Subtitle block with a vertical gold bar on the left: white text "${subB}" on one line, gold text "${subO}" on the next line.
+
+⑤ Dark green rounded rectangle price box with gold border:
+   Left side: small white label "${planoNome}", below it a huge gold number/text "${planoNum}".
+   Vertical gold divider line in the middle.
+   Right side: ${precoDe ? `small text "DE:" followed by "${precoDe}" with a red diagonal strikethrough line,` : ''} a small gold pill badge labeled "POR:", then large bold gold text "${precoPor}".
+
+⑥ Two side-by-side feature cards with semi-transparent dark green background and gold borders:
+   Left card: circular gold icon with 📄, bold white text "${feat1}".
+   Right card: circular gold icon with ⚡, bold white text "${feat2}".
+
+⑦ Full-width green gradient pill button (dark green to bright green, #196624 to #24a033) with a WhatsApp logo icon on the left and bold white uppercase italic text: "${cta}".
+
+⑧ Thin gold separator line, then small centered white text: "chaozao.com.br  ·  Maior plataforma de imóveis rurais do Brasil".
+
+IMPORTANT: All text must be perfectly legible, crisp, and exactly as specified. No extra decorations. No watermarks. High resolution.`;
+
+  console.log('[DALLE] gerando banner...');
   const response = await getOpenAI().images.generate({
     model:   'gpt-image-1',
-    prompt,
+    prompt:  imagePrompt,
     n:       1,
     size:    '1024x1536',
     quality: 'high',
@@ -50,10 +88,10 @@ async function gerarImagemFundo() {
 
   const imgData = response.data[0];
   if (imgData.b64_json) {
-    console.log('[DALLE] fundo gerado (base64)');
+    console.log('[DALLE] banner gerado (base64)');
     return 'data:image/png;base64,' + imgData.b64_json;
   }
-  console.log('[DALLE] fundo gerado (url):', imgData.url?.slice(0,60) + '...');
+  console.log('[DALLE] banner gerado (url):', imgData.url?.slice(0,60) + '...');
   return imgData.url;
 }
 
@@ -165,9 +203,9 @@ ATENÇÃO FINAL: sua resposta DEVE começar com { e terminar com }. Nenhum texto
     const raw  = (claudeMsg.content || []).map(c => c.text || '').join('');
     const json = extractJson(raw);
 
-    // 2. gpt-image-1 gera fundo fotográfico; canvas renderiza o texto por cima
+    // 2. gpt-image-1 gera o banner completo
     try {
-      json.banner_bg_url = await gerarImagemFundo();
+      json.banner_bg_url = await gerarBannerCompleto(json);
     } catch (dErr) {
       console.error('[campaign] DALLE falhou:', dErr.status, dErr.message);
       json.dall_e_error = `${dErr.status || ''} ${dErr.message || ''}`.trim();
