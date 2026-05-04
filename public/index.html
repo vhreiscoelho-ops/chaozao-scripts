@@ -955,6 +955,302 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
   padding:3rem 1.5rem; text-align:center;
   display:flex; flex-direction:column; align-items:center; gap:1rem; color:var(--muted);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   CALL MODE — Dark theme for the Gerar screen
+═══════════════════════════════════════════════════════════════════ */
+.main-area.call-mode {
+  background: #0B0B0B;
+  --bg:#0B0B0B; --surface:#141414; --surface2:#1C1C1C;
+  --border:rgba(255,255,255,.09); --text:#F0EDE4; --muted:rgba(240,237,228,.48);
+  --light:rgba(240,237,228,.26); --accent:#22C55E; --accent-l:#16A34A;
+  --accent-bg:rgba(34,197,94,.1); --amber:#F5C518; --r:10px; --rl:16px;
+}
+.main-area.call-mode .container { background:transparent; }
+.main-area.call-mode .ipanel { background:#111; border-color:rgba(255,255,255,.08); }
+.main-area.call-mode .opanel { background:#111; border-color:rgba(255,255,255,.08); }
+.main-area.call-mode .oh { border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .oh-left .pt { color:#F0EDE4; }
+.main-area.call-mode .oh-left .ps { color:rgba(240,237,228,.45); }
+.main-area.call-mode .picon { background:rgba(34,197,94,.15); }
+.main-area.call-mode select,
+.main-area.call-mode input,
+.main-area.call-mode textarea {
+  background:#1C1C1C; border-color:rgba(255,255,255,.1);
+  color:#F0EDE4;
+}
+.main-area.call-mode input::placeholder,
+.main-area.call-mode textarea::placeholder { color:rgba(240,237,228,.28); }
+.main-area.call-mode input:focus,
+.main-area.call-mode textarea:focus {
+  border-color:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.12);
+  background:#1C1C1C;
+}
+.main-area.call-mode label { color:rgba(240,237,228,.48); }
+.main-area.call-mode .gbtn { background:#22C55E; color:#0B1F10; }
+.main-area.call-mode .gbtn:hover:not(:disabled) { background:#16A34A; }
+.main-area.call-mode .hint { color:rgba(240,237,228,.22); }
+.main-area.call-mode .cpill {
+  background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.5);
+}
+.main-area.call-mode .cpill.on { background:#22C55E; border-color:#22C55E; color:#0B1F10; font-weight:600; }
+.main-area.call-mode .cpill:hover { border-color:#22C55E; color:#22C55E; }
+.main-area.call-mode .gmp { color:rgba(240,237,228,.42); }
+.main-area.call-mode .gmp.on { color:#22C55E; border-bottom-color:#22C55E; }
+.main-area.call-mode .gmp:hover { color:#22C55E; }
+.main-area.call-mode .gen-mode-pills { border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .ph { border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .ab-toggle-wrap { border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .ab-toggle-btn {
+  border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.4);
+}
+.main-area.call-mode .ab-toggle-btn:hover { border-color:#22C55E; color:#22C55E; }
+.main-area.call-mode .ab-toggle-btn.on { background:#22C55E; border-color:#22C55E; color:#0B1F10; }
+.main-area.call-mode .plan-dd-trigger {
+  background:#1C1C1C; border-color:rgba(255,255,255,.1); color:#F0EDE4;
+}
+.main-area.call-mode .plan-dd-trigger:hover { background:#222; border-color:#22C55E; }
+.main-area.call-mode .plan-dd-tbadge { color:#22C55E; background:rgba(34,197,94,.15); }
+.main-area.call-mode .plan-dd-tprice { color:#F5C518; }
+.main-area.call-mode .plan-dd-panel {
+  background:#161616; border-color:#22C55E;
+}
+.main-area.call-mode .plan-dd-item:hover { background:#1C1C1C; }
+.main-area.call-mode .plan-dd-item.active { background:rgba(34,197,94,.1); }
+.main-area.call-mode .plan-dd-glabel { color:rgba(240,237,228,.35); }
+.main-area.call-mode .plan-dd-name { color:#F0EDE4; }
+.main-area.call-mode .plan-dd-item.active .plan-dd-name { color:#22C55E; }
+.main-area.call-mode .plan-dd-price { color:#F5C518; }
+.main-area.call-mode .plan-dd-badge { color:#22C55E; background:rgba(34,197,94,.15); }
+.main-area.call-mode .plan-dd-item.active .plan-dd-badge { background:#22C55E; color:#0B1F10; }
+.main-area.call-mode .plan-dd-arrow { color:rgba(240,237,228,.3); }
+.main-area.call-mode .discount-input-box {
+  background:#1C1C1C; border-color:rgba(255,255,255,.1);
+}
+.main-area.call-mode .discount-input-box:focus-within { border-color:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.12); background:#1C1C1C; }
+.main-area.call-mode .discount-input-box input { background:transparent; color:#F0EDE4; }
+.main-area.call-mode .discount-input-box .pct-sign { color:rgba(240,237,228,.4); }
+.main-area.call-mode .plan-final-row { background:rgba(34,197,94,.08); border-color:rgba(34,197,94,.2); }
+.main-area.call-mode .plan-original { color:rgba(240,237,228,.3); }
+.main-area.call-mode .plan-discounted { color:#22C55E; }
+.main-area.call-mode .plan-save { color:rgba(240,237,228,.4); }
+.main-area.call-mode .plan-save b { color:#22C55E; }
+.main-area.call-mode .cbtn { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.5); }
+.main-area.call-mode .cbtn:hover { border-color:#22C55E; color:#22C55E; }
+/* Score cards in dark mode */
+.main-area.call-mode .score-card.score-alta  { background:rgba(8,80,65,.3);  border-color:rgba(8,80,65,.7); }
+.main-area.call-mode .score-card.score-media { background:rgba(90,60,0,.3);  border-color:rgba(90,60,0,.7); }
+.main-area.call-mode .score-card.score-baixa { background:rgba(80,20,20,.3); border-color:rgba(80,20,20,.7); }
+.main-area.call-mode .score-alta  .score-num   { color:#4ADE80; }
+.main-area.call-mode .score-media .score-num   { color:#F5C518; }
+.main-area.call-mode .score-baixa .score-num   { color:#F87171; }
+.main-area.call-mode .score-just  { color:rgba(240,237,228,.7); }
+.main-area.call-mode .score-tag   { background:rgba(255,255,255,.08); color:rgba(240,237,228,.55); }
+/* Script cards */
+.main-area.call-mode .script-wrap h1 { color:#F0EDE4; }
+.main-area.call-mode .script-wrap .sub { color:rgba(240,237,228,.45); }
+.main-area.call-mode .s-card { background:#1A1A1A; border-color:rgba(255,255,255,.08); }
+.main-area.call-mode .s-hrow .s-etitle { color:#F0EDE4; }
+.main-area.call-mode .s-tempo { color:rgba(240,237,228,.3); }
+.main-area.call-mode .s-fala { background:rgba(255,255,255,.04); border-left-color:rgba(245,197,24,.5); color:#E8E4D8; }
+.main-area.call-mode .s-hr { border-top-color:rgba(255,255,255,.07); }
+.main-area.call-mode .s-dica { background:rgba(245,197,24,.06); color:rgba(240,237,228,.55); }
+.main-area.call-mode .s-dica strong { color:#F5C518; }
+.main-area.call-mode .s-destaque { background:rgba(60,52,137,.25); color:rgba(200,195,255,.8); }
+.main-area.call-mode .s-destaque strong { color:rgba(220,215,255,.9); }
+.main-area.call-mode .s-verde { background:rgba(8,80,65,.2); color:#4ADE80; }
+.main-area.call-mode .s-aviso { background:rgba(90,60,0,.2); color:#F5C518; }
+.main-area.call-mode .s-alerta { background:rgba(80,20,20,.2); color:#F87171; }
+.main-area.call-mode .s-chip { background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.08); color:rgba(240,237,228,.45); }
+.main-area.call-mode .s-obj { background:rgba(255,255,255,.04); }
+.main-area.call-mode .s-obj-l { color:#F87171; }
+.main-area.call-mode .s-obj-r { color:rgba(240,237,228,.7); }
+.main-area.call-mode .s-stat { background:#1C1C1C; border-color:rgba(255,255,255,.07); }
+.main-area.call-mode .s-stat-val { color:#F0EDE4; }
+.main-area.call-mode .s-stat-sub { color:rgba(240,237,228,.38); }
+.main-area.call-mode .s-stat-label { color:rgba(240,237,228,.3); }
+.main-area.call-mode .s-cta { background:#22C55E; color:#0B1F10; }
+.main-area.call-mode .s-list li { color:rgba(240,237,228,.7); border-bottom-color:rgba(255,255,255,.06); }
+.main-area.call-mode .s-list li::before { color:#22C55E; }
+.main-area.call-mode .s-step-num { background:#22C55E; color:#0B1F10; }
+.main-area.call-mode .s-step-text { color:rgba(240,237,228,.7); }
+.main-area.call-mode .s-step { border-bottom-color:rgba(255,255,255,.06); }
+/* Resultado bar */
+.main-area.call-mode .resultado-bar { background:#161616; border-top-color:rgba(255,255,255,.08); }
+.main-area.call-mode .resultado-title { color:rgba(240,237,228,.35); }
+.main-area.call-mode .rbtn { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.45); }
+.main-area.call-mode .rbtn:hover { border-color:#22C55E; color:#22C55E; }
+.main-area.call-mode .obs-area textarea { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:#F0EDE4; }
+.main-area.call-mode .obs-save { background:#22C55E; color:#0B1F10; }
+.main-area.call-mode .obs-save:hover { background:#16A34A; }
+.main-area.call-mode .obs-saved { color:#22C55E; }
+/* A/B tabs */
+.main-area.call-mode .abtab { background:#1A1A1A; border-bottom-color:transparent; }
+.main-area.call-mode .abtab.on { background:#141414; border-bottom-color:#22C55E; }
+.main-area.call-mode .abtab-strat { color:#F0EDE4; }
+.main-area.call-mode .abtab-score { color:rgba(240,237,228,.4); }
+.main-area.call-mode .ab-tab-wrap { border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .abtab-a .abtab-variant { color:#A8B4FF; }
+.main-area.call-mode .abtab-b .abtab-variant { color:#4ADE80; }
+/* View tabs */
+.main-area.call-mode .vtab { background:transparent; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.4); }
+.main-area.call-mode .vtab.on { background:#22C55E; color:#0B1F10; border-color:transparent; }
+.main-area.call-mode #viewTabWrap { background:#161616; border-bottom-color:rgba(255,255,255,.08); }
+/* Follow-up cards */
+.main-area.call-mode .fu-card { background:#1A1A1A; border-color:rgba(255,255,255,.08); }
+.main-area.call-mode .fu-card-head { background:#161616; border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .fu-card-body { color:#F0EDE4; }
+.main-area.call-mode .fu-msg { color:rgba(240,237,228,.8); }
+.main-area.call-mode .fu-card-foot { background:#161616; border-top-color:rgba(255,255,255,.06); }
+.main-area.call-mode .fu-dica { color:rgba(240,237,228,.4); }
+.main-area.call-mode .fu-copy-btn { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.4); }
+.main-area.call-mode .fu-copy-btn:hover { border-color:#22C55E; color:#22C55E; }
+.main-area.call-mode .fu-wrap h1 { color:#F0EDE4; }
+.main-area.call-mode .fu-wrap .sub { color:rgba(240,237,228,.4); }
+.main-area.call-mode .fu-sep { color:rgba(240,237,228,.18); }
+.main-area.call-mode .fu-sep::before,.main-area.call-mode .fu-sep::after { background:rgba(255,255,255,.07); }
+.main-area.call-mode .fu-tipo-pill { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.45); }
+.main-area.call-mode .fu-tipo-pill.on { background:#22C55E; border-color:#22C55E; color:#0B1F10; }
+.main-area.call-mode .fu-tipo-pill:hover { border-color:#22C55E; color:#22C55E; }
+.main-area.call-mode .canal-pill { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:rgba(240,237,228,.45); }
+.main-area.call-mode .canal-pill.on { background:#22C55E; border-color:#22C55E; color:#0B1F10; }
+.main-area.call-mode .canal-pill:hover { border-color:#22C55E; color:#22C55E; }
+/* PropInline */
+.main-area.call-mode .prop-inline-toggle { color:#22C55E; border-color:rgba(255,255,255,.1); }
+.main-area.call-mode .prop-inline-toggle:hover { background:rgba(34,197,94,.1); border-color:#22C55E; }
+.main-area.call-mode #propInlineSection { border-top-color:rgba(255,255,255,.08); }
+/* Proposta WhatsApp card */
+.main-area.call-mode .prop-wa-card { border-color:rgba(37,211,102,.4); }
+.main-area.call-mode .prop-wa-msg { background:#0f1f13; color:rgba(240,237,228,.8); }
+
+/* ── Section headers inside ipanel (call mode grouping) ── */
+.ci-section {
+  padding:.65rem 1.4rem .45rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items:center; gap:7px;
+  font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.09em; color:rgba(240,237,228,.25);
+}
+.ci-section-dot {
+  width:5px; height:5px; border-radius:50%; background:#22C55E; opacity:.6; flex-shrink:0;
+}
+.ci-section:first-child { padding-top:.85rem; }
+
+/* ── Intelligence Panel (empty state / skeleton) ── */
+.intel-empty {
+  display:flex; flex-direction:column; padding:1.75rem 1.5rem; gap:1.25rem; flex:1;
+}
+.intel-header {
+  display:flex; align-items:center; gap:8px; margin-bottom:.15rem;
+}
+.intel-pulse {
+  width:8px; height:8px; border-radius:50%; background:#22C55E;
+  animation:pulseDot 2s ease-in-out infinite; flex-shrink:0;
+}
+@keyframes pulseDot {
+  0%,100% { opacity:.3; transform:scale(.85); }
+  50%      { opacity:1;  transform:scale(1.1); }
+}
+.intel-title {
+  font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+  color:rgba(240,237,228,.6); letter-spacing:.015em;
+}
+.intel-subtitle {
+  font-size:11.5px; color:rgba(240,237,228,.25); line-height:1.5; margin-left:16px;
+}
+
+/* Skeleton blocks */
+.skel {
+  background: linear-gradient(90deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.05) 100%);
+  background-size:200% 100%;
+  border-radius:6px; animation:skelShimmer 1.6s ease-in-out infinite;
+}
+@keyframes skelShimmer {
+  0%   { background-position:200% 0; }
+  100% { background-position:-200% 0; }
+}
+.skel-line { height:10px; margin-bottom:7px; }
+.skel-line.w-80 { width:80%; }
+.skel-line.w-60 { width:60%; }
+.skel-line.w-90 { width:90%; }
+.skel-line.w-45 { width:45%; }
+.skel-line.h-14 { height:14px; }
+.skel-block { height:72px; border-radius:10px; margin-bottom:8px; }
+.skel-bar { height:22px; border-radius:11px; }
+
+.intel-section {
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+  border-radius:12px; padding:1rem 1.15rem;
+}
+.intel-section-label {
+  font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color:rgba(240,237,228,.25); margin-bottom:.65rem; display:flex; align-items:center; gap:6px;
+}
+.intel-section-label::before { content:''; width:3px; height:3px; border-radius:50%; background:#22C55E; opacity:.5; }
+
+/* Probability bar skeleton */
+.prob-track {
+  height:22px; background:rgba(255,255,255,.06); border-radius:11px; overflow:hidden;
+  position:relative; margin-bottom:.4rem;
+}
+.prob-fill {
+  height:100%; border-radius:11px;
+  background:linear-gradient(90deg,#16A34A,#22C55E,#4ADE80);
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);
+  position:relative; overflow:hidden;
+}
+.prob-fill::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  animation:probShine 2s ease-in-out infinite;
+}
+@keyframes probShine { 0%,100%{transform:translateX(-100%)} 50%{transform:translateX(100%)} }
+.prob-label {
+  display:flex; justify-content:space-between;
+  font-size:11px; color:rgba(240,237,228,.35);
+}
+.prob-pct {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:20px;
+  color:#22C55E; line-height:1; margin-bottom:.2rem;
+}
+
+/* Quick action buttons */
+.quick-actions {
+  padding:1rem 1.5rem 1.25rem;
+  border-top:1px solid rgba(255,255,255,.07);
+  background:#0f0f0f;
+  flex-shrink:0;
+}
+.qa-label {
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+  color:rgba(240,237,228,.25); margin-bottom:.6rem; display:flex; align-items:center; gap:6px;
+}
+.qa-label::before { content:'⚡'; font-size:10px; }
+.qa-row { display:flex; flex-wrap:wrap; gap:7px; }
+.qa-btn {
+  padding:6px 13px; border-radius:20px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  color:rgba(240,237,228,.55); font-size:12px; font-weight:500;
+  cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all .15s; display:flex; align-items:center; gap:5px;
+}
+.qa-btn:hover { background:rgba(34,197,94,.1); border-color:#22C55E; color:#22C55E; }
+.qa-btn:disabled { opacity:.35; cursor:not-allowed; }
+.qa-btn.qa-loading { opacity:.55; }
+
+/* Spinner for quick actions */
+.qa-spin { width:10px; height:10px; border:2px solid rgba(34,197,94,.25); border-top-color:#22C55E; border-radius:50%; animation:spin .6s linear infinite; display:inline-block; }
+
+/* AB strat wrap dark mode */
+.main-area.call-mode .ab-strat-wrap { background:#161616; border-bottom-color:rgba(255,255,255,.08); }
+.main-area.call-mode .ab-strat-label { color:rgba(180,175,255,.7) !important; }
+.main-area.call-mode .strat-b .ab-strat-label { color:rgba(74,222,128,.7) !important; }
+.main-area.call-mode select { background:#1C1C1C; border-color:rgba(255,255,255,.1); color:#F0EDE4; }
+
+/* rec-topbar dark mode */
+.main-area.call-mode .rec-topbar { background:#161616; border-bottom-color:rgba(255,255,255,.07); }
+.main-area.call-mode .rec-tb-label { color:#F0EDE4; }
+.main-area.call-mode .rec-tb-sublabel { color:rgba(240,237,228,.35); }
 </style>
 </head>
 <body>
@@ -1056,7 +1352,7 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
       <div class="picon" id="phIcon">📋</div>
       <div><div class="pt" id="phTitle">Briefing do Lead</div><div class="ps" id="phSub">Cole o resumo do SDR e configure</div></div>
     </div>
-    <div class="pb">
+    <div class="pb" id="mainPb">
       <div class="field">
         <label>Closer</label>
         <div class="cpills" id="cpills"><span style="font-size:12px;color:var(--muted)">Carregando…</span></div>
@@ -1292,6 +1588,17 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
       </div>
     </div>
 
+    <!-- Quick refinement actions (shown after script is generated) -->
+    <div id="quickActions" class="quick-actions" style="display:none">
+      <div class="qa-label">Refinar script</div>
+      <div class="qa-row">
+        <button class="qa-btn" onclick="quickRefine('mais_agressivo',this)">🔥 Mais agressivo</button>
+        <button class="qa-btn" onclick="quickRefine('simplificar',this)">✂️ Simplificar</button>
+        <button class="qa-btn" onclick="quickRefine('foco_preco',this)">💰 Foco no preço</button>
+        <button class="qa-btn" onclick="quickRefine('encurtar',this)">⏱️ Encurtar</button>
+        <button class="qa-btn" onclick="quickRefine('mais_empatia',this)">🤝 Mais empatia</button>
+      </div>
+    </div>
 
     <!-- Resultado da ligação -->
     <div id="resultadoBar" class="resultado-bar" style="display:none">
@@ -1628,24 +1935,33 @@ function sbActivate(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('on');
 }
+function _setCallMode(on) {
+  const ma = document.querySelector('.main-area');
+  if (ma) ma.classList.toggle('call-mode', on);
+}
 function sbHoje() {
   sbActivate('sb-hoje');
+  _setCallMode(false);
   openQueue();
 }
 function sbGerar() {
   sbActivate('sb-gerar');
+  _setCallMode(true);
   if (!['script','proposal','followup'].includes(currentMode)) setMode('script');
 }
 function sbLeads() {
   sbActivate('sb-leads');
+  _setCallMode(false);
   openFicha();
 }
 function sbAnalise() {
   sbActivate('sb-analise');
+  _setCallMode(false);
   openDashboard();
 }
 function sbConfig() {
   sbActivate('sb-config');
+  _setCallMode(false);
   openSettings();
 }
 
@@ -1730,15 +2046,54 @@ function toggleAB() {
 }
 
 function resetOutput() {
+  const isCallMode = document.querySelector('.main-area')?.classList.contains('call-mode');
   const modeIcon = currentMode==='script'?'📞':currentMode==='proposal'?'📄':'🔁';
   const modeTitle = abMode?'Duas variantes prontas em segundos':currentMode==='script'?'Script pronto em segundos':currentMode==='proposal'?'Proposta pronta em segundos':'3 abordagens em segundos';
   const modeDesc = abMode?'Gera os 2 scripts em paralelo — registre o resultado de cada um.':currentMode==='script'?'Preencha o briefing do SDR ao lado e clique em gerar.':currentMode==='proposal'?'Descreva o que foi discutido na reunião e o plano negociado.':'Preencha os dados do lead parado e clique em gerar.';
-  document.getElementById('out').innerHTML = `
-    <div class="estate">
-      <div class="estate-icon">${modeIcon}</div>
-      <h3>${modeTitle}</h3>
-      <p>${modeDesc}</p>
+
+  if (isCallMode && currentMode === 'script') {
+    document.getElementById('out').innerHTML = `
+    <div class="intel-empty">
+      <div class="intel-header">
+        <div class="intel-pulse"></div>
+        <div class="intel-title">Motor de Inteligência</div>
+      </div>
+      <div class="intel-subtitle">Cole o briefing do SDR e clique em Gerar — a IA analisa o perfil do lead e monta o script em segundos.</div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Probabilidade de Fechamento</div>
+        <div class="prob-track"><div class="skel skel-bar" style="width:100%;height:100%"></div></div>
+        <div class="prob-label"><span>Aguardando análise</span><span>—</span></div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Perfil do Lead</div>
+        <div class="skel skel-line w-80"></div>
+        <div class="skel skel-line w-60"></div>
+        <div class="skel skel-line w-90"></div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Dores Identificadas</div>
+        <div class="skel skel-block"></div>
+        <div class="skel skel-line w-45"></div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Objeções Prováveis</div>
+        <div class="skel skel-line h-14 w-80" style="margin-bottom:10px"></div>
+        <div class="skel skel-line h-14 w-60"></div>
+      </div>
     </div>`;
+  } else {
+    document.getElementById('out').innerHTML = `
+      <div class="estate">
+        <div class="estate-icon">${modeIcon}</div>
+        <h3>${modeTitle}</h3>
+        <p>${modeDesc}</p>
+      </div>`;
+  }
+
   document.getElementById('osub').textContent = 'Aguardando briefing…';
   document.getElementById('cbtn').style.display = 'none';
   document.getElementById('resultadoBar').style.display = 'none';
@@ -1746,6 +2101,7 @@ function resetOutput() {
   document.getElementById('propInlineSection').style.display = 'none';
   document.getElementById('propInlineForm').style.display    = 'none';
   document.getElementById('propInlineDone').style.display    = 'none';
+  document.getElementById('quickActions').style.display = 'none';
   document.getElementById('piLeadNome').value = '';
   document.getElementById('piDeadline').value = '';
   document.getElementById('piObs').value      = '';
@@ -1844,7 +2200,13 @@ function onPlanChange() {
   hidden.value   = `${planName} — ${fmt(discounted)} (${pct}% off)`;
 }
 
-window.addEventListener('DOMContentLoaded', () => { onPlanChange(); });
+window.addEventListener('DOMContentLoaded', () => {
+  onPlanChange();
+  // Start in call mode since Gerar is the default active screen
+  _setCallMode(true);
+  // Trigger the intelligence skeleton on initial load
+  resetOutput();
+});
 
 // ── Char Counter ───────────────────────────────────────────────────────────
 function updateCharCount() {
@@ -1916,6 +2278,7 @@ async function gen() {
   document.getElementById('cbtn').style.display='none';
   document.getElementById('resultadoBar').style.display='none';
   document.getElementById('abTabWrap').style.display='none';
+  document.getElementById('quickActions').style.display='none';
   showLoad();
 
   // Vincula proposta ao script aberto (se houver)
@@ -2034,26 +2397,85 @@ function switchAB(variant) {
 
 // ── Loading ────────────────────────────────────────────────────────────────
 function showLoad() {
+  const isCallMode = document.querySelector('.main-area')?.classList.contains('call-mode');
   const msgs = abMode
     ? ['Gerando Variante A…','Gerando Variante B em paralelo…','Calculando scores…','Comparando abordagens…']
     : currentMode==='script'
-      ? ['Analisando perfil do lead…','Calculando score de propensão…','Identificando dor principal…','Montando script de fechamento…']
+      ? ['Analisando perfil do lead…','Mapeando dores e objeções…','Calculando probabilidade de fechamento…','Construindo estratégia de abordagem…','Montando script personalizado…']
       : ['Analisando perfil do lead…','Calculando score de propensão…','Estruturando proposta…','Personalizando para o lead…'];
 
-  let i=0;
-  document.getElementById('out').innerHTML = `
-    <div class="estate" style="gap:16px">
-      <div class="spin"></div>
-      <div id="loadMsg" style="font-size:13px;color:var(--muted);transition:opacity .25s">${msgs[0]}</div>
+  const steps = ['Analisando perfil', 'Mapeando objeções', 'Construindo script'];
+  let i=0, step=0;
+
+  if (isCallMode && currentMode === 'script') {
+    document.getElementById('out').innerHTML = `
+    <div class="intel-empty">
+      <div class="intel-header">
+        <div class="intel-pulse" style="animation-duration:.8s"></div>
+        <div class="intel-title" style="color:rgba(240,237,228,.85)">Analisando lead…</div>
+      </div>
+
+      <div class="intel-section" style="border-color:rgba(34,197,94,.2)">
+        <div class="intel-section-label" style="color:rgba(34,197,94,.6)">Status</div>
+        <div id="loadSteps" style="display:flex;flex-direction:column;gap:8px">
+          ${steps.map((s,idx)=>`<div id="lstep${idx}" style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:rgba(240,237,228,${idx===0?.7:.25});transition:all .3s">
+            <span id="lstep${idx}ico" style="width:16px;text-align:center">${idx===0?'⏳':'○'}</span>
+            <span>${s}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Probabilidade de Fechamento</div>
+        <div class="prob-track"><div class="skel skel-bar" style="width:100%;height:100%"></div></div>
+        <div class="prob-label"><span id="loadMsg" style="transition:opacity .25s;color:rgba(34,197,94,.6)">${msgs[0]}</span><span>—</span></div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Perfil do Lead</div>
+        <div class="skel skel-line w-80"></div>
+        <div class="skel skel-line w-60"></div>
+        <div class="skel skel-line w-90"></div>
+      </div>
+
+      <div class="intel-section">
+        <div class="intel-section-label">Objeções Prováveis</div>
+        <div class="skel skel-block"></div>
+      </div>
     </div>`;
-  clearInterval(_loadTimer);
-  _loadTimer = setInterval(()=>{
-    i=(i+1)%msgs.length;
-    const el=document.getElementById('loadMsg');
-    if(!el)return;
-    el.style.opacity='0';
-    setTimeout(()=>{if(el){el.textContent=msgs[i];el.style.opacity='1';}},200);
-  },2200);
+
+    clearInterval(_loadTimer);
+    _loadTimer = setInterval(()=>{
+      i=(i+1)%msgs.length;
+      // advance step indicator
+      const newStep = Math.floor(i * steps.length / msgs.length);
+      if (newStep !== step) {
+        const old = document.getElementById(`lstep${step}`);
+        if (old) { const ico=old.querySelector(`#lstep${step}ico`); if(ico)ico.textContent='✓'; old.style.color='rgba(34,197,94,.6)'; }
+        step = newStep;
+        const cur = document.getElementById(`lstep${step}`);
+        if (cur) { cur.style.color='rgba(240,237,228,.85)'; cur.querySelector(`#lstep${step}ico`).textContent='⏳'; }
+      }
+      const el=document.getElementById('loadMsg');
+      if(!el)return;
+      el.style.opacity='0';
+      setTimeout(()=>{if(el){el.textContent=msgs[i];el.style.opacity='1';}},200);
+    },2200);
+  } else {
+    document.getElementById('out').innerHTML = `
+      <div class="estate" style="gap:16px">
+        <div class="spin"></div>
+        <div id="loadMsg" style="font-size:13px;color:var(--muted);transition:opacity .25s">${msgs[0]}</div>
+      </div>`;
+    clearInterval(_loadTimer);
+    _loadTimer = setInterval(()=>{
+      i=(i+1)%msgs.length;
+      const el=document.getElementById('loadMsg');
+      if(!el)return;
+      el.style.opacity='0';
+      setTimeout(()=>{if(el){el.textContent=msgs[i];el.style.opacity='1';}},200);
+    },2200);
+  }
 }
 
 function clearLoad() { clearInterval(_loadTimer); _loadTimer=null; }
@@ -2087,11 +2509,34 @@ function alertBox(tipo,titulo,texto){
 }
 
 function renderScript(j) {
+  const isCallMode = document.querySelector('.main-area')?.classList.contains('call-mode');
+  // Show quick actions
+  const qa = document.getElementById('quickActions');
+  if (qa && isCallMode) qa.style.display = 'block';
+
   let h=`<div class="script-wrap">`;
   if (j?.etapas?.length) {
-    h+=`<button onclick="openLiveMode()" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#2D5016;border:1px solid #4A7A25;border-radius:9px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:1rem;width:100%;justify-content:center;">▶ Iniciar Modo Ao Vivo</button>`;
+    h+=`<button onclick="openLiveMode()" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:${isCallMode?'rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22C55E':'#2D5016;border:1px solid #4A7A25;color:#fff'};border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:1rem;width:100%;justify-content:center;">▶ Iniciar Modo Ao Vivo</button>`;
   }
-  h+=scoreCard(j.score);
+
+  // Enhanced probability bar in call mode
+  if (isCallMode && j.score?.valor != null) {
+    const v = Math.min(10, Math.max(1, Number(j.score.valor)||0));
+    const pct = Math.round(v * 9.5 + 5); // maps 1-10 → 14-100%
+    const color = v>=8?'#22C55E':v>=5?'#F5C518':'#F87171';
+    const label = v>=8?'Alta — Boas chances de fechar hoje':v>=5?'Média — Necessita de preparo extra':'Baixa — Abordagem cuidadosa necessária';
+    h+=`<div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1rem">
+      <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:rgba(240,237,228,.25);margin-bottom:.65rem;display:flex;align-items:center;gap:6px"><span style="width:3px;height:3px;border-radius:50%;background:#22C55E;opacity:.5;display:inline-block"></span>Probabilidade de Fechamento</div>
+      <div style="display:flex;align-items:baseline;gap:.5rem;margin-bottom:.5rem">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:${color};line-height:1">${pct}%</div>
+        <div style="font-size:11px;color:rgba(240,237,228,.4)">${label}</div>
+      </div>
+      <div class="prob-track"><div class="prob-fill" style="width:${pct}%;background:linear-gradient(90deg,${v>=8?'#16A34A,#22C55E,#4ADE80':v>=5?'#B45309,#D97706,#F5C518':'#991B1B,#DC2626,#F87171'})"></div></div>
+    </div>`;
+  } else {
+    h+=scoreCard(j.score);
+  }
+
   h+=`<h1>Script de ligação — ${esc(j.lead_nome)}</h1><p class="sub">${esc(j.subtitulo)}</p>`;
   (j.alertas_topo||[]).forEach(a=>{h+=alertBox(a.tipo,a.titulo,a.texto);});
   h+=`<div class="s-grid">`;
@@ -2152,6 +2597,60 @@ function renderProposal(j) {
 
   h += `</div>`;
   document.getElementById('out').innerHTML = h;
+}
+
+// ── Quick Refinement ───────────────────────────────────────────────────────
+const QA_LABELS = {
+  mais_agressivo: 'Reescrevendo com mais urgência e pressão…',
+  simplificar:    'Simplificando o script…',
+  foco_preco:     'Reorientando o script para o argumento de preço…',
+  encurtar:       'Encurtando o script para ligação mais rápida…',
+  mais_empatia:   'Adicionando mais empatia e escuta ativa…',
+};
+const QA_INSTRUCTIONS = {
+  mais_agressivo: 'Reescreva o script com tom mais urgente e direto. Use mais senso de urgência, escassez e pressão sutil. Mantenha a estrutura mas torne cada fala mais assertiva e de fechamento.',
+  simplificar:    'Simplifique o script: menos etapas, falas mais curtas e diretas. Mantenha apenas o essencial para fechar. Foco na dor principal do lead.',
+  foco_preco:     'Reescreva o script colocando o argumento de preço/valor como central. Destaque o ROI, a economia, o custo de não anunciar. Trate objeções de preço de forma proativa.',
+  encurtar:       'Encurte o script para uma ligação de no máximo 8 minutos. Elimine etapas dispensáveis, combine falas, vá direto ao ponto. Mantenha a qualidade do fechamento.',
+  mais_empatia:   'Reescreva o script com mais empatia e escuta ativa. Adicione perguntas abertas, validações emocionais, e mostre que o closer entende a situação do lead antes de propor.',
+};
+
+async function quickRefine(type, btn) {
+  if (!currentOutput?.result) return;
+  const btns = document.querySelectorAll('.qa-btn');
+  btns.forEach(b => { b.disabled = true; });
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn) btn.innerHTML = `<span class="qa-spin"></span> Refinando…`;
+
+  const briefing = document.getElementById('sdr').value.trim();
+  const planVal  = document.getElementById('planVal').value.trim() || '3x R$ 399,33';
+  const callTime = document.getElementById('callTime').value;
+
+  try {
+    const res = await fetch('/api/generate', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mode: 'script',
+        closer: selectedCloser?.name || 'Closer',
+        callTime, planVal, briefing,
+        refinement: QA_INSTRUCTIONS[type],
+        strategyA: 'urgencia', strategyB: 'sonho',
+        linkedId: null
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro ao refinar');
+    currentOutput = { id: data.id, result: data.result, mode: 'script',
+                      proposalMsg: null, proposalLeadNome: null };
+    renderScript(data.result);
+    document.getElementById('osub').textContent = `Refinado: ${QA_LABELS[type]?.split('…')[0] || type}`;
+  } catch(e) {
+    // silent fail — restore buttons
+  } finally {
+    btns.forEach(b => { b.disabled = false; });
+    if (btn) btn.innerHTML = originalHTML;
+  }
 }
 
 // ── Follow-up Canal ────────────────────────────────────────────────────────
@@ -4038,6 +4537,7 @@ let _campData = null;
 
 function sbCampanha() {
   sbActivate('sb-campanha');
+  _setCallMode(false);
   document.getElementById('campaignOverlay').style.display = 'flex';
 }
 function closeCampanha() {

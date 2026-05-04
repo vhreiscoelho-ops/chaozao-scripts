@@ -92,13 +92,16 @@ const SCORE_REGRA = `- score: avalie 1-10 (8-10=alta, 5-7=média, 1-4=baixa) com
 - score.alertas: máximo 3, cada um com ação concreta para o closer`;
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
-function scriptPrompt(closer, callTime, planVal, briefing, strategy = null) {
+function scriptPrompt(closer, callTime, planVal, briefing, strategy = null, refinement = null) {
   const stratBlock = strategy && STRATEGIES[strategy]
     ? `\n${STRATEGIES[strategy]}\nTodo o script deve seguir esta abordagem de forma consistente.\n`
     : '';
+  const refinementBlock = refinement
+    ? `\nINSTRUÇÃO DE REFINAMENTO (prioridade máxima):\n${refinement}\nMantenha todos os dados do lead e do plano. Ajuste apenas o tom, estrutura e abordagem conforme instruído.\n`
+    : '';
 
   return `Analise o briefing e retorne SOMENTE o objeto JSON abaixo. Comece com { e termine com }.
-${stratBlock}
+${stratBlock}${refinementBlock}
 DADOS:
 - Closer: ${closer}
 - Horário da call: ${callTime || 'A definir'}
@@ -299,14 +302,15 @@ function saveItem(store, fields) {
 // ─── Route ────────────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   const {
-    mode      = 'script',
-    closer    = 'Closer',
-    callTime  = '',
-    planVal   = '',
-    briefing  = '',
-    strategyA = 'urgencia',
-    strategyB = 'sonho',
-    linkedId  = null    // ID do script ao qual a proposta deve ser vinculada
+    mode       = 'script',
+    closer     = 'Closer',
+    callTime   = '',
+    planVal    = '',
+    briefing   = '',
+    strategyA  = 'urgencia',
+    strategyB  = 'sonho',
+    linkedId   = null,    // ID do script ao qual a proposta deve ser vinculada
+    refinement = null     // Instrução de refinamento rápido (quickRefine)
   } = req.body;
 
   if (!briefing.trim())
@@ -343,7 +347,7 @@ router.post('/', async (req, res) => {
     // ── Modo normal: script ou proposta ───────────────────────────────────────
     const prompt = mode === 'proposal'
       ? proposalPrompt(closer, planVal, briefing)
-      : scriptPrompt(closer, callTime, planVal, briefing);
+      : scriptPrompt(closer, callTime, planVal, briefing, null, refinement || null);
 
     const json = await callClaude(prompt);
 
@@ -359,6 +363,11 @@ router.post('/', async (req, res) => {
         save(store);
         return res.json({ id: target.id, linked: true, result: json });
       }
+    }
+
+    // ── Refinamento: não salva no histórico ──────────────────────────────────
+    if (refinement) {
+      return res.json({ id: null, result: json });
     }
 
     // ── Salva item normal ────────────────────────────────────────────────────
