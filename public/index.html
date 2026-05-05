@@ -1256,10 +1256,11 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
    CENTRAL DO DIA — v2.0
 ══════════════════════════════════════════════════════════════ */
 #cdiaOverlay {
-  position:fixed; inset:0; z-index:500;
+  width:100%; height:100vh;
   background:#080808; color:#F0EDE4;
   display:none; flex-direction:column;
   font-family:'DM Sans',sans-serif; overflow:hidden;
+  flex-shrink:0;
 }
 #cdiaOverlay.open { display:flex !important; }
 
@@ -2025,7 +2026,7 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
 
 <!-- ── MAIN AREA ── -->
 <div class="main-area">
-<div class="container">
+<div class="container" id="mainContainer">
 
   <!-- ── INPUT PANEL ── -->
   <div class="ipanel">
@@ -2378,6 +2379,118 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
     </div>
   </div>
 </div><!-- /container -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     CENTRAL DO DIA — page section (sidebar always visible)
+══════════════════════════════════════════════════════════════ -->
+<div id="cdiaOverlay">
+
+  <!-- Header -->
+  <div class="cdia-header">
+    <div class="cdia-brand">Central<span> do Dia</span></div>
+    <div class="cdia-date" id="cdiaDateLabel"></div>
+    <div class="cdia-closer-tabs" id="cdiaCloserTabs"></div>
+    <div class="cdia-header-right">
+      <button class="cdia-add-btn" onclick="cdiaOpenAdd()">+ Lead</button>
+      <button class="cdia-refresh-btn" onclick="cdiaRefresh()" title="Atualizar">↺</button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="cdia-body">
+    <!-- Main focus area -->
+    <div class="cdia-main" id="cdiaMain">
+      <div class="cdia-empty">
+        <div class="cdia-empty-icon">🎯</div>
+        <h3>Carregando…</h3>
+      </div>
+    </div>
+
+    <!-- Lead list sidebar -->
+    <div class="cdia-sidebar">
+      <div class="cdia-sb-head">
+        <div class="cdia-sb-title">
+          Fila do Dia
+          <span class="cdia-sb-count" id="cdiaSbCount">0</span>
+        </div>
+      </div>
+      <div class="cdia-sb-list" id="cdiaSbList"></div>
+    </div>
+  </div>
+
+  <!-- Post-call overlay -->
+  <div id="cdiaPostCall">
+    <div class="cdiapc-card">
+      <div class="cdiapc-lead-name" id="cdiapcLeadName">Lead</div>
+      <div class="cdiapc-subtitle">Call encerrada — registre o resultado</div>
+      <div class="cdiapc-q">Como foi a call?</div>
+      <div class="cdiapc-options">
+        <button class="cdiapc-opt cdiapc-opt-fechou" onclick="cdiaRegistrarResultado('fechou')">
+          <span class="cdiapc-opt-icon">✅</span> Fechou!
+        </button>
+        <button class="cdiapc-opt cdiapc-opt-followup" onclick="cdiaRegistrarResultado('followup')">
+          <span class="cdiapc-opt-icon">📅</span> Follow-up agendado
+        </button>
+        <button class="cdiapc-opt cdiapc-opt-perdeu" onclick="cdiaRegistrarResultado('perdeu')">
+          <span class="cdiapc-opt-icon">❌</span> Perdeu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Lead modal -->
+  <div class="cdia-modal-overlay" id="cdiaAddOverlay">
+    <div class="cdia-add-card">
+      <div class="cdia-add-title">
+        Adicionar Lead
+        <button class="cdia-add-x" onclick="cdiaCloseAdd()">✕</button>
+      </div>
+      <div class="cdia-ff">
+        <label>Nome do Lead *</label>
+        <input id="cdiaAddName" type="text" placeholder="Ex: João Silva">
+      </div>
+      <div class="cdia-ff-row">
+        <div class="cdia-ff">
+          <label>Plano</label>
+          <input id="cdiaAddPlan" type="text" placeholder="Ex: 3x R$ 399,33">
+        </div>
+        <div class="cdia-ff">
+          <label>Horário</label>
+          <input id="cdiaAddTime" type="text" placeholder="Ex: 14:30">
+        </div>
+      </div>
+      <div class="cdia-ff">
+        <label>Closer</label>
+        <select id="cdiaAddCloser"></select>
+      </div>
+      <div class="cdia-ff">
+        <label>Briefing do SDR *</label>
+        <textarea id="cdiaAddBriefing" rows="5" placeholder="Cole o briefing completo do SDR aqui…"></textarea>
+      </div>
+      <button class="cdia-add-btn-submit" id="cdiaAddSubmit" onclick="cdiaSubmitAdd()">
+        Adicionar à Fila
+      </button>
+    </div>
+  </div>
+
+  <!-- Skip reason modal -->
+  <div class="cdia-modal-overlay" id="cdiaSkipOverlay">
+    <div class="cdia-skip-card">
+      <div class="cdia-skip-title">⏩ Pular este lead</div>
+      <div class="cdia-skip-sub">Por que está pulando?</div>
+      <div class="cdia-skip-reasons">
+        <button class="cdia-skip-reason" data-reason="sem-contato"  onclick="cdiaSelectSkipReason(this)">📵 Não atendeu</button>
+        <button class="cdia-skip-reason" data-reason="ocupado"      onclick="cdiaSelectSkipReason(this)">⏰ Pediu ligar mais tarde</button>
+        <button class="cdia-skip-reason" data-reason="reagendado"   onclick="cdiaSelectSkipReason(this)">📅 Reagendado para outro dia</button>
+        <button class="cdia-skip-reason" data-reason="sem-perfil"   onclick="cdiaSelectSkipReason(this)">❌ Sem perfil</button>
+      </div>
+      <button class="cdia-skip-confirm" id="cdiaSkipConfirmBtn" onclick="cdiaConfirmSkip()">Confirmar e ir ao próximo</button>
+      <button class="cdia-skip-cancel"  onclick="cdiaCloseSkip()">Cancelar</button>
+    </div>
+  </div>
+
+</div><!-- /cdiaOverlay -->
+
 </div><!-- /main-area -->
 
 <!-- ── QUEUE SIDEBAR (mantido oculto para compatibilidade de referências) ── -->
@@ -2661,13 +2774,29 @@ function _setCallMode(on) {
   const ma = document.querySelector('.main-area');
   if (ma) ma.classList.toggle('call-mode', on);
 }
+// Show main container, hide Central do Dia section
+function _showMainContainer() {
+  const cdia = document.getElementById('cdiaOverlay');
+  const cont = document.getElementById('mainContainer');
+  if (cdia) cdia.classList.remove('open');
+  if (cont) cont.style.display = '';
+}
+// Hide main container, show Central do Dia section
+function _showCdia() {
+  const cdia = document.getElementById('cdiaOverlay');
+  const cont = document.getElementById('mainContainer');
+  if (cont) cont.style.display = 'none';
+  if (cdia) cdia.classList.add('open');
+}
 function sbHoje() {
   sbActivate('sb-hoje');
+  _showMainContainer();
   _setCallMode(false);
   openQueue();
 }
 function sbGerar() {
   sbActivate('sb-gerar');
+  _showMainContainer();
   _setCallMode(true);
   if (!['script','proposal','followup'].includes(currentMode)) setMode('script');
   // Ensure skeleton shows when entering Modo Call fresh
@@ -2675,16 +2804,19 @@ function sbGerar() {
 }
 function sbLeads() {
   sbActivate('sb-leads');
+  _showMainContainer();
   _setCallMode(false);
   openFicha();
 }
 function sbAnalise() {
   sbActivate('sb-analise');
+  _showMainContainer();
   _setCallMode(false);
   openDashboard();
 }
 function sbConfig() {
   sbActivate('sb-config');
+  _showMainContainer();
   _setCallMode(false);
   openSettings();
 }
@@ -5268,6 +5400,7 @@ let _campData = null;
 
 function sbCampanha() {
   sbActivate('sb-campanha');
+  _showMainContainer();
   _setCallMode(false);
   document.getElementById('campaignOverlay').style.display = 'flex';
 }
@@ -5739,8 +5872,7 @@ function sbCentralDia() {
 }
 
 async function openCentralDia() {
-  const overlay = document.getElementById('cdiaOverlay');
-  overlay.classList.add('open');
+  _showCdia();
 
   // Date label
   const now = new Date();
@@ -5760,7 +5892,7 @@ async function openCentralDia() {
 }
 
 function closeCentralDia() {
-  document.getElementById('cdiaOverlay').classList.remove('open');
+  _showMainContainer();
   _cdiaStopTimer();
 }
 
@@ -6310,8 +6442,7 @@ document.addEventListener('keydown', e => {
       { cdiaCloseSkip(); e.preventDefault(); }
     else if (document.getElementById('cdiaAddOverlay')?.classList.contains('open'))
       { cdiaCloseAdd(); e.preventDefault(); }
-    else if (document.getElementById('cdiaOverlay')?.classList.contains('open'))
-      { closeCentralDia(); e.preventDefault(); }
+    // Central do Dia is now a permanent page section — navigate via sidebar
   }
 });
 </script>
@@ -6347,118 +6478,6 @@ document.addEventListener('keydown', e => {
     </div>
     <div id="liveObjBody"></div>
   </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════
-     CENTRAL DO DIA OVERLAY — v2.0
-══════════════════════════════════════════════════════════════ -->
-<div id="cdiaOverlay">
-
-  <!-- Header -->
-  <div class="cdia-header">
-    <div class="cdia-brand">Central<span> do Dia</span></div>
-    <div class="cdia-date" id="cdiaDateLabel"></div>
-    <div class="cdia-closer-tabs" id="cdiaCloserTabs"></div>
-    <div class="cdia-header-right">
-      <button class="cdia-add-btn" onclick="cdiaOpenAdd()">+ Lead</button>
-      <button class="cdia-refresh-btn" onclick="cdiaRefresh()" title="Atualizar">↺</button>
-      <button class="cdia-close-btn" onclick="closeCentralDia()">✕ Fechar</button>
-    </div>
-  </div>
-
-  <!-- Body -->
-  <div class="cdia-body">
-    <!-- Main focus area -->
-    <div class="cdia-main" id="cdiaMain">
-      <div class="cdia-empty">
-        <div class="cdia-empty-icon">🎯</div>
-        <h3>Carregando…</h3>
-      </div>
-    </div>
-
-    <!-- Lead list sidebar -->
-    <div class="cdia-sidebar">
-      <div class="cdia-sb-head">
-        <div class="cdia-sb-title">
-          Fila do Dia
-          <span class="cdia-sb-count" id="cdiaSbCount">0</span>
-        </div>
-      </div>
-      <div class="cdia-sb-list" id="cdiaSbList"></div>
-    </div>
-  </div>
-
-  <!-- Post-call overlay -->
-  <div id="cdiaPostCall">
-    <div class="cdiapc-card">
-      <div class="cdiapc-lead-name" id="cdiapcLeadName">Lead</div>
-      <div class="cdiapc-subtitle">Call encerrada — registre o resultado</div>
-      <div class="cdiapc-q">Como foi a call?</div>
-      <div class="cdiapc-options">
-        <button class="cdiapc-opt cdiapc-opt-fechou" onclick="cdiaRegistrarResultado('fechou')">
-          <span class="cdiapc-opt-icon">✅</span> Fechou!
-        </button>
-        <button class="cdiapc-opt cdiapc-opt-followup" onclick="cdiaRegistrarResultado('followup')">
-          <span class="cdiapc-opt-icon">📅</span> Follow-up agendado
-        </button>
-        <button class="cdiapc-opt cdiapc-opt-perdeu" onclick="cdiaRegistrarResultado('perdeu')">
-          <span class="cdiapc-opt-icon">❌</span> Perdeu
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Lead modal -->
-  <div class="cdia-modal-overlay" id="cdiaAddOverlay">
-    <div class="cdia-add-card">
-      <div class="cdia-add-title">
-        Adicionar Lead
-        <button class="cdia-add-x" onclick="cdiaCloseAdd()">✕</button>
-      </div>
-      <div class="cdia-ff">
-        <label>Nome do Lead *</label>
-        <input id="cdiaAddName" type="text" placeholder="Ex: João Silva">
-      </div>
-      <div class="cdia-ff-row">
-        <div class="cdia-ff">
-          <label>Plano</label>
-          <input id="cdiaAddPlan" type="text" placeholder="Ex: 3x R$ 399,33">
-        </div>
-        <div class="cdia-ff">
-          <label>Horário</label>
-          <input id="cdiaAddTime" type="text" placeholder="Ex: 14:30">
-        </div>
-      </div>
-      <div class="cdia-ff">
-        <label>Closer</label>
-        <select id="cdiaAddCloser"></select>
-      </div>
-      <div class="cdia-ff">
-        <label>Briefing do SDR *</label>
-        <textarea id="cdiaAddBriefing" rows="5" placeholder="Cole o briefing completo do SDR aqui…"></textarea>
-      </div>
-      <button class="cdia-add-btn-submit" id="cdiaAddSubmit" onclick="cdiaSubmitAdd()">
-        Adicionar à Fila
-      </button>
-    </div>
-  </div>
-
-  <!-- Skip reason modal -->
-  <div class="cdia-modal-overlay" id="cdiaSkipOverlay">
-    <div class="cdia-skip-card">
-      <div class="cdia-skip-title">⏩ Pular este lead</div>
-      <div class="cdia-skip-sub">Por que está pulando?</div>
-      <div class="cdia-skip-reasons">
-        <button class="cdia-skip-reason" data-reason="sem-contato"  onclick="cdiaSelectSkipReason(this)">📵 Não atendeu</button>
-        <button class="cdia-skip-reason" data-reason="ocupado"      onclick="cdiaSelectSkipReason(this)">⏰ Pediu ligar mais tarde</button>
-        <button class="cdia-skip-reason" data-reason="reagendado"   onclick="cdiaSelectSkipReason(this)">📅 Reagendado para outro dia</button>
-        <button class="cdia-skip-reason" data-reason="sem-perfil"   onclick="cdiaSelectSkipReason(this)">❌ Sem perfil</button>
-      </div>
-      <button class="cdia-skip-confirm" id="cdiaSkipConfirmBtn" onclick="cdiaConfirmSkip()">Confirmar e ir ao próximo</button>
-      <button class="cdia-skip-cancel"  onclick="cdiaCloseSkip()">Cancelar</button>
-    </div>
-  </div>
-
 </div>
 
 <!-- ── CAMPANHA OVERLAY ── -->
