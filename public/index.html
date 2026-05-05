@@ -1652,6 +1652,321 @@ input:focus, textarea:focus { border-color:var(--accent-l); box-shadow:0 0 0 3px
   .cdia-sidebar { display:none; }
   .cdia-ff-row { grid-template-columns:1fr; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   CALL MODE OVERLAY — v2.0
+══════════════════════════════════════════════════════════════ */
+#callModeOverlay {
+  position:fixed; inset:0; z-index:600;
+  background:#0A0A0A; color:#F0EDE4;
+  display:none; flex-direction:column;
+  font-family:'DM Sans',sans-serif; overflow:hidden;
+}
+#callModeOverlay.open { display:flex !important; }
+
+/* ── CM Header ── */
+.cm-header {
+  height:56px; background:#111; border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex; align-items:center; gap:12px; padding:0 1.1rem;
+  flex-shrink:0;
+}
+.cm-header-lead { flex:1; min-width:0; }
+.cm-lead-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:rgba(240,237,228,.28); margin-bottom:0; }
+.cm-lead-name { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+.cm-timer {
+  font-family:'Syne',sans-serif; font-weight:700; font-size:22px;
+  color:#22C55E; letter-spacing:.03em; min-width:70px; text-align:center;
+  flex-shrink:0; transition:color .5s;
+}
+.cm-timer.warn  { color:#F59E0B; }
+.cm-timer.alert { color:#EF4444; animation:timerPulse 1s ease-in-out infinite; }
+.cm-likelihood-tag {
+  font-size:11px; font-weight:700; padding:3px 11px; border-radius:20px;
+  background:rgba(34,197,94,.1); color:#22C55E; border:1px solid rgba(34,197,94,.2);
+  flex-shrink:0; white-space:nowrap;
+}
+.cm-end-btn {
+  padding:8px 16px; border-radius:9px; border:1px solid rgba(239,68,68,.3);
+  background:rgba(239,68,68,.08); color:#F87171;
+  font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer; transition:all .18s; white-space:nowrap; flex-shrink:0;
+}
+.cm-end-btn:hover { background:rgba(239,68,68,.18); border-color:#EF4444; color:#fff; }
+
+/* ── CM Body ── */
+.cm-body { flex:1; display:flex; min-height:0; overflow:hidden; position:relative; }
+
+/* ── Left Column ── */
+.cm-left {
+  flex:0 0 64%; max-width:64%; display:flex; flex-direction:column;
+  overflow-y:auto; padding:.8rem 1rem .8rem 1.25rem;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.06) transparent;
+  gap:.65rem;
+}
+.cm-left::-webkit-scrollbar { width:4px; }
+.cm-left::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+
+/* ── Adaptive Guide Banner ── */
+.cm-guide-banner {
+  border-radius:10px; padding:.6rem .9rem; font-size:13px;
+  line-height:1.5; border:1px solid; display:none; flex-shrink:0;
+}
+.cm-guide-banner.show { display:block; animation:guideIn .2s ease-out; }
+@keyframes guideIn { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+.cm-guide-banner.guide-good     { background:rgba(34,197,94,.07); border-color:rgba(34,197,94,.22); color:#4ADE80; }
+.cm-guide-banner.guide-confused { background:rgba(245,158,11,.07); border-color:rgba(245,158,11,.22); color:#FCD34D; }
+.cm-guide-banner.guide-resist   { background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.22); color:#FCA5A5; }
+.cm-guide-banner.guide-hot      { background:rgba(249,115,22,.07); border-color:rgba(249,115,22,.22); color:#FB923C; }
+.cm-guide-banner.guide-time     { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.3); color:#FCA5A5; }
+.cm-guide-banner.guide-obj      { background:rgba(96,165,250,.07); border-color:rgba(96,165,250,.22); color:#93C5FD; }
+.cm-guide-banner.guide-boost    { background:rgba(34,197,94,.1); border-color:#22C55E; color:#4ADE80; }
+.cm-guide-title { font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; margin-bottom:3px; opacity:.7; }
+.cm-guide-text { font-size:13px; line-height:1.5; white-space:pre-line; }
+.cm-guide-skip-btn {
+  margin-top:.5rem; padding:5px 12px; border-radius:7px;
+  background:rgba(249,115,22,.12); border:1px solid rgba(249,115,22,.25);
+  color:#FB923C; font-size:12px; cursor:pointer; font-family:'Syne',sans-serif;
+  font-weight:700; transition:all .15s; display:none;
+}
+.cm-guide-skip-btn:hover { background:rgba(249,115,22,.22); border-color:#FB923C; }
+
+/* ── Step Dots ── */
+.cm-step-dots-wrap { display:flex; align-items:center; gap:7px; flex-shrink:0; padding:0 .1rem; }
+.cm-step-dot {
+  height:6px; border-radius:3px; transition:all .3s cubic-bezier(.4,0,.2,1);
+  cursor:default;
+}
+.cm-step-dot.done   { background:#22C55E; width:16px; }
+.cm-step-dot.active { background:#22C55E; width:28px; box-shadow:0 0 8px rgba(34,197,94,.4); }
+.cm-step-dot.future { background:rgba(255,255,255,.1); width:6px; }
+
+/* ── Step Card ── */
+.cm-step-card {
+  background:#141414; border:1px solid rgba(255,255,255,.09);
+  border-radius:14px; padding:1rem 1.15rem; flex-shrink:0;
+}
+.cm-step-header { display:flex; align-items:center; gap:9px; margin-bottom:.7rem; }
+.cm-step-icon { font-size:20px; flex-shrink:0; }
+.cm-step-title-wrap { flex:1; min-width:0; }
+.cm-step-num { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:rgba(240,237,228,.28); }
+.cm-step-name { font-family:'Syne',sans-serif; font-weight:800; font-size:18px; color:#fff; letter-spacing:-.015em; line-height:1.15; }
+.cm-step-fala {
+  font-size:15.5px; color:rgba(240,237,228,.87); line-height:1.65;
+  font-style:italic; padding:.8rem 1rem;
+  background:rgba(255,255,255,.03); border-radius:10px;
+  border-left:3px solid rgba(34,197,94,.35); margin-bottom:.8rem;
+  min-height:76px;
+}
+.cm-step-fala.fala-anim { animation:falaIn .28s ease-out; }
+@keyframes falaIn { from{opacity:0;transform:translateX(7px)} to{opacity:1;transform:translateX(0)} }
+.cm-step-tip {
+  font-size:12px; color:rgba(240,237,228,.35); line-height:1.5;
+  padding:.4rem .65rem; background:rgba(255,255,255,.02); border-radius:7px;
+  margin-bottom:.8rem; display:none;
+}
+.cm-step-tip.show { display:block; }
+
+/* ── Step Actions ── */
+.cm-step-actions { display:flex; gap:8px; }
+.cm-btn-feito {
+  flex:1; padding:13px; border-radius:11px; border:none;
+  background:linear-gradient(135deg,#22C55E,#16A34A); color:#0B1F10;
+  font-family:'Syne',sans-serif; font-weight:800; font-size:14px;
+  cursor:pointer; transition:all .18s; display:flex; align-items:center;
+  justify-content:center; gap:6px;
+}
+.cm-btn-feito:hover { background:linear-gradient(135deg,#16A34A,#15803D); box-shadow:0 4px 20px rgba(34,197,94,.3); transform:translateY(-1px); }
+.cm-btn-feito:active { transform:scale(.98); }
+.cm-btn-pular {
+  padding:13px 18px; border-radius:11px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09);
+  color:rgba(240,237,228,.5); font-family:'DM Sans',sans-serif;
+  font-size:13px; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.cm-btn-pular:hover { background:rgba(255,255,255,.1); color:#fff; }
+
+/* ── Next Step Preview ── */
+.cm-next-preview {
+  height:68px; flex-shrink:0;
+  border:1px solid rgba(255,255,255,.05); border-radius:11px;
+  padding:.55rem .85rem; display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.015); opacity:.45; overflow:hidden;
+}
+.cm-next-preview.cm-done { opacity:.2; }
+.cm-next-icon { font-size:15px; flex-shrink:0; }
+.cm-next-wrap { flex:1; min-width:0; }
+.cm-next-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:rgba(240,237,228,.3); }
+.cm-next-title { font-size:12.5px; color:rgba(240,237,228,.5); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cm-next-fala  { font-size:11.5px; color:rgba(240,237,228,.32); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-style:italic; margin-top:1px; }
+
+/* ── Right Column ── */
+.cm-right {
+  flex:0 0 36%; max-width:36%;
+  border-left:1px solid rgba(255,255,255,.07);
+  display:flex; flex-direction:column; overflow:hidden;
+  background:#0C0C0C;
+}
+.cm-right-section { padding:.6rem .85rem; border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0; }
+.cm-section-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:rgba(240,237,228,.22); margin-bottom:.45rem; }
+
+/* ── Markers Grid ── */
+.cm-markers-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.cm-marker-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; padding:10px 5px; border-radius:10px;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  cursor:pointer; font-family:'DM Sans',sans-serif;
+  color:rgba(240,237,228,.5); transition:all .12s; position:relative;
+}
+.cm-marker-btn:hover { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.14); color:#fff; }
+.cm-mk-emoji { font-size:19px; }
+.cm-mk-label { font-size:10px; font-weight:500; }
+.cm-mk-count { position:absolute; top:4px; right:7px; font-size:9px; font-weight:700; color:rgba(255,255,255,.28); }
+.cm-marker-btn.mk-good.active    { background:rgba(34,197,94,.1); border-color:#22C55E; color:#4ADE80; }
+.cm-marker-btn.mk-confused.active { background:rgba(245,158,11,.1); border-color:#F59E0B; color:#FCD34D; }
+.cm-marker-btn.mk-resist.active  { background:rgba(239,68,68,.1); border-color:#EF4444; color:#FCA5A5; }
+.cm-marker-btn.mk-hot.active     { background:rgba(249,115,22,.1); border-color:#FB923C; color:#FDBA74; }
+.cm-marker-feedback { font-size:11px; color:rgba(240,237,228,.35); margin-top:.35rem; min-height:15px; text-align:center; transition:opacity .4s; }
+
+/* ── Quick Notes ── */
+.cm-notes-section {
+  flex:1; display:flex; flex-direction:column; padding:.6rem .85rem;
+  gap:.4rem; min-height:0; overflow:hidden;
+}
+.cm-notes-input {
+  flex:1; background:#141414; border:1px solid rgba(255,255,255,.08);
+  border-radius:9px; padding:.6rem .8rem; font-family:'DM Sans',sans-serif;
+  font-size:12.5px; color:#F0EDE4; resize:none; outline:none;
+  min-height:0; transition:border-color .15s;
+  scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.07) transparent;
+}
+.cm-notes-input:focus { border-color:rgba(34,197,94,.35); }
+.cm-notes-input::placeholder { color:rgba(240,237,228,.18); }
+
+/* ── Objection Float Button ── */
+.cm-obj-float-btn {
+  margin:.4rem .85rem .6rem;
+  padding:9px; border-radius:10px; flex-shrink:0;
+  background:rgba(96,165,250,.06); border:1px solid rgba(96,165,250,.15);
+  color:#93C5FD; font-family:'Syne',sans-serif; font-weight:700;
+  font-size:12.5px; cursor:pointer; transition:all .15s;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.cm-obj-float-btn:hover { background:rgba(96,165,250,.12); border-color:#60A5FA; }
+.cm-obj-float-btn.cm-obj-open { background:rgba(96,165,250,.15); border-color:#60A5FA; color:#fff; }
+
+/* ── Objection Panel (slide from right) ── */
+#cmObjPanel {
+  position:absolute; top:0; right:0; bottom:0;
+  width:min(400px, 90%); z-index:10;
+  background:#111; border-left:1px solid rgba(96,165,250,.2);
+  display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform .25s cubic-bezier(.4,0,.2,1);
+}
+#cmObjPanel.open { transform:translateX(0); }
+.cm-obj-panel-header {
+  padding:.7rem 1rem; border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex; align-items:center; gap:8px; flex-shrink:0;
+}
+.cm-obj-panel-title { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#fff; flex:1; }
+.cm-obj-panel-close { background:none; border:none; color:rgba(240,237,228,.35); cursor:pointer; font-size:18px; padding:0; line-height:1; }
+.cm-obj-panel-close:hover { color:#fff; }
+.cm-obj-panel-body { flex:1; overflow-y:auto; padding:.65rem; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.07) transparent; }
+.cm-obj-item { background:#1A1A1A; border:1px solid rgba(255,255,255,.07); border-radius:10px; padding:.7rem .85rem; margin-bottom:.45rem; }
+.cm-obj-trigger { font-size:11px; color:rgba(240,237,228,.4); font-style:italic; margin-bottom:.4rem; padding-bottom:.3rem; border-bottom:.5px solid rgba(255,255,255,.06); }
+.cm-obj-response { font-size:13px; color:rgba(240,237,228,.78); line-height:1.6; }
+
+/* ── End Call Bottom Sheet ── */
+#cmEndSheet {
+  position:absolute; inset:0; z-index:20;
+  background:rgba(0,0,0,.72); backdrop-filter:blur(8px);
+  display:none; align-items:flex-end; justify-content:center;
+}
+#cmEndSheet.open { display:flex; animation:fadeIn .18s ease-out; }
+.cm-end-sheet-card {
+  background:#161616; border:1px solid rgba(255,255,255,.1);
+  border-radius:20px 20px 0 0; padding:1.4rem 1.4rem 1.6rem;
+  width:100%; max-width:520px;
+  animation:sheetIn .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes sheetIn { from{transform:translateY(36px);opacity:0} to{transform:translateY(0);opacity:1} }
+.cm-sheet-title { font-family:'Syne',sans-serif; font-weight:800; font-size:17px; color:#fff; margin-bottom:.25rem; }
+.cm-sheet-sub { font-size:12px; color:rgba(240,237,228,.38); margin-bottom:1.2rem; }
+.cm-outcome-btns { display:flex; flex-direction:column; gap:8px; }
+.cm-outcome-btn {
+  padding:13px 15px; border-radius:12px; border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04); cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all .15s; display:flex; align-items:center; gap:10px; color:#F0EDE4;
+  text-align:left; width:100%;
+}
+.cm-outcome-btn:hover { background:rgba(255,255,255,.08); }
+.cm-outcome-fechou:hover   { background:rgba(8,80,65,.25); border-color:#22C55E; color:#4ADE80; }
+.cm-outcome-followup:hover { background:rgba(12,68,124,.25); border-color:#60A5FA; color:#93C5FD; }
+.cm-outcome-perdeu:hover   { background:rgba(120,30,30,.25); border-color:#EF4444; color:#FCA5A5; }
+.cm-outcome-icon { font-size:20px; flex-shrink:0; }
+.cm-outcome-detail { flex:1; }
+.cm-outcome-label { font-size:14px; font-weight:700; }
+.cm-outcome-hint { font-size:11px; color:rgba(240,237,228,.38); margin-top:1px; }
+.cm-back-btn { background:none; border:none; color:rgba(240,237,228,.35); font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:4px; padding:0; margin-bottom:.9rem; }
+.cm-back-btn:hover { color:#fff; }
+.cm-detail-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:rgba(240,237,228,.3); margin-bottom:5px; margin-top:.75rem; }
+.cm-detail-label:first-child { margin-top:0; }
+.cm-detail-input {
+  width:100%; background:#1C1C1C; border:1px solid rgba(255,255,255,.1);
+  border-radius:8px; padding:9px 11px; font-family:'DM Sans',sans-serif;
+  font-size:13px; color:#F0EDE4; outline:none; box-sizing:border-box;
+  transition:border-color .15s;
+}
+.cm-detail-input:focus { border-color:#22C55E; }
+.cm-detail-select {
+  width:100%; background:#1C1C1C; border:1px solid rgba(255,255,255,.1);
+  border-radius:8px; padding:9px 11px; font-family:'DM Sans',sans-serif;
+  font-size:13px; color:#F0EDE4; outline:none; cursor:pointer;
+  transition:border-color .15s;
+}
+.cm-detail-select:focus { border-color:#22C55E; }
+.cm-save-btn {
+  width:100%; margin-top:.9rem; padding:13px; background:#22C55E; color:#0B1F10;
+  border:none; border-radius:11px; font-family:'Syne',sans-serif;
+  font-weight:800; font-size:14px; cursor:pointer; transition:all .2s;
+}
+.cm-save-btn:hover { background:#16A34A; }
+.cm-save-btn:disabled { opacity:.5; cursor:not-allowed; }
+#cmSheetStateC { display:none; text-align:center; padding:.8rem 0 .2rem; }
+.cm-saving-icon { font-size:36px; margin-bottom:.4rem; animation:savePop .3s ease-out; }
+@keyframes savePop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+.cm-saving-text { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:#4ADE80; }
+.cm-saving-sub { font-size:12px; color:rgba(240,237,228,.38); margin-top:.25rem; }
+
+/* ── Friction Dialog ── */
+#cmFrictionDialog {
+  position:absolute; inset:0; z-index:25;
+  background:rgba(0,0,0,.78); backdrop-filter:blur(6px);
+  display:none; align-items:center; justify-content:center; padding:1rem;
+}
+#cmFrictionDialog.open { display:flex; animation:fadeIn .18s ease-out; }
+.cm-friction-card {
+  background:#1A1A1A; border:1px solid rgba(239,68,68,.22);
+  border-radius:16px; padding:1.5rem; max-width:340px; width:100%;
+  text-align:center;
+}
+.cm-friction-icon { font-size:28px; margin-bottom:.45rem; }
+.cm-friction-title { font-family:'Syne',sans-serif; font-weight:700; font-size:15px; color:#fff; margin-bottom:.3rem; }
+.cm-friction-sub { font-size:13px; color:rgba(240,237,228,.5); margin-bottom:1.1rem; line-height:1.55; }
+.cm-friction-btns { display:flex; flex-direction:column; gap:7px; }
+.cm-friction-continue {
+  padding:11px; border-radius:10px; background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.3); color:#4ADE80;
+  font-family:'Syne',sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer; transition:all .15s;
+}
+.cm-friction-continue:hover { background:rgba(34,197,94,.18); }
+.cm-friction-end {
+  padding:11px; border-radius:10px; background:transparent;
+  border:1px solid rgba(255,255,255,.09); color:rgba(240,237,228,.4);
+  font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all .15s;
+}
+.cm-friction-end:hover { border-color:rgba(239,68,68,.3); color:#FCA5A5; }
 </style>
 </head>
 <body>
@@ -5721,18 +6036,17 @@ function cdiaStartCall() {
   const lead = cdia.leads[cdia.activeIdx];
   if (!lead) return;
   lead.status = 'calling';
-  cdia.callSeconds = 0;
-  cdia.callTimer = setInterval(_cdiaTickTimer, 1000);
   fetch(`/api/queue/${lead.id}`, {
     method:'PATCH', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ status:'calling' })
   }).catch(() => {});
+  // Update cdia card button state
   const btn   = document.getElementById('cdiaCallBtn');
   const timer = document.getElementById('cdiaCallTimer');
   if (btn)   { btn.textContent = '⏹ ENCERRAR CALL'; btn.classList.add('calling'); }
   if (timer) timer.classList.add('on');
-  const nowEl = document.getElementById('cdiaNowText');
-  if (nowEl) nowEl.textContent = _cdiaGetNowText({ ...lead, status:'calling' });
+  // Launch full Call Mode overlay
+  callModeOpen(lead);
 }
 
 function cdiaEndCall() {
@@ -5990,6 +6304,8 @@ async function cdiaSubmitAdd() {
 // Close modals with Escape
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    // Don't handle if Call Mode is in front
+    if (document.getElementById('callModeOverlay')?.classList.contains('open')) return;
     if (document.getElementById('cdiaSkipOverlay')?.classList.contains('open'))
       { cdiaCloseSkip(); e.preventDefault(); }
     else if (document.getElementById('cdiaAddOverlay')?.classList.contains('open'))
@@ -6199,6 +6515,724 @@ document.addEventListener('keydown', e => {
 
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CALL MODE OVERLAY — v2.0
+══════════════════════════════════════════════════════════════ -->
+<div id="callModeOverlay">
+
+  <!-- Header -->
+  <div class="cm-header">
+    <div class="cm-header-lead">
+      <div class="cm-lead-label">EM CALL</div>
+      <div class="cm-lead-name" id="cmLeadName">—</div>
+    </div>
+    <div class="cm-timer" id="cmTimer">00:00</div>
+    <div class="cm-likelihood-tag" id="cmLikelihood">—</div>
+    <button class="cm-end-btn" onclick="cmRequestEnd()">⏹ ENCERRAR</button>
+  </div>
+
+  <!-- Body -->
+  <div class="cm-body">
+
+    <!-- LEFT: Script execution -->
+    <div class="cm-left" id="cmLeft">
+
+      <!-- Adaptive guide banner -->
+      <div class="cm-guide-banner" id="cmGuideBanner">
+        <div class="cm-guide-title" id="cmGuideTitle"></div>
+        <div class="cm-guide-text"  id="cmGuideText"></div>
+        <button class="cm-guide-skip-btn" id="cmGuideSkipBtn" onclick="cmSkipToClosing()">
+          🏆 Ir para Fechamento agora
+        </button>
+      </div>
+
+      <!-- Step progress dots -->
+      <div class="cm-step-dots-wrap">
+        <div class="cm-step-dots" id="cmStepDots"></div>
+      </div>
+
+      <!-- Active step card -->
+      <div class="cm-step-card" id="cmStepCard">
+        <div class="cm-step-header">
+          <div class="cm-step-icon" id="cmStepIcon">🎯</div>
+          <div class="cm-step-title-wrap">
+            <div class="cm-step-num"  id="cmStepNum">Passo 1 de 4</div>
+            <div class="cm-step-name" id="cmStepName">Abertura</div>
+          </div>
+        </div>
+        <div class="cm-step-fala" id="cmStepFala">Carregando…</div>
+        <div class="cm-step-tip"  id="cmStepTip"></div>
+        <div class="cm-step-actions">
+          <button class="cm-btn-feito" onclick="cmStepFeito()">✓ FEITO</button>
+          <button class="cm-btn-pular" onclick="cmStepPular()">Pular →</button>
+        </div>
+      </div>
+
+      <!-- Next step preview -->
+      <div class="cm-next-preview" id="cmNextPreview">
+        <div class="cm-next-icon" id="cmNextIcon">🔍</div>
+        <div class="cm-next-wrap">
+          <div class="cm-next-label">A SEGUIR</div>
+          <div class="cm-next-title" id="cmNextTitle">—</div>
+          <div class="cm-next-fala"  id="cmNextFala">—</div>
+        </div>
+      </div>
+
+    </div><!-- end cm-left -->
+
+    <!-- RIGHT: Controls -->
+    <div class="cm-right">
+
+      <!-- Markers -->
+      <div class="cm-right-section">
+        <div class="cm-section-label">Sinais do Lead</div>
+        <div class="cm-markers-grid">
+          <button class="cm-marker-btn mk-good"     onclick="cmTapMarker('good')"    id="cmMkGood">
+            <span class="cm-mk-count" id="cmMkGoodCount">0</span>
+            <span class="cm-mk-emoji">👍</span>
+            <span class="cm-mk-label">Positivo</span>
+          </button>
+          <button class="cm-marker-btn mk-confused"  onclick="cmTapMarker('confused')" id="cmMkConfused">
+            <span class="cm-mk-count" id="cmMkConfusedCount">0</span>
+            <span class="cm-mk-emoji">🤔</span>
+            <span class="cm-mk-label">Confuso</span>
+          </button>
+          <button class="cm-marker-btn mk-resist"   onclick="cmTapMarker('resist')"  id="cmMkResist">
+            <span class="cm-mk-count" id="cmMkResistCount">0</span>
+            <span class="cm-mk-emoji">🚫</span>
+            <span class="cm-mk-label">Resistência</span>
+          </button>
+          <button class="cm-marker-btn mk-hot"      onclick="cmTapMarker('hot')"     id="cmMkHot">
+            <span class="cm-mk-count" id="cmMkHotCount">0</span>
+            <span class="cm-mk-emoji">🔥</span>
+            <span class="cm-mk-label">Quente</span>
+          </button>
+        </div>
+        <div class="cm-marker-feedback" id="cmMarkerFeedback"></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="cm-notes-section">
+        <div class="cm-section-label">Notas rápidas</div>
+        <textarea class="cm-notes-input" id="cmNotesInput"
+          placeholder="Anote objeções, dores, pontos-chave…"
+          oninput="callMode.notes=this.value"></textarea>
+      </div>
+
+      <!-- Objection button -->
+      <button class="cm-obj-float-btn" id="cmObjFloatBtn" onclick="cmToggleObjPanel()">
+        ⚡ Objeções <span id="cmObjCount"></span>
+      </button>
+
+    </div><!-- end cm-right -->
+
+    <!-- Objection slide panel -->
+    <div id="cmObjPanel">
+      <div class="cm-obj-panel-header">
+        <div class="cm-obj-panel-title">⚡ Objeções & Respostas</div>
+        <button class="cm-obj-panel-close" onclick="cmToggleObjPanel()">✕</button>
+      </div>
+      <div class="cm-obj-panel-body" id="cmObjPanelBody"></div>
+    </div>
+
+    <!-- End call bottom sheet -->
+    <div id="cmEndSheet">
+      <div class="cm-end-sheet-card">
+
+        <!-- State A: outcome selection -->
+        <div id="cmSheetStateA">
+          <div class="cm-sheet-title" id="cmSheetLeadName">—</div>
+          <div class="cm-sheet-sub">Call encerrada — como foi?</div>
+          <div class="cm-outcome-btns">
+            <button class="cm-outcome-btn cm-outcome-fechou"   onclick="cmSelectOutcome('fechou')">
+              <span class="cm-outcome-icon">✅</span>
+              <div class="cm-outcome-detail">
+                <div class="cm-outcome-label">Fechou!</div>
+                <div class="cm-outcome-hint">Contrato ou pagamento confirmado</div>
+              </div>
+            </button>
+            <button class="cm-outcome-btn cm-outcome-followup" onclick="cmSelectOutcome('followup')">
+              <span class="cm-outcome-icon">📅</span>
+              <div class="cm-outcome-detail">
+                <div class="cm-outcome-label">Follow-up agendado</div>
+                <div class="cm-outcome-hint">Interessado — próximo contato marcado</div>
+              </div>
+            </button>
+            <button class="cm-outcome-btn cm-outcome-perdeu"   onclick="cmSelectOutcome('perdeu')">
+              <span class="cm-outcome-icon">❌</span>
+              <div class="cm-outcome-detail">
+                <div class="cm-outcome-label">Perdeu</div>
+                <div class="cm-outcome-hint">Desistiu ou sem perfil</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- State B: outcome details -->
+        <div id="cmSheetStateB" style="display:none">
+          <button class="cm-back-btn" onclick="cmSheetBack()">← Voltar</button>
+          <div id="cmSheetBContent"></div>
+          <button class="cm-save-btn" id="cmSaveBtn" onclick="cmSaveOutcome()">
+            Salvar e próximo lead →
+          </button>
+        </div>
+
+        <!-- State C: saved confirmation -->
+        <div id="cmSheetStateC">
+          <div class="cm-saving-icon" id="cmSavingIcon">✅</div>
+          <div class="cm-saving-text" id="cmSavingText">Resultado salvo!</div>
+          <div class="cm-saving-sub"  id="cmSavingSub">Avançando para o próximo lead…</div>
+        </div>
+
+      </div>
+    </div><!-- end cmEndSheet -->
+
+    <!-- Pre-end friction dialog -->
+    <div id="cmFrictionDialog">
+      <div class="cm-friction-card">
+        <div class="cm-friction-icon">⚠️</div>
+        <div class="cm-friction-title">Encerrando sem fechar</div>
+        <div class="cm-friction-sub">Você ainda tem espaço para tentar fechar.<br>Quer encerrar a call mesmo assim?</div>
+        <div class="cm-friction-btns">
+          <button class="cm-friction-continue" onclick="cmFrictionContinue()">Continuar tentativa</button>
+          <button class="cm-friction-end"      onclick="cmFrictionConfirm()">Encerrar mesmo assim</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end cm-body -->
+</div><!-- end #callModeOverlay -->
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CALL MODE — v2.0
+// ══════════════════════════════════════════════════════════════
+
+const callMode = {
+  lead:             null,
+  steps:            [],    // [{icon, title, falas, tip, objections, anticipation}]
+  stepIdx:          0,
+  falaIdx:          0,
+  markers:          { good:0, confused:0, resist:0, hot:0 },
+  notes:            '',
+  timer:            null,
+  seconds:          0,
+  guideTimeout:     null,
+  anticipationTimer:null,
+  pressureShown:    { m10:false, m15:false },
+  closingBoostShown:false,
+  pendingOutcome:   null,
+};
+
+// ── Open / Close ───────────────────────────────────────────────
+function callModeOpen(lead) {
+  if (!lead) return;
+  callMode.lead              = lead;
+  callMode.steps             = _cmBuildSteps(lead.scriptJson);
+  callMode.stepIdx           = 0;
+  callMode.falaIdx           = 0;
+  callMode.markers           = { good:0, confused:0, resist:0, hot:0 };
+  callMode.notes             = '';
+  callMode.seconds           = 0;
+  callMode.pressureShown     = { m10:false, m15:false };
+  callMode.closingBoostShown = false;
+  callMode.pendingOutcome    = null;
+
+  // Reset UI elements
+  const notesEl = document.getElementById('cmNotesInput');
+  if (notesEl) { notesEl.value = ''; }
+  document.getElementById('cmFrictionDialog').classList.remove('open');
+  document.getElementById('cmObjPanel').classList.remove('open');
+  document.getElementById('cmObjFloatBtn').classList.remove('cm-obj-open');
+  _cmSheetReset();
+  _cmHideGuide();
+  _cmResetMarkers();
+
+  // Populate
+  _cmRenderHeader();
+  _cmRenderStepDots();
+  _cmRenderStep();
+  _cmRenderObjPanel(lead.scriptJson);
+
+  // Start timer
+  if (callMode.timer) clearInterval(callMode.timer);
+  callMode.timer = setInterval(_cmTick, 1000);
+
+  document.getElementById('callModeOverlay').classList.add('open');
+}
+
+function callModeClose() {
+  document.getElementById('callModeOverlay').classList.remove('open');
+  if (callMode.timer)          { clearInterval(callMode.timer);          callMode.timer = null; }
+  if (callMode.guideTimeout)   { clearTimeout(callMode.guideTimeout);    callMode.guideTimeout = null; }
+  if (callMode.anticipationTimer){ clearTimeout(callMode.anticipationTimer); callMode.anticipationTimer = null; }
+}
+
+// ── Build 4 script steps ───────────────────────────────────────
+function _cmBuildSteps(json) {
+  const steps = [];
+
+  // Step 0: Abertura
+  const e0 = json?.etapas?.[0];
+  steps.push({
+    icon:'🎯', title:'Abertura',
+    falas: (e0?.falas || ['Olá! Você conseguiu dar uma olhada no que enviamos? Me conta um pouco sobre sua situação atual.']).slice(0,4),
+    tip:   e0?.dica || 'Estabeleça rapport nos primeiros 30 segundos. Demonstre que se preparou.',
+    anticipation: null,
+  });
+
+  // Step 1: Diagnóstico
+  const e2 = json?.etapas?.[2] || json?.etapas?.[1];
+  steps.push({
+    icon:'🔍', title:'Diagnóstico',
+    falas: (e2?.falas || ['Me conta — qual é o maior desafio que você enfrenta hoje com essa questão?', 'E o que você já tentou para resolver isso?']).slice(0,4),
+    tip:   e2?.dica || 'Faça perguntas abertas. Ouça mais do que fala. Anote as dores.',
+    anticipation: json?.objecoes?.[0]?.objecao || null,
+  });
+
+  // Step 2: Objeções
+  const obj0 = json?.objecoes?.[0];
+  steps.push({
+    icon:'⚡', title:'Objeções',
+    falas: [obj0?.resposta || 'Entendo sua preocupação — ela é muito comum. Vamos olhar juntos para isso?'],
+    tip:  'Não discuta. Valide, normalize e redirecione com perguntas.',
+    anticipation: null,
+  });
+
+  // Step 3: Fechamento
+  const fech = json?.fechamento;
+  steps.push({
+    icon:'🏆', title:'Fechamento',
+    falas: (fech?.falas || ['Com base em tudo que conversamos, o Chãozão resolve exatamente o que você precisa. Vamos fechar hoje e você começa ainda essa semana?']).slice(0,4),
+    tip:   fech?.dica || 'Após apresentar o preço: silêncio. Quem fala primeiro, perde.',
+    anticipation: null,
+  });
+
+  return steps;
+}
+
+// ── Timer ──────────────────────────────────────────────────────
+function _cmTick() {
+  callMode.seconds++;
+  const m = Math.floor(callMode.seconds / 60);
+  const s = callMode.seconds % 60;
+  const txt = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  const el = document.getElementById('cmTimer');
+  if (el) {
+    el.textContent = txt;
+    el.classList.remove('warn','alert');
+    if (callMode.seconds >= 900)      el.classList.add('alert');
+    else if (callMode.seconds >= 600) el.classList.add('warn');
+  }
+
+  // Time pressure signals
+  if (callMode.seconds === 600 && !callMode.pressureShown.m10) {
+    callMode.pressureShown.m10 = true;
+    _cmShowGuide('time', '⚠ CALL LONGA — HORA DE AVANÇAR',
+      'Já são 10 minutos. Direcione para a proposta ou o fechamento agora.', 9000);
+  }
+  if (callMode.seconds === 900 && !callMode.pressureShown.m15) {
+    callMode.pressureShown.m15 = true;
+    _cmShowGuide('time', '⚠ RISCO DE PERDER CONTROLE',
+      'Call muito longa. Seja objetivo: apresente o preço e peça o fechamento.', 12000);
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function _cmRenderHeader() {
+  const lead = callMode.lead;
+  document.getElementById('cmLeadName').textContent = lead.leadName || 'Lead';
+  document.getElementById('cmTimer').textContent = '00:00';
+  document.getElementById('cmTimer').className = 'cm-timer';
+  document.getElementById('cmSheetLeadName').textContent = lead.leadName || 'Lead';
+
+  const score = lead.scoreValor;
+  let likText = lead.planVal || '—';
+  if (score >= 8)      likText = `🔥 ${Math.round((score/10)*100)}% Alta`;
+  else if (score >= 5) likText = `⚡ ${Math.round((score/10)*100)}% Média`;
+  else if (score)      likText = `🧊 ${Math.round((score/10)*100)}% Baixa`;
+  document.getElementById('cmLikelihood').textContent = likText;
+
+  const objCount = callMode.lead.scriptJson?.objecoes?.length;
+  const cntEl = document.getElementById('cmObjCount');
+  if (cntEl) cntEl.textContent = objCount ? ` (${objCount})` : '';
+}
+
+function _cmRenderStepDots() {
+  const el = document.getElementById('cmStepDots');
+  if (!el) return;
+  el.innerHTML = callMode.steps.map((s, i) => {
+    let cls = 'cm-step-dot ';
+    if (i < callMode.stepIdx)      cls += 'done';
+    else if (i === callMode.stepIdx) cls += 'active';
+    else                            cls += 'future';
+    return `<div class="${cls}" title="${esc(s.title)}"></div>`;
+  }).join('');
+}
+
+function _cmRenderStep() {
+  const step = callMode.steps[callMode.stepIdx];
+  if (!step) { _cmRequestEndInternal(); return; }
+
+  const totalFalas = step.falas.length;
+  const falaIdx    = Math.min(callMode.falaIdx, totalFalas - 1);
+  const fala       = step.falas[falaIdx];
+  const stepN      = callMode.stepIdx + 1;
+  const stepTotal  = callMode.steps.length;
+
+  document.getElementById('cmStepIcon').textContent = step.icon;
+  document.getElementById('cmStepNum').textContent  = `Passo ${stepN} de ${stepTotal}`;
+  document.getElementById('cmStepName').textContent = step.title;
+
+  const falaEl = document.getElementById('cmStepFala');
+  falaEl.textContent = `"${fala}"`;
+  falaEl.classList.remove('fala-anim');
+  void falaEl.offsetWidth;
+  falaEl.classList.add('fala-anim');
+
+  const tipEl = document.getElementById('cmStepTip');
+  if (step.tip) { tipEl.textContent = `💡 ${step.tip}`; tipEl.classList.add('show'); }
+  else          { tipEl.classList.remove('show'); }
+
+  _cmRenderStepDots();
+  _cmRenderNextPreview();
+  _cmOnStepEnter(callMode.stepIdx, step);
+}
+
+function _cmRenderNextPreview() {
+  const nextIdx = callMode.stepIdx + 1;
+  const next    = callMode.steps[nextIdx];
+  const el      = document.getElementById('cmNextPreview');
+  if (!el) return;
+
+  if (!next) {
+    el.classList.add('cm-done');
+    document.getElementById('cmNextIcon').textContent  = '🎉';
+    document.getElementById('cmNextTitle').textContent = 'Fim do script';
+    document.getElementById('cmNextFala').textContent  = 'Registre o resultado da call.';
+    return;
+  }
+  el.classList.remove('cm-done');
+  document.getElementById('cmNextIcon').textContent  = next.icon;
+  document.getElementById('cmNextTitle').textContent = next.title;
+  const preview = (next.falas[0] || '').substring(0, 80);
+  document.getElementById('cmNextFala').textContent  = `"${preview}${preview.length === 80 ? '…' : ''}"`;
+}
+
+// ── Step-enter adaptive behaviors ─────────────────────────────
+function _cmOnStepEnter(idx, step) {
+  // Clear any anticipation timer
+  if (callMode.anticipationTimer) { clearTimeout(callMode.anticipationTimer); callMode.anticipationTimer = null; }
+
+  // Closing Moment Boost (entering Fechamento)
+  if (idx === 3 && !callMode.closingBoostShown) {
+    callMode.closingBoostShown = true;
+    const hasHot = callMode.markers.hot > 0;
+    _cmShowGuide('boost', '🔥 MOMENTO DE FECHAR',
+      hasHot
+        ? 'Lead demonstrou interesse! Apresente o preço com confiança e aguarde em silêncio.'
+        : 'Resuma os benefícios em 1 frase, apresente o preço e faça silêncio absoluto.\nQuem falar primeiro, decide.',
+      11000);
+    return;
+  }
+
+  // Proactive objection anticipation (Diagnóstico, after 30s)
+  if (idx === 1 && step.anticipation) {
+    callMode.anticipationTimer = setTimeout(() => {
+      if (callMode.stepIdx === 1) { // still on Diagnóstico
+        _cmShowGuide('obj', '⚠ POSSÍVEL OBJEÇÃO CHEGANDO',
+          `"${step.anticipation}" — prepare-se para validar e redirecionar.`, 8000);
+      }
+    }, 30000);
+  }
+}
+
+// ── Step navigation ────────────────────────────────────────────
+function cmStepFeito() {
+  const step = callMode.steps[callMode.stepIdx];
+  if (!step) return;
+  // If more falas in this step, advance fala index
+  if (callMode.falaIdx < step.falas.length - 1) {
+    callMode.falaIdx++;
+    _cmRenderStep();
+    return;
+  }
+  // Else advance to next step
+  _cmHideGuide();
+  callMode.stepIdx++;
+  callMode.falaIdx = 0;
+  _cmRenderStep();
+}
+
+function cmStepPular() {
+  _cmHideGuide();
+  if (callMode.stepIdx < callMode.steps.length - 1) {
+    callMode.stepIdx++;
+    callMode.falaIdx = 0;
+    _cmRenderStep();
+  } else {
+    _cmRequestEndInternal();
+  }
+}
+
+function cmSkipToClosing() {
+  _cmHideGuide();
+  callMode.stepIdx = callMode.steps.length - 1;
+  callMode.falaIdx = 0;
+  _cmRenderStep();
+}
+
+function _cmRequestEndInternal() {
+  setTimeout(() => _cmOpenEndSheet(), 350);
+}
+
+// ── Markers ────────────────────────────────────────────────────
+const _cmMarkerCfg = {
+  good:    { cls:'guide-good',    title:'Sinal positivo ✓',      text:'Continue aprofundando o diagnóstico.\n→ Explore mais este ponto positivo.',              feedback:'→ Continue aprofundando',      skip:false },
+  confused:{ cls:'guide-confused',title:'Lead confuso',          text:'Simplifique com uma analogia.\n→ Faça uma pergunta simples para reengajar.',             feedback:'→ Redirecione a conversa',      skip:false },
+  resist:  { cls:'guide-resist',  title:'Resistência detectada', text:'Não discuta — valide a preocupação e redirecione.\n→ Abra o painel de objeções agora.',  feedback:'→ Valide antes de responder',   skip:false },
+  hot:     { cls:'guide-hot',     title:'Lead quente! 🔥',       text:'Avance para o fechamento!\n→ Não perca o momentum. Pule direto para a proposta.',        feedback:'→ Avance para o fechamento',    skip:true  },
+};
+
+function _cmResetMarkers() {
+  const idMap = { good:'Good', confused:'Confused', resist:'Resist', hot:'Hot' };
+  Object.keys(idMap).forEach(k => {
+    const btn = document.getElementById(`cmMk${idMap[k]}`);
+    if (btn) btn.classList.remove('active');
+    const cnt = document.getElementById(`cmMk${idMap[k]}Count`);
+    if (cnt) cnt.textContent = '0';
+  });
+  const fb = document.getElementById('cmMarkerFeedback');
+  if (fb) fb.textContent = '';
+}
+
+function cmTapMarker(type) {
+  callMode.markers[type] = (callMode.markers[type] || 0) + 1;
+
+  const idMap = { good:'Good', confused:'Confused', resist:'Resist', hot:'Hot' };
+  const countEl = document.getElementById(`cmMk${idMap[type]}Count`);
+  if (countEl) countEl.textContent = callMode.markers[type];
+
+  const btn = document.getElementById(`cmMk${idMap[type]}`);
+  if (btn) btn.classList.add('active');
+
+  const cfg = _cmMarkerCfg[type];
+  if (!cfg) return;
+
+  // Micro feedback text
+  const fbEl = document.getElementById('cmMarkerFeedback');
+  if (fbEl) {
+    fbEl.textContent = cfg.feedback;
+    fbEl.style.opacity = '1';
+    setTimeout(() => { if (fbEl) fbEl.style.opacity = '0.35'; }, 2800);
+  }
+
+  // Guide banner (5–7s)
+  const canSkip = cfg.skip && callMode.stepIdx < callMode.steps.length - 1;
+  _cmShowGuide(cfg.cls.replace('guide-',''), cfg.title, cfg.text, 6500, canSkip);
+}
+
+// ── Guide Banner ───────────────────────────────────────────────
+function _cmShowGuide(type, title, text, duration = 6000, showSkip = false) {
+  if (callMode.guideTimeout) clearTimeout(callMode.guideTimeout);
+  const el = document.getElementById('cmGuideBanner');
+  if (!el) return;
+  el.className = `cm-guide-banner guide-${type} show`;
+  document.getElementById('cmGuideTitle').textContent = title;
+  document.getElementById('cmGuideText').textContent  = text;
+  const skipBtn = document.getElementById('cmGuideSkipBtn');
+  if (skipBtn) skipBtn.style.display = showSkip ? 'block' : 'none';
+  callMode.guideTimeout = setTimeout(_cmHideGuide, duration);
+}
+
+function _cmHideGuide() {
+  const el = document.getElementById('cmGuideBanner');
+  if (el) el.classList.remove('show');
+  if (callMode.guideTimeout) { clearTimeout(callMode.guideTimeout); callMode.guideTimeout = null; }
+}
+
+// ── Objection Panel ────────────────────────────────────────────
+function cmToggleObjPanel() {
+  const panel = document.getElementById('cmObjPanel');
+  const btn   = document.getElementById('cmObjFloatBtn');
+  if (panel.classList.toggle('open')) btn.classList.add('cm-obj-open');
+  else                                btn.classList.remove('cm-obj-open');
+}
+
+function _cmRenderObjPanel(json) {
+  const body = document.getElementById('cmObjPanelBody');
+  if (!body) return;
+  const objs = json?.objecoes;
+  if (!objs?.length) {
+    body.innerHTML = '<div style="text-align:center;color:rgba(240,237,228,.3);padding:2rem;font-size:13px">Gere o script primeiro para ver as objeções preparadas.</div>';
+    return;
+  }
+  body.innerHTML = objs.map(o => `
+    <div class="cm-obj-item">
+      <div class="cm-obj-trigger">"${esc(o.objecao || '')}"</div>
+      <div class="cm-obj-response">${esc(o.resposta || '')}</div>
+    </div>`).join('');
+}
+
+// ── End Call Flow ──────────────────────────────────────────────
+function cmRequestEnd() {
+  // Pre-end friction: not on Fechamento and no hot signals
+  const onFechamento = callMode.stepIdx >= callMode.steps.length - 1;
+  const hasHot       = callMode.markers.hot > 0;
+  if (!onFechamento && !hasHot) {
+    document.getElementById('cmFrictionDialog').classList.add('open');
+    return;
+  }
+  _cmOpenEndSheet();
+}
+
+function cmFrictionContinue() {
+  document.getElementById('cmFrictionDialog').classList.remove('open');
+}
+
+function cmFrictionConfirm() {
+  document.getElementById('cmFrictionDialog').classList.remove('open');
+  _cmOpenEndSheet();
+}
+
+function _cmOpenEndSheet() {
+  _cmSheetReset();
+  document.getElementById('cmEndSheet').classList.add('open');
+  document.getElementById('cmSheetStateA').style.display = '';
+}
+
+function _cmSheetReset() {
+  document.getElementById('cmEndSheet').classList.remove('open');
+  document.getElementById('cmSheetStateA').style.display = '';
+  document.getElementById('cmSheetStateB').style.display = 'none';
+  document.getElementById('cmSheetStateC').style.display = 'none';
+  callMode.pendingOutcome = null;
+}
+
+function cmSelectOutcome(outcome) {
+  callMode.pendingOutcome = outcome;
+
+  if (outcome === 'fechou') {
+    _cmSaveAndClose('fechou', {});
+    return;
+  }
+
+  document.getElementById('cmSheetStateA').style.display = 'none';
+  const bContent = document.getElementById('cmSheetBContent');
+
+  if (outcome === 'followup') {
+    const today = new Date().toISOString().split('T')[0];
+    bContent.innerHTML = `
+      <div class="cm-detail-label">Data do próximo contato *</div>
+      <input type="date" class="cm-detail-input" id="cmFollowupDate" value="${today}">
+      <div class="cm-detail-label">Observações</div>
+      <input type="text"  class="cm-detail-input" id="cmFollowupObs" placeholder="Ex: vai consultar o sócio antes">
+    `;
+  } else if (outcome === 'perdeu') {
+    bContent.innerHTML = `
+      <div class="cm-detail-label">Motivo da perda *</div>
+      <select class="cm-detail-select" id="cmPerdeuMotivo">
+        <option value="">Selecione…</option>
+        <option value="sem-recurso">Sem recurso financeiro</option>
+        <option value="preco">Achou caro</option>
+        <option value="sem-urgencia">Sem urgência agora</option>
+        <option value="concorrente">Escolheu concorrente</option>
+        <option value="sem-perfil">Sem perfil</option>
+        <option value="nao-atendeu">Não atendeu</option>
+        <option value="outro">Outro</option>
+      </select>
+      <div class="cm-detail-label">Observações</div>
+      <input type="text" class="cm-detail-input" id="cmPerdeuObs" placeholder="Detalhes adicionais">
+    `;
+  }
+
+  document.getElementById('cmSheetStateB').style.display = '';
+}
+
+function cmSheetBack() {
+  callMode.pendingOutcome = null;
+  document.getElementById('cmSheetStateB').style.display = 'none';
+  document.getElementById('cmSheetStateA').style.display = '';
+}
+
+async function cmSaveOutcome() {
+  const outcome = callMode.pendingOutcome;
+  const details = {};
+
+  if (outcome === 'followup') {
+    details.followupDate = document.getElementById('cmFollowupDate')?.value || '';
+    details.obs          = document.getElementById('cmFollowupObs')?.value  || '';
+  } else if (outcome === 'perdeu') {
+    const motivo = document.getElementById('cmPerdeuMotivo')?.value;
+    if (!motivo) { showToast('Selecione o motivo da perda'); return; }
+    details.motivo = motivo;
+    details.obs    = document.getElementById('cmPerdeuObs')?.value || '';
+  }
+
+  await _cmSaveAndClose(outcome, details);
+}
+
+async function _cmSaveAndClose(outcome, details) {
+  const lead    = callMode.lead;
+  const saveBtn = document.getElementById('cmSaveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Salvando…'; }
+
+  // Show State C immediately
+  document.getElementById('cmSheetStateA').style.display = 'none';
+  document.getElementById('cmSheetStateB').style.display = 'none';
+  document.getElementById('cmSheetStateC').style.display = '';
+
+  const icons = { fechou:'🎉', followup:'📅', perdeu:'❌' };
+  const texts = { fechou:'Fechou! Parabéns! 🏆', followup:'Follow-up agendado!', perdeu:'Resultado registrado.' };
+  document.getElementById('cmSavingIcon').textContent = icons[outcome] || '✅';
+  document.getElementById('cmSavingText').textContent = texts[outcome] || 'Salvo!';
+  document.getElementById('cmSavingSub').textContent  = 'Avançando para o próximo lead…';
+
+  // Persist to API
+  try {
+    const body = { status:'done', resultado: outcome };
+    if (details.motivo)      body.skipReason  = details.motivo;
+    if (details.followupDate) body.followupDate = details.followupDate;
+    await fetch(`/api/queue/${lead.id}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+  } catch(e) {}
+
+  // Update local cdia state
+  if (typeof cdia !== 'undefined' && cdia.leads) {
+    const local = cdia.leads.find(l => l.id === lead.id);
+    if (local) { local.status = 'done'; local.resultado = outcome; }
+  }
+
+  setTimeout(() => {
+    callModeClose();
+    _cdiaStopTimer();
+    // Advance to next pending lead in Central do Dia
+    if (typeof cdia !== 'undefined' && cdia.leads) {
+      const next = cdia.leads.findIndex((l, i) => i > cdia.activeIdx && l.status === 'pending');
+      if (next >= 0) cdia.activeIdx = next;
+      cdiaRender();
+    }
+    showToast(texts[outcome] + ' ✓');
+  }, 1800);
+}
+
+// ── ESC closes obj panel or friction dialog ────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('callModeOverlay')?.classList.contains('open')) return;
+  if (document.getElementById('cmFrictionDialog')?.classList.contains('open')) {
+    cmFrictionContinue(); e.preventDefault();
+  } else if (document.getElementById('cmEndSheet')?.classList.contains('open')) {
+    _cmSheetReset(); e.preventDefault();
+  } else if (document.getElementById('cmObjPanel')?.classList.contains('open')) {
+    cmToggleObjPanel(); e.preventDefault();
+  }
+});
+</script>
 
 </body>
 </html>
